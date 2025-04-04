@@ -20,7 +20,7 @@ public class Program
 							 .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
 							 .AddJsonFile("Connection.json", optional: false, reloadOnChange: true);
 
-		builder.Services.AddDbContext<ApplicationDbContext>(options =>
+		builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
 			options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 		builder.Services.AddQuickGridEntityFrameworkAdapter();
