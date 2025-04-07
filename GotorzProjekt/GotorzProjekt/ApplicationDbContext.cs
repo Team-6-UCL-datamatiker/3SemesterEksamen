@@ -16,21 +16,16 @@ namespace GotorzProjekt
 		{
 			base.OnModelCreating(modelBuilder);
 
-			// Configure primary key for User
-			modelBuilder.Entity<User>()
-				.HasKey(u => u.UserId);
+			// Map each entity to its own table
+			modelBuilder.Entity<User>().ToTable("Users");
+			modelBuilder.Entity<Customer>().ToTable("Customers");
+			modelBuilder.Entity<Employee>().ToTable("Employees");
 
-			// Configure Customer table
-			modelBuilder.Entity<Customer>()
-				.HasOne<User>()
-				.WithOne()
-				.HasForeignKey<Customer>(c => c.UserId);
-
-			// Configure Employee table
-			modelBuilder.Entity<Employee>()
-				.HasOne<User>()
-				.WithOne()
-				.HasForeignKey<Employee>(e => e.UserId);
+			// Optionally, if you want to configure relationships or keys explicitly, you can do so:
+			//modelBuilder.Entity<Customer>()
+			//   .HasKey(c => c.UserId);
+			//modelBuilder.Entity<Employee>()
+			//   .HasKey(e => e.UserId);
 		}
 	}
 }
