@@ -1,6 +1,8 @@
-﻿namespace GotorzProjectMain.Models
+﻿using GotorzProjectMain.Data;
+
+namespace GotorzProjectMain.Models
 {
-	public class Customer : User
+	public class Customer : ApplicationUser
 	{
 		public string Username { get; set; }
 	}
