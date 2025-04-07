@@ -13,3 +13,4 @@ Add-Migration 'navn på migration'
 ```shell
 Update-Database
 ```
+Dette skal køres hver gang databaseændringer skal opdateres til den lokale database. 
