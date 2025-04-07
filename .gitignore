@@ -362,3 +362,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /GotorzProjekt/GotorzProjekt/Connection.json
+/GotorzProjectMain/GotorzProjectMain/Connection.json
