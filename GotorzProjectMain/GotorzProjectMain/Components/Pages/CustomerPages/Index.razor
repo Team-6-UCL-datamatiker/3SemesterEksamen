@@ -1,0 +1,40 @@
+﻿@page "/customers"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using GotorzProjectMain.Models
+@using GotorzProjectMain.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="customers/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Customers">
+    <PropertyColumn Property="customer => customer.Username" />
+    <PropertyColumn Property="customer => customer.FirstName" />
+    <PropertyColumn Property="customer => customer.LastName" />
+    <PropertyColumn Property="customer => customer.Email" />
+    <PropertyColumn Property="customer => customer.Password" />
+
+    <TemplateColumn Context="customer">
+        <a href="@($"customers/edit?userid={customer.UserId}")">Edit</a> |
+        <a href="@($"customers/details?userid={customer.UserId}")">Details</a> |
+        <a href="@($"customers/delete?userid={customer.UserId}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private ApplicationDbContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}
