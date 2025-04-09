@@ -47,7 +47,10 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+//builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+//replacing the dummy email sender with GmailEmailSender which uses Gmails SMTP services
+//Every time a razor page ask for IEmailSender, it get the gmail powered version
+builder.Services.AddScoped<IEmailSender<ApplicationUser>, GmailEmailSender>();
 
 var app = builder.Build();
 
