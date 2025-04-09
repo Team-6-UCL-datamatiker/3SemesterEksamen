@@ -1,0 +1,44 @@
+﻿@page "/customers"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using GotorzProjectMain.Models
+@using GotorzProjectMain.Data
+<!-- Injecting the Userservice so it can be used to find user data -->
+@inject Services.UserService UserService
+@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+
+<PageTitle>Customers</PageTitle>
+
+<h1>Customers</h1>
+
+<p>
+    <a href="/Account/RegisterCustomer">Create New</a>
+</p>
+
+<!-- Had to change context.customers to customers.AsQueryable() -->
+<QuickGrid Class="table" Items="customers.AsQueryable()">
+    <PropertyColumn Property="customer => customer.CustomUserName" Title="Username" />
+    <PropertyColumn Property="customer => customer.User.FirstName" Title="First Name" />
+    <PropertyColumn Property="customer => customer.User.LastName" Title="Last Name" />
+    <PropertyColumn Property="customer => customer.User.Email" Title="Email" />
+    <PropertyColumn Property="customer => customer.User.PhoneNumber" Title="Phone Number" />
+
+    <TemplateColumn Context="customer">
+        <a href="@($"customers/edit?id={customer.Id}")">Edit</a> |
+        <a href="@($"customers/details?id={customer.Id}")">Details</a> |
+        <a href="@($"customers/delete?id={customer.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    
+    // Had to make a list of customers to quickbind the quickgrid to instead of just the context.customers, because thats an IQueryable<Customer> (a query, not real data yet).
+    private List<Customer> customers = new();
+
+    // I used the Userservice to get the customers and their users, so I don't need to use the DbFactory here.
+    protected override async Task OnInitializedAsync()
+    {
+        customers = await UserService.GetCustomersWithUsersAsync();
+    }
+
+}

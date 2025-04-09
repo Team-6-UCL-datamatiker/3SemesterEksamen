@@ -91,8 +91,36 @@ namespace GotorzProjectMain.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
 
-                    b.UseTptMappingStrategy();
+            modelBuilder.Entity("GotorzProjectMain.Models.Customer", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("CustomUserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Customers", (string)null);
+                });
+
+            modelBuilder.Entity("GotorzProjectMain.Models.Employee", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ProfilePicture")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Role")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Employees", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -230,26 +258,24 @@ namespace GotorzProjectMain.Migrations
 
             modelBuilder.Entity("GotorzProjectMain.Models.Customer", b =>
                 {
-                    b.HasBaseType("GotorzProjectMain.Data.ApplicationUser");
+                    b.HasOne("GotorzProjectMain.Data.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.ToTable("Customers", (string)null);
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("GotorzProjectMain.Models.Employee", b =>
                 {
-                    b.HasBaseType("GotorzProjectMain.Data.ApplicationUser");
+                    b.HasOne("GotorzProjectMain.Data.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Property<string>("ProfilePicture")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Role")
-                        .HasColumnType("bit");
-
-                    b.ToTable("Employees", (string)null);
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -299,24 +325,6 @@ namespace GotorzProjectMain.Migrations
                     b.HasOne("GotorzProjectMain.Data.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("GotorzProjectMain.Models.Customer", b =>
-                {
-                    b.HasOne("GotorzProjectMain.Data.ApplicationUser", null)
-                        .WithOne()
-                        .HasForeignKey("GotorzProjectMain.Models.Customer", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("GotorzProjectMain.Models.Employee", b =>
-                {
-                    b.HasOne("GotorzProjectMain.Data.ApplicationUser", null)
-                        .WithOne()
-                        .HasForeignKey("GotorzProjectMain.Models.Employee", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

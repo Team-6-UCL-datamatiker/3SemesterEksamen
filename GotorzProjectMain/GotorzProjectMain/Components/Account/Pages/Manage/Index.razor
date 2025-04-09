@@ -3,11 +3,15 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
 @using GotorzProjectMain.Data
+@using GotorzProjectMain.Models
+@using Microsoft.EntityFrameworkCore
+
 
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityUserAccessor UserAccessor
 @inject IdentityRedirectManager RedirectManager
+@inject ApplicationDbContext DbContext
 
 <PageTitle>Profile</PageTitle>
 
@@ -19,9 +23,22 @@
         <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" role="alert" />
+
+            <!-- Changed this from being the standard username which is just the email -->
             <div class="form-floating mb-3">
-                <input type="text" value="@username" class="form-control" placeholder="Please choose your username." disabled />
+                <InputText @bind-Value="Input.CustomUserName" class="form-control" placeholder="Please choose your username." />
                 <label for="username" class="form-label">Username</label>
+                <ValidationMessage For="() => Input.CustomUserName" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.FirstName" class="form-control" placeholder="Please write your first name." />
+                <label for="firstname" class="form-label">First Name</label>
+                <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.LastName" class="form-control" placeholder="Please write your last name." />
+                <label for="lastname" class="form-label">Last Name</label>
+                <ValidationMessage For="() => Input.LastName" class="text-danger" />
             </div>
             <div class="form-floating mb-3">
                 <InputText @bind-Value="Input.PhoneNumber" class="form-control" placeholder="Please enter your phone number." />
@@ -36,7 +53,7 @@
 @code {
     private ApplicationUser user = default!;
     private string? username;
-    private string? phoneNumber;
+    private Customer customer = default!;
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
@@ -48,30 +65,53 @@
     {
         user = await UserAccessor.GetRequiredUserAsync(HttpContext);
         username = await UserManager.GetUserNameAsync(user);
-        phoneNumber = await UserManager.GetPhoneNumberAsync(user);
 
-        Input.PhoneNumber ??= phoneNumber;
+        Input.PhoneNumber ??= user.PhoneNumber;
+        Input.FirstName ??= user.FirstName;
+        Input.LastName ??= user.LastName;
+
+
+        // Loads in customer from database
+        customer = await DbContext.Customers.FindAsync(user.Id);
+
+        if (customer != null && string.IsNullOrEmpty(Input.CustomUserName))
+        {
+            Input.CustomUserName = customer.CustomUserName; // Populate the form only if not already set
+        }
     }
 
     private async Task OnValidSubmitAsync()
     {
-        if (Input.PhoneNumber != phoneNumber)
+        user.PhoneNumber = Input.PhoneNumber;
+        user.FirstName = Input.FirstName;
+        user.LastName = Input.LastName;
+        customer.CustomUserName = Input.CustomUserName;
+
+        var updateResultUser = await UserManager.UpdateAsync(user);
+
+        if (!updateResultUser.Succeeded)
         {
-            var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
-            if (!setPhoneResult.Succeeded)
-            {
-                RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
-            }
+            RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
+            return;
         }
 
         await SignInManager.RefreshSignInAsync(user);
         RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
     }
 
+
+
     private sealed class InputModel
     {
         [Phone]
         [Display(Name = "Phone number")]
         public string? PhoneNumber { get; set; }
+
+        public string? CustomUserName { get; set; }
+
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+
+
     }
 }

@@ -5,6 +5,7 @@ using GotorzProjectMain.Client.Pages;
 using GotorzProjectMain.Components;
 using GotorzProjectMain.Components.Account;
 using GotorzProjectMain.Data;
+using GotorzProjectMain.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,10 @@ builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddQuickGridEntityFrameworkAdapter();
+
+//Used for getting the user data everytime an employee or customer is loaded
+builder.Services.AddScoped<UserService>();
+
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
