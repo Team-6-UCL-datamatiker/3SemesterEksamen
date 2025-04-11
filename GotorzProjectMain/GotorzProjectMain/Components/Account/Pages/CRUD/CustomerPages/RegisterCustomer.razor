@@ -48,7 +48,7 @@
 
 			<!-- This code block adds a field with an indication of whether or not the written username is taken. -->
 			<!--Currently doesn't work' -->
-			<div class="form-floating mb-3">
+			@* <div class="form-floating mb-3">
 				<InputText @bind-Value="Input.CustomUserName"
 						   class="form-control"
 						   @oninput="CheckUsernameAvailability"
@@ -63,7 +63,7 @@
 						<span>@UsernameCheckMessage</span>
 					}
 				</div>
-			</div>
+			</div> *@
 
 			<div class="form-floating mb-3">
 				<InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
@@ -129,6 +129,7 @@
 
 		// Assign Customer role to the new user
 		var roleResult = await UserManager.AddToRoleAsync(user, "Customer");
+		
 		if (!roleResult.Succeeded)
 		{
 			identityErrors = roleResult.Errors;
@@ -192,32 +193,32 @@
 
 	// A method to check if the username is already taken
 
-	private string UsernameCheckMessage { get; set; } = "";
+	// private string UsernameCheckMessage { get; set; } = "";
 
 
 	//This method is called when the user types in the username field, but currently doesn't work
-	private async Task CheckUsernameAvailability(ChangeEventArgs e)
-	{
-		var username = Input.CustomUserName;
+	// private async Task CheckUsernameAvailability(ChangeEventArgs e)
+	// {
+	// 	var username = Input.CustomUserName;
 
-		if (!string.IsNullOrWhiteSpace(username))
-		{
-			var existingUser = await UserManager.FindByNameAsync(username);
+	// 	if (!string.IsNullOrWhiteSpace(username))
+	// 	{
+	// 		var existingUser = await UserManager.FindByNameAsync(username);
 
-			if (existingUser != null)
-			{
-				UsernameCheckMessage = "❌ Username is already taken.";
-			}
-			else
-			{
-				UsernameCheckMessage = "✅ Username is available.";
-			}
-		}
-		else
-		{
-			UsernameCheckMessage = "";
-		}
-	}
+	// 		if (existingUser != null)
+	// 		{
+	// 			UsernameCheckMessage = "❌ Username is already taken.";
+	// 		}
+	// 		else
+	// 		{
+	// 			UsernameCheckMessage = "✅ Username is available.";
+	// 		}
+	// 	}
+	// 	else
+	// 	{
+	// 		UsernameCheckMessage = "";
+	// 	}
+	// }
 
 	private sealed class InputModel
 	{

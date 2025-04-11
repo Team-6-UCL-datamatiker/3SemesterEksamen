@@ -90,14 +90,17 @@ else
         {
             NavigationManager.NavigateTo("notfound");
         }
-
-        if (employee.User != null)
+        else
         {
-            firstName = employee.User.FirstName;
-            lastName = employee.User.LastName;
-            email = employee.User.Email;
-            phoneNumber = employee.User.PhoneNumber;
+            if (employee.User != null)
+            {
+                firstName = employee.User.FirstName;
+                lastName = employee.User.LastName;
+                email = employee.User.Email;
+                phoneNumber = employee.User.PhoneNumber;
+            }
         }
+
     }
 
     // To protect from overposting attacks, enable the specific properties you want to bind to.

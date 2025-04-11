@@ -6,7 +6,7 @@ using Moq;
 namespace TestProject.UnitTests
 {
     [TestClass]
-    public sealed class UserServiceTest
+    public sealed class MockUserServiceTest
     {
         private Mock<IUserService> mockUserService;
 

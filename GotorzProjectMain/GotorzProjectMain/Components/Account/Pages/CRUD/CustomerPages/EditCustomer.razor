@@ -88,14 +88,18 @@ else
         {
             NavigationManager.NavigateTo("notfound");
         }
-
-        if (customer.User != null)
+        else
         {
-            firstName = customer.User.FirstName;
-            lastName = customer.User.LastName;
-            email = customer.User.Email;
-            phoneNumber = customer.User.PhoneNumber;
+            if (customer.User != null)
+            {
+                firstName = customer.User.FirstName;
+                lastName = customer.User.LastName;
+                email = customer.User.Email;
+                phoneNumber = customer.User.PhoneNumber;
+            }
         }
+
+
     }
 
     // To protect from overposting attacks, enable the specific properties you want to bind to.
@@ -148,7 +152,7 @@ else
         NavigationManager.NavigateTo("/customers");
     }
 
-    private bool CustomerExists(string id)
+    public bool CustomerExists(string id)
     {
         using var context = DbFactory.CreateDbContext();
         return context.Customers.Any(e => e.Id == id);
