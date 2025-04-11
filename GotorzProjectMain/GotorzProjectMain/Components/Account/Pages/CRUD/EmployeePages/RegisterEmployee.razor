@@ -1,9 +1,10 @@
-﻿@page "/Account/Register"
+﻿@page "/Account/RegisterEmployee"
 
 @using System.ComponentModel.DataAnnotations
 @using System.Text
 @using System.Text.Encodings.Web
 @using GotorzProjectMain.Models
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using GotorzProjectMain.Data
@@ -12,11 +13,12 @@
 @inject IUserStore<ApplicationUser> UserStore
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IEmailSender<ApplicationUser> EmailSender
-@inject ILogger<Register> Logger
+@inject ILogger<RegisterEmployee> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 @inject ApplicationDbContext DbContext
 
+@*@attribute [Authorize(Policy = "Admin")]*@
 
 <PageTitle>Register</PageTitle>
 
@@ -27,9 +29,19 @@
         <StatusMessage Message="@Message" />
         <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
             <DataAnnotationsValidator />
-            <h2>Create a new account.</h2>
+            <h2>Create a new employee account.</h2>
             <hr />
             <ValidationSummary class="text-danger" role="alert" />
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.FirstName" class="form-control" autocomplete="firstname" aria-required="true" placeholder="john" />
+                <label for="firstname">First Name</label>
+                <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.LastName" class="form-control" autocomplete="lastname" aria-required="true" placeholder="doe" />
+                <label for="lastname">Last Name</label>
+                <ValidationMessage For="() => Input.LastName" class="text-danger" />
+            </div>
             <div class="form-floating mb-3">
                 <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
                 <label for="email">Email</label>
@@ -46,12 +58,19 @@
                 <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
             </div>
             <div class="form-floating mb-3">
-                <InputCheckbox @bind-Value="Input.IsEmployee" class="form-check-input" />
-                <label class="form-check-label" for="IsEmployee">I am an employee</label>
+                <InputText type="phone" @bind-Value="Input.Phone" class="form-control" autocomplete="phone" aria-required="true" placeholder="phone number" />
+                <label for="phone">Phone Number</label>
+                <ValidationMessage For="() => Input.Phone" class="text-danger" />
+            </div>
+            <!--    Field to set role, might need revisiting    -->
+            <div class="form-check mb-3">
+                <InputCheckbox id="isAdmin" @bind-Value="Input.IsAdmin" class="form-check-input" />
+                <label class="form-check-label" for="isAdmin">Is Admin?</label>
             </div>
             <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
         </EditForm>
     </div>
+    <!--
     <div class="col-md-6 col-md-offset-2">
         <section>
             <h3>Use another service to register.</h3>
@@ -59,6 +78,7 @@
             <ExternalLoginPicker />
         </section>
     </div>
+    -->
 </div>
 
 @code {
@@ -81,31 +101,34 @@
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
         var result = await UserManager.CreateAsync(user, Input.Password);
 
+        //this is where custom fields are set to update the user, all fields that arent covered by the createAsync method
+        user.FirstName = Input.FirstName;
+        user.LastName = Input.LastName;
+        user.PhoneNumber = Input.Phone;
+        await UserManager.UpdateAsync(user);
+
+
         if (!result.Succeeded)
         {
             identityErrors = result.Errors;
             return;
         }
 
-        if (Input.IsEmployee)
-        {
-            var employee = new Employee
-                {
-                    Id = user.Id,
-                    Role = true // Set the fields you want
-                };
+        var employee = new Employee
+            {
+                Id = user.Id,
+                Role = Input.IsAdmin // Sets the role
+            };
 
-            DbContext.Employees.Add(employee);
-        }
-        else
-        {
-            var customer = new Customer
-                {
-                    Id = user.Id,
-                    Username = user.Email
-                };
+        DbContext.Employees.Add(employee);
 
-            DbContext.Customers.Add(customer);
+        // Assign user to either Admin or Employee role based on the checkbox
+        string roleToAssign = Input.IsAdmin ? "Admin" : "Employee";
+        var roleResult = await UserManager.AddToRoleAsync(user, roleToAssign);
+        if (!roleResult.Succeeded)
+        {
+            identityErrors = roleResult.Errors;
+            return;
         }
 
         await DbContext.SaveChangesAsync();
@@ -157,6 +180,14 @@
     private sealed class InputModel
     {
         [Required]
+        [Display(Name = "FirstName")]
+        public string FirstName { get; set; } = "";
+
+        [Required]
+        [Display(Name = "LastName")]
+        public string LastName { get; set; } = "";
+
+        [Required]
         [EmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; } = "";
@@ -173,8 +204,14 @@
         public string ConfirmPassword { get; set; } = "";
 
         [Required]
-        [Display(Name = "Are you an employee?")]
-        public bool IsEmployee { get; set; } // Checkbox to decide if employee
+        [Phone]
+        [Display(Name = "Phone")]
+        public string Phone { get; set; } = "";
+
+
+        // This part is needed and acts to enforce that this needs a choice.
+        [Display(Name = "Is Admin?")]
+        public bool IsAdmin { get; set; }
 
 
     }
