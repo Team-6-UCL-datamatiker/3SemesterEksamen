@@ -4,6 +4,7 @@
 @using System.Text
 @using System.Text.Encodings.Web
 @using GotorzProjectMain.Models
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using GotorzProjectMain.Data
@@ -17,6 +18,7 @@
 @inject IdentityRedirectManager RedirectManager
 @inject ApplicationDbContext DbContext
 
+@attribute [Authorize(Policy = "EmployeeOrAdmin")]
 
 <PageTitle>Register</PageTitle>
 
@@ -119,6 +121,15 @@
             };
 
         DbContext.Employees.Add(employee);
+
+        // Assign user to either Admin or Employee role based on the checkbox
+        string roleToAssign = Input.IsAdmin ? "Admin" : "Employee";
+        var roleResult = await UserManager.AddToRoleAsync(user, roleToAssign);
+        if (!roleResult.Succeeded)
+        {
+            identityErrors = roleResult.Errors;
+            return;
+        }
 
         await DbContext.SaveChangesAsync();
 
