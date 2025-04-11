@@ -186,28 +186,28 @@
 
 
     //This method is called when the user types in the username field, but currently doesn't work
-    private async Task CheckUsernameAvailability(ChangeEventArgs e)
-    {
-        var username = Input.CustomUserName;
+    //private async Task CheckUsernameAvailability(ChangeEventArgs e)
+    //{
+    //    var username = Input.CustomUserName;
 
-        if (!string.IsNullOrWhiteSpace(username))
-        {
-            var existingUser = await UserManager.FindByNameAsync(username);
+    //    if (!string.IsNullOrWhiteSpace(username))
+    //    {
+    //        var existingUser = await UserManager.FindByNameAsync(username);
 
-            if (existingUser != null)
-            {
-                UsernameCheckMessage = "❌ Username is already taken.";
-            }
-            else
-            {
-                UsernameCheckMessage = "✅ Username is available.";
-            }
-        }
-        else
-        {
-            UsernameCheckMessage = "";
-        }
-    }
+    //        if (existingUser != null)
+    //        {
+    //            UsernameCheckMessage = "❌ Username is already taken.";
+    //        }
+    //       else
+    //        {
+    //            UsernameCheckMessage = "✅ Username is available.";
+    //        }
+    //    }
+    //    else
+    //    {
+    //        UsernameCheckMessage = "";
+    //    }
+    //}
 
     private sealed class InputModel
     {
