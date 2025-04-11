@@ -4,6 +4,7 @@
 @using GotorzProjectMain.Models
 @inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject Services.IUserService UserService
 
 @attribute [Authorize(Policy = "Admin")]
 
@@ -43,8 +44,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        employee = await context.Employees.FirstOrDefaultAsync(m => m.Id == Id);
+        employee = await UserService.GetEmployeeByIdAsync(Id);
 
         if (employee is null)
         {

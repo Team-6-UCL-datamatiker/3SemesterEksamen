@@ -6,7 +6,7 @@
 @using GotorzProjectMain.Models
 @inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
-@inject Services.UserService UserService
+@inject Services.IUserService UserService
 @inject UserManager<ApplicationUser> UserManager
 
 @attribute [Authorize(Policy = "Admin")]

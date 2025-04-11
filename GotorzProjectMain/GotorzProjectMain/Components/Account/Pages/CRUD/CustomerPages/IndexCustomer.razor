@@ -6,7 +6,7 @@
 @using GotorzProjectMain.Data
 <!-- Injecting the Userservice so it can be used to find user data -->
 @inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
-@inject Services.UserService UserService
+@inject Services.IUserService UserService
 
 @attribute [Authorize(Policy = "Admin")]
 
