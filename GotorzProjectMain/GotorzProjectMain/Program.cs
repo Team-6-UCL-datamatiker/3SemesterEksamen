@@ -25,7 +25,7 @@ builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 
 //Used for getting the user data everytime an employee or customer is loaded
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserService, ExtendedUserService>();
 
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();

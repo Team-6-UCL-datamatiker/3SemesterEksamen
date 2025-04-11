@@ -14,12 +14,12 @@ namespace GotorzProjectMain.Services
         Task<Employee?> GetEmployeeByIdAsync(string id);
     }
 
-    public class UserService : IUserService
+    public class ExtendedUserService : IUserService
     {
         private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
 
 
-        public UserService(IDbContextFactory<ApplicationDbContext> dbFactory, UserManager<ApplicationUser> userManager)
+        public ExtendedUserService(IDbContextFactory<ApplicationDbContext> dbFactory, UserManager<ApplicationUser> userManager)
         {
             _dbFactory = dbFactory;
         }
