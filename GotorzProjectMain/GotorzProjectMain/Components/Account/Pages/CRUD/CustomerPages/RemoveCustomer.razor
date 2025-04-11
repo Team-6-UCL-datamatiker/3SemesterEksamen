@@ -1,9 +1,12 @@
 ﻿@page "/customers/delete"
 @using Microsoft.EntityFrameworkCore
 @using GotorzProjectMain.Models
+@using Microsoft.AspNetCore.Authorization
 @inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 @inject Services.UserService UserService
+
+@attribute [Authorize(Policy = "Admin")]
 
 <PageTitle>Delete</PageTitle>
 

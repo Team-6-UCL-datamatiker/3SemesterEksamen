@@ -1,8 +1,11 @@
 ﻿@page "/employees/delete"
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
 @using GotorzProjectMain.Models
 @inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
+
+@attribute [Authorize(Policy = "Admin")]
 
 <PageTitle>Delete</PageTitle>
 

@@ -2,11 +2,14 @@
 @using GotorzProjectMain.Data
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
 @using GotorzProjectMain.Models
 @inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 @inject Services.UserService UserService
 @inject UserManager<ApplicationUser> UserManager
+
+@attribute [Authorize(Policy = "Admin")]
 
     @rendermode InteractiveServer
 
@@ -122,7 +125,7 @@ else
 
         try
         {
-            
+
             await context.SaveChangesAsync();
 
             // Update the related ApplicationUser fields (FirstName, LastName, Email, PhoneNumber)

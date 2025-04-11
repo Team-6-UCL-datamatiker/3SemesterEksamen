@@ -1,11 +1,14 @@
 ﻿@page "/employees"
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.AspNetCore.Authorization
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Data
 <!-- Injecting the Userservice so it can be used to find user data -->
 @inject Services.UserService UserService
 @inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+
+@attribute [Authorize(Policy = "Admin")]
 
 <PageTitle>Employees</PageTitle>
 
