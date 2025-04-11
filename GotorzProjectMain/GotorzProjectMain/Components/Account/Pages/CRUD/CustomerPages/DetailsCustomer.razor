@@ -1,11 +1,12 @@
 ﻿@page "/customers/details"
+@using GotorzProjectMain.Services
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Authorization
 @using GotorzProjectMain.Models
 <!-- Injecting the Userservice so it can be used to find user data -->
-@inject Services.UserService UserService
 @inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject Services.UserService UserService
 
 @attribute [Authorize(Policy = "Admin")]
 
