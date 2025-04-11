@@ -48,7 +48,7 @@
 
             <!-- This code block adds a field with an indication of whether or not the written username is taken. -->
             <!--Currently doesn't work' -->
-            <div class="form-floating mb-3">
+            @*<div class="form-floating mb-3">
                 <InputText @bind-Value="Input.CustomUserName"
                            class="form-control"
                            @oninput="CheckUsernameAvailability"
@@ -63,7 +63,7 @@
                         <span>@UsernameCheckMessage</span>
                     }
                 </div>
-            </div>
+            </div>*@
 
             <div class="form-floating mb-3">
                 <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
