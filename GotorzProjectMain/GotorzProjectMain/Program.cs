@@ -82,7 +82,8 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-    DbInitializer.Execute(scope.ServiceProvider, context, userManager);
+
+    await DbInitializer.Execute(scope.ServiceProvider, context, userManager);
 }
 
 // Configure the HTTP request pipeline.

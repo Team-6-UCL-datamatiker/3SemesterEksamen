@@ -1,11 +1,10 @@
 ﻿using GotorzProjectMain.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace GotorzProjectMain.Data;
 
-public class DbInitializer
+public static class DbInitializer
 {
     public static async Task Execute(IServiceProvider serviceProvider, ApplicationDbContext context, UserManager<ApplicationUser> userManager)
     {
@@ -25,8 +24,6 @@ public class DbInitializer
 
         string[] roleNames = { "Admin", "Employee", "Customer" };
 
-        foreach
-
         foreach (var roleName in roleNames)
         {
             var roleExist = await roleManager.RoleExistsAsync(roleName);
@@ -43,7 +40,7 @@ public class DbInitializer
         }
     }
 
-    public static async Task CreateAdminIfNotExists(ApplicationDbContext context, UserManager<ApplicationUser> manager)
+    private static async Task CreateAdminIfNotExists(ApplicationDbContext context, UserManager<ApplicationUser> manager)
     {
         // Check if there is an employee with the "Admin" role
         bool adminExists = context.Employees.Any(e => e.Role == true);
@@ -58,7 +55,7 @@ public class DbInitializer
                 EmailConfirmed = true
             };
 
-            var result = await manager.CreateAsync(user, "admin");
+            var result = await manager.CreateAsync(user, "@Dmin1");
 
             if (!result.Succeeded)
             {
