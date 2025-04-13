@@ -8,13 +8,11 @@ public static class DbInitializer
 {
     public static async Task Execute(IServiceProvider serviceProvider, ApplicationDbContext context, UserManager<ApplicationUser> userManager)
     {
-        // Apply any pending migrations and ensure the database is created
+        // Ensure the database is created and apply any pending migrations
         await context.Database.MigrateAsync();
 
-        // Check if roles exists, and create if not
         await CreateUserRolesIfNotExists(serviceProvider);
 
-        // Check if the admin user exists, and create if not
         await CreateAdminIfNotExists(context, userManager);
     }
 
@@ -26,9 +24,9 @@ public static class DbInitializer
 
         foreach (var roleName in roleNames)
         {
-            var roleExist = await roleManager.RoleExistsAsync(roleName);
+            var roleExists = await roleManager.RoleExistsAsync(roleName);
 
-            if (!roleExist)
+            if (!roleExists)
             {
                 var result = await roleManager.CreateAsync(new IdentityRole(roleName));
 
@@ -42,10 +40,8 @@ public static class DbInitializer
 
     private static async Task CreateAdminIfNotExists(ApplicationDbContext context, UserManager<ApplicationUser> manager)
     {
-        // Check if there is an employee with the "Admin" role
         bool adminExists = context.Employees.Any(e => e.Role == true);
 
-        // No admin employee found, create one
         if (!adminExists)
         {
             var user = new ApplicationUser
