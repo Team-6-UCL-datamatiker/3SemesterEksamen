@@ -6,6 +6,7 @@ using GotorzProjectMain.Components;
 using GotorzProjectMain.Components.Account;
 using GotorzProjectMain.Data;
 using GotorzProjectMain.Services;
+using static System.Formats.Asn1.AsnWriter;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -79,11 +80,12 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
-// Seed Database roles
 using (var scope = app.Services.CreateScope())
 {
-	var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-	await SeedRoles(roleManager);
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    await DbInitializer.Execute(scope.ServiceProvider, context, userManager);
 }
 
 // Configure the HTTP request pipeline.
@@ -101,7 +103,6 @@ else
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 app.UseAntiforgery();
 
@@ -114,17 +115,3 @@ app.MapRazorComponents<App>()
 app.MapAdditionalIdentityEndpoints();
 
 app.Run();
-
-
-// Seed the database with the initial roles
-async Task SeedRoles(RoleManager<IdentityRole> roleManager)
-{
-	string[] roleNames = { "Admin", "Employee", "Customer" };
-	foreach (var roleName in roleNames)
-	{
-		if (!await roleManager.RoleExistsAsync(roleName))
-		{
-			await roleManager.CreateAsync(new IdentityRole(roleName));
-		}
-	}
-}
