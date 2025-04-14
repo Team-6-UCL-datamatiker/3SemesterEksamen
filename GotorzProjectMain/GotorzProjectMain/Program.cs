@@ -45,13 +45,21 @@ builder.Services.AddAuthentication(options =>
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 	options.UseSqlServer(connectionString));
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
 	.AddRoles<IdentityRole>()
 	.AddEntityFrameworkStores<ApplicationDbContext>()
 	.AddSignInManager()
 	.AddDefaultTokenProviders();
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+}
+else
+{
+    builder.Services.AddScoped<IEmailSender<ApplicationUser>, GmailEmailSender>();
+}
 
 // Authorization policies
 builder.Services.AddAuthorization(options =>
@@ -68,12 +76,6 @@ builder.Services.AddAuthorization(options =>
 	options.AddPolicy("Customer", policy =>
 		policy.RequireRole("Customer"));
 });
-
-builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
-//replacing the dummy email sender with GmailEmailSender which uses Gmails SMTP services
-//Every time a razor page ask for IEmailSender, it get the gmail powered version
-// GUYSS HERE THE ACTION IS AT!!!! OMG OMG OMG OMG OMG OMG OMG OMG OMG OMG - Remember to enable before deployment - Jesper quote hehe
-//builder.Services.AddScoped<IEmailSender<ApplicationUser>, GmailEmailSender>();
 
 var app = builder.Build();
 
