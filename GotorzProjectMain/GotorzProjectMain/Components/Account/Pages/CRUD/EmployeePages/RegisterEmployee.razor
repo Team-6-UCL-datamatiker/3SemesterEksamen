@@ -69,7 +69,7 @@
 
             <div class="mb-3">
                 <label for="profilePicture" class="form-label">Profile Picture:</label>
-                <InputFile id="profilePicture" OnChange="HandleProfilePictureUpload" class="form-control" />
+                <InputFile id="profilePicture" accept="image/*" OnChange="HandleProfilePictureUpload" class="form-control" />
                 <ValidationMessage For="() => Input.ProfilePictureFile" class="text-danger" />
             </div>
 
