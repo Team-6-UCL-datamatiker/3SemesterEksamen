@@ -19,11 +19,18 @@
 
     protected override void OnInitialized()
     {
-        messageFromCookie = HttpContext.Request.Cookies[IdentityRedirectManager.StatusCookieName];
-
-        if (messageFromCookie is not null)
+        if (HttpContext is not null)
         {
-            HttpContext.Response.Cookies.Delete(IdentityRedirectManager.StatusCookieName);
+            messageFromCookie = HttpContext.Request.Cookies[IdentityRedirectManager.StatusCookieName];
+            if (messageFromCookie is not null)
+            {
+                HttpContext.Response.Cookies.Delete(IdentityRedirectManager.StatusCookieName);
+            }
+        }
+        else
+        {
+            // Optionally, initialize messageFromCookie with a default value if needed.
+            messageFromCookie = null;
         }
     }
 }

@@ -8,10 +8,11 @@
 @inject NavigationManager NavigationManager
 @inject Services.IUserService UserService
 @inject UserManager<ApplicationUser> UserManager
+@inject IWebHostEnvironment WebHostEnvironment
 
 @attribute [Authorize(Policy = "Admin")]
 
-    @rendermode InteractiveServer
+@rendermode InteractiveServer
 
 <PageTitle>Edit Employee</PageTitle>
 
@@ -52,6 +53,16 @@ else
                     <InputText id="phone" @bind-Value="phoneNumber" class="form-control" aria-required="true" />
                     <ValidationMessage For="() => employee.User.PhoneNumber" class="text-danger" />
                 </div>
+
+                <div class="mb-3">
+                    <label for="profilePicture" class="form-label">Profile Picture:</label>
+                    <InputFile id="profilePicture" accept="image/*" OnChange="HandleProfilePictureUpload" class="form-control" />
+                    @if (profilePictureFile != null)
+                    {
+                        <p>New file selected: @profilePictureFile.Name</p>
+                    }
+                </div>
+
                 <div class="mb-3">
                     <div class="form-check">
                         <InputCheckbox id="terms" @bind-Value="employee.Role" class="form-check-input" aria-required="true" />
@@ -75,6 +86,10 @@ else
     private string? lastName;
     private string? email;
     private string? phoneNumber;
+
+    // New profile picture file
+    private IBrowserFile? profilePictureFile;
+
 
     [SupplyParameterFromQuery]
     private string Id { get; set; }
@@ -112,6 +127,17 @@ else
         employee.User.LastName = lastName;
         employee.User.Email = email;
         employee.User.PhoneNumber = phoneNumber;
+
+        // If a new profile picture file was selected, update the picture.
+        if (profilePictureFile != null)
+        {
+            Uri? newProfilePictureUri = await SaveProfilePicture(profilePictureFile);
+            if (newProfilePictureUri != null)
+            {
+                // Assuming your ApplicationUser has a ProfilePicture property.
+                employee.ProfilePicture = newProfilePictureUri;
+            }
+        }
 
         using var context = DbFactory.CreateDbContext();
 
@@ -157,5 +183,42 @@ else
     {
         using var context = DbFactory.CreateDbContext();
         return context.Employees.Any(e => e.Id == id);
+    }
+
+    // Helper method to save the uploaded profile picture.
+    private async Task<Uri?> SaveProfilePicture(IBrowserFile file)
+    {
+        try
+        {
+            var fileName = Path.GetFileName(file.Name);
+            var imagesFolder = Path.Combine(WebHostEnvironment.WebRootPath, "images");
+
+            if (!Directory.Exists(imagesFolder))
+            {
+                Directory.CreateDirectory(imagesFolder);
+            }
+
+            var filePath = Path.Combine(imagesFolder, fileName);
+            if (!File.Exists(filePath))
+            {
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.OpenReadStream().CopyToAsync(stream);
+                }
+            }
+
+            var relativePath = "/images/" + fileName;
+            return new Uri(relativePath, UriKind.Relative);
+        }
+        catch (Exception ex)
+        {
+            return null;
+        }
+    }
+
+    // Event handler for file input changes.
+    private async Task HandleProfilePictureUpload(InputFileChangeEventArgs e)
+    {
+        profilePictureFile = e.File;
     }
 }

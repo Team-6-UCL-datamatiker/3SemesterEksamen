@@ -58,7 +58,15 @@ public static class DbInitializer
                 throw new Exception("Failed to create admin: " + string.Join(", ", result.Errors.Select(e => e.Description)));
             }
 
-            var employee = new Employee
+			// Assign the user to the Admin role
+			var roleResult = await manager.AddToRoleAsync(user, "Admin");
+
+			if (!roleResult.Succeeded)
+			{
+				throw new Exception("Failed to assign Admin role: " + string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+			}
+
+			var employee = new Employee
             {
                 Role = true,
                 User = user
