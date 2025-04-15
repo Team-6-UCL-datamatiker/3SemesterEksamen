@@ -6,6 +6,7 @@ using GotorzProjectMain.Components;
 using GotorzProjectMain.Components.Account;
 using GotorzProjectMain.Data;
 using GotorzProjectMain.Services;
+using static System.Formats.Asn1.AsnWriter;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,13 +46,21 @@ builder.Services.AddAuthentication(options =>
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 	options.UseSqlServer(connectionString));
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
 	.AddRoles<IdentityRole>()
 	.AddEntityFrameworkStores<ApplicationDbContext>()
 	.AddSignInManager()
 	.AddDefaultTokenProviders();
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+}
+else
+{
+    builder.Services.AddScoped<IEmailSender<ApplicationUser>, GmailEmailSender>();
+}
 
 // Authorization policies
 builder.Services.AddAuthorization(options =>
@@ -69,15 +78,14 @@ builder.Services.AddAuthorization(options =>
 		policy.RequireRole("Customer"));
 });
 
-builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
-
 var app = builder.Build();
 
-// Seed Database roles
 using (var scope = app.Services.CreateScope())
 {
-	var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-	await SeedRoles(roleManager);
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    await DbInitializer.Execute(scope.ServiceProvider, context, userManager);
 }
 
 // Configure the HTTP request pipeline.
@@ -95,9 +103,10 @@ else
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 app.UseAntiforgery();
+
+
 
 app.MapRazorComponents<App>()
 	.AddInteractiveServerRenderMode()
@@ -108,17 +117,3 @@ app.MapRazorComponents<App>()
 app.MapAdditionalIdentityEndpoints();
 
 app.Run();
-
-
-// Seed the database with the initial roles
-async Task SeedRoles(RoleManager<IdentityRole> roleManager)
-{
-	string[] roleNames = { "Admin", "Employee", "Customer" };
-	foreach (var roleName in roleNames)
-	{
-		if (!await roleManager.RoleExistsAsync(roleName))
-		{
-			await roleManager.CreateAsync(new IdentityRole(roleName));
-		}
-	}
-}

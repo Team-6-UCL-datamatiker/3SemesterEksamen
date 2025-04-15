@@ -5,6 +5,7 @@
 @using System.Text.Encodings.Web
 @using GotorzProjectMain.Models
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Hosting
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using GotorzProjectMain.Data
@@ -17,8 +18,11 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 @inject ApplicationDbContext DbContext
+@inject IWebHostEnvironment WebHostEnvironment
 
-@*@attribute [Authorize(Policy = "Admin")]*@
+@attribute [Authorize(Policy = "Admin")]
+
+@rendermode InteractiveServer
 
 <PageTitle>Register</PageTitle>
 
@@ -62,6 +66,13 @@
                 <label for="phone">Phone Number</label>
                 <ValidationMessage For="() => Input.Phone" class="text-danger" />
             </div>
+
+            <div class="mb-3">
+                <label for="profilePicture" class="form-label">Profile Picture:</label>
+                <InputFile id="profilePicture" accept="image/*" OnChange="HandleProfilePictureUpload" class="form-control" />
+                <ValidationMessage For="() => Input.ProfilePictureFile" class="text-danger" />
+            </div>
+
             <!--    Field to set role, might need revisiting    -->
             <div class="form-check mb-3">
                 <InputCheckbox id="isAdmin" @bind-Value="Input.IsAdmin" class="form-check-input" />
@@ -72,11 +83,11 @@
     </div>
     <!--
     <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to register.</h3>
-            <hr />
-            <ExternalLoginPicker />
-        </section>
+    <section>
+    <h3>Use another service to register.</h3>
+    <hr />
+    <ExternalLoginPicker />
+    </section>
     </div>
     -->
 </div>
@@ -107,6 +118,12 @@
         user.PhoneNumber = Input.Phone;
         await UserManager.UpdateAsync(user);
 
+        // If a profile picture was uploaded, handle file processing
+        Uri? profilePictureUri = null;
+        if (Input.ProfilePictureFile != null)
+        {
+            profilePictureUri = await SaveProfilePicture(Input.ProfilePictureFile);
+        }
 
         if (!result.Succeeded)
         {
@@ -115,10 +132,11 @@
         }
 
         var employee = new Employee
-            {
-                Id = user.Id,
-                Role = Input.IsAdmin // Sets the role
-            };
+			{
+				Id = user.Id,
+				Role = Input.IsAdmin, // Sets the role
+				ProfilePicture = profilePictureUri
+			};
 
         DbContext.Employees.Add(employee);
 
@@ -177,42 +195,96 @@
         return (IUserEmailStore<ApplicationUser>)UserStore;
     }
 
-    private sealed class InputModel
+    // Helper method to save the profile picture and return the file URI
+    private async Task<Uri?> SaveProfilePicture(IBrowserFile file)
     {
-        [Required]
-        [Display(Name = "FirstName")]
-        public string FirstName { get; set; } = "";
+        try
+        {
+            // Use the file name from the uploaded file
+            var fileName = Path.GetFileName(file.Name);
+            var imagesFolder = Path.Combine(WebHostEnvironment.WebRootPath, "images");
 
-        [Required]
-        [Display(Name = "LastName")]
-        public string LastName { get; set; } = "";
+			if (!Directory.Exists(imagesFolder))
+			{
+				Directory.CreateDirectory(imagesFolder);
+			}
 
-        [Required]
-        [EmailAddress]
-        [Display(Name = "Email")]
-        public string Email { get; set; } = "";
+			// Combine to create the full file path
+			var filePath = Path.Combine(imagesFolder, fileName);
 
-        [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
-        [DataType(DataType.Password)]
-        [Display(Name = "Password")]
-        public string Password { get; set; } = "";
+			// If the file doesn't exist, save it.
+			if (!File.Exists(filePath))
+			{
+				using (var stream = new FileStream(filePath, FileMode.Create))
+				{
+					await file.OpenReadStream().CopyToAsync(stream);
+				}
+			}
 
-        [DataType(DataType.Password)]
-        [Display(Name = "Confirm password")]
-        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
-        public string ConfirmPassword { get; set; } = "";
+			// Return the URI that points to the image.
+			var relativePath = "/images/" + fileName;
+			return new Uri(relativePath, UriKind.Relative);
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "Failed to save the profile picture.");
+			return null;
+		}
+	}
 
-        [Required]
-        [Phone]
-        [Display(Name = "Phone")]
-        public string Phone { get; set; } = "";
+	// Event handler for the file input, which assigns the selected file to our model property.
+	private async Task HandleProfilePictureUpload(InputFileChangeEventArgs e)
+	{
+		var file = e.File;
+		if (file != null)
+		{
+			Input.ProfilePictureFile = file;
+		}
+		else
+		{
+			Input.ProfilePictureFile = null;
+		}
+	}
+
+	private sealed class InputModel
+	{
+		[Required]
+		[Display(Name = "FirstName")]
+		public string FirstName { get; set; } = "";
+
+		[Required]
+		[Display(Name = "LastName")]
+		public string LastName { get; set; } = "";
+
+		[Required]
+		[EmailAddress]
+		[Display(Name = "Email")]
+		public string Email { get; set; } = "";
+
+		[Required]
+		[StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+		[DataType(DataType.Password)]
+		[Display(Name = "Password")]
+		public string Password { get; set; } = "";
+
+		[DataType(DataType.Password)]
+		[Display(Name = "Confirm password")]
+		[Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+		public string ConfirmPassword { get; set; } = "";
+
+		[Required]
+		[Phone]
+		[Display(Name = "Phone")]
+		public string Phone { get; set; } = "";
 
 
-        // This part is needed and acts to enforce that this needs a choice.
-        [Display(Name = "Is Admin?")]
-        public bool IsAdmin { get; set; }
+		// This part is needed and acts to enforce that this needs a choice.
+		[Display(Name = "Is Admin?")]
+		public bool IsAdmin { get; set; }
 
 
-    }
+		// Property to hold the uploaded profile picture
+		public IBrowserFile? ProfilePictureFile { get; set; }
+
+	}
 }
