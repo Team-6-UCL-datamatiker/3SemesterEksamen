@@ -14,3 +14,9 @@ Add-Migration 'navn på migration'
 Update-Database
 ```
 Dette skal køres hver gang databaseændringer skal opdateres til den lokale database. 
+
+---
+## Merging 
+1. Lav pull Request på Mirror Branchen.
+2. Merge ind på Mirror Branchen med det samme.
+3. Vi merger Mirror Branchen med Main når vi sidder sammen.
