@@ -5,6 +5,8 @@ using GotorzProjectMain.Client.Pages;
 using GotorzProjectMain.Components;
 using GotorzProjectMain.Components.Account;
 using GotorzProjectMain.Data;
+using Microsoft.AspNetCore.ResponseCompression;
+using GotorzProjectMain.Hubs;
 using GotorzProjectMain.Services;
 using static System.Formats.Asn1.AsnWriter;
 
@@ -78,7 +80,17 @@ builder.Services.AddAuthorization(options =>
 		policy.RequireRole("Customer"));
 });
 
+builder.Services.AddSignalR();
+
+builder.Services.AddResponseCompression(opts =>
+{
+	opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+		[ "application/octet-stream" ]);
+});
+
 var app = builder.Build();
+
+app.UseResponseCompression();
 
 using (var scope = app.Services.CreateScope())
 {
@@ -104,9 +116,8 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseRouting();
 app.UseAntiforgery();
-
-
 
 app.MapRazorComponents<App>()
 	.AddInteractiveServerRenderMode()
@@ -115,5 +126,7 @@ app.MapRazorComponents<App>()
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
+
+app.MapHub<VacationRequestHub>("/vacationrequesthub");
 
 app.Run();

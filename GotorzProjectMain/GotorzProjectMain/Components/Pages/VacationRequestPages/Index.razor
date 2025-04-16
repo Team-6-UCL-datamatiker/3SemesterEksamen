@@ -4,13 +4,22 @@
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Data
 @using GotorzProjectMain.Services
+@using Microsoft.AspNetCore.SignalR.Client
+@using Mono.TextTemplating
 @implements IAsyncDisposable
 @inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
 @inject IUserService ExtendedUserService
+@inject NavigationManager NavigationManager
+
+@rendermode InteractiveServer
 
 <PageTitle>Index</PageTitle>
 
 <h1>Index</h1>
+
+<p>SignalR Status: @(hubConnection?.State.ToString() ?? "Not Connected")</p>
+@* For debugging *@
+<p>Last updated: @lastUpdated.ToLongTimeString()</p>
 
 <p>
     <a href="vacationrequests/create">Create New</a>
@@ -44,6 +53,13 @@
 </QuickGrid>
 
 @code {
+
+    private HubConnection? hubConnection;
+    private bool _connected = false;
+    
+    //For debugging
+    private DateTime lastUpdated = DateTime.Now;
+    
     private ApplicationDbContext context = default!;
     private List<VacationRequest> vacationRequests = new();
     private List<Customer> customers = new();
@@ -51,12 +67,53 @@
     protected override async Task OnInitializedAsync()
     {
         context = DbFactory.CreateDbContext();
+        await LoadDataAsync();
+        
+        if (hubConnection is null)
+        {
+            Console.WriteLine("🔄 Setting up SignalR hub connection (from OnInitializedAsync)");
 
-        vacationRequests = await context.VacationRequests
-            .ToListAsync();
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(NavigationManager.ToAbsoluteUri("/vacationrequesthub"))
+                .WithAutomaticReconnect()
+                .Build();
+
+            hubConnection.On("ReceiveVacationRequest", async () =>
+            {
+                Console.WriteLine("⚡ ReceiveVacationRequest event received.");
+                await LoadDataAsync();
+                lastUpdated = DateTime.Now;
+                InvokeAsync(StateHasChanged);
+            });
+
+            try
+            {
+                await hubConnection.StartAsync();
+                Console.WriteLine("✅ SignalR hub started (from OnInitializedAsync).");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Failed to start SignalR hub: {ex.Message}");
+            }
+        }
+    }
+    
+    private async Task LoadDataAsync()
+    {
+        vacationRequests = await context.VacationRequests.ToListAsync();
         customers = await ExtendedUserService.GetCustomersWithUsersAsync();
-
+        // For debugging
+        lastUpdated = DateTime.Now;
+        Console.WriteLine("Data reloaded at " + lastUpdated);
     }
 
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+
+        await context.DisposeAsync();
+    }
 }
