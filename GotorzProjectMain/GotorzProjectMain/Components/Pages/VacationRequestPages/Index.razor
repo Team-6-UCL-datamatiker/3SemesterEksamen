@@ -3,8 +3,10 @@
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Data
+@using GotorzProjectMain.Services
 @implements IAsyncDisposable
 @inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+@inject IUserService ExtendedUserService
 
 <PageTitle>Index</PageTitle>
 
@@ -14,18 +16,25 @@
     <a href="vacationrequests/create">Create New</a>
 </p>
 
-<QuickGrid Class="table" Items="context.VacationRequests">
-    <PropertyColumn Property="vacationrequest => vacationrequest.Country" />
-    <PropertyColumn Property="vacationrequest => vacationrequest.StartDate" />
-    <PropertyColumn Property="vacationrequest => vacationrequest.EndDate" />
-    <PropertyColumn Property="vacationrequest => vacationrequest.ChildrenAmount" />
-    <PropertyColumn Property="vacationrequest => vacationrequest.AdultsAmount" />
-    <PropertyColumn Property="vacationrequest => vacationrequest.RoomsAmount" />
-    <PropertyColumn Property="vacationrequest => vacationrequest.HotelRequest" />
-    <PropertyColumn Property="vacationrequest => vacationrequest.FlightRequest" />
-    <PropertyColumn Property="vacationrequest => vacationrequest.Misc" />
-    <PropertyColumn Property="vacationrequest => vacationrequest.Status" />
-    <PropertyColumn Property="vacationrequest => vacationrequest.UserId" />
+<QuickGrid Class="table" Items="vacationRequests.AsQueryable()">
+    <TemplateColumn Context="vacationrequest" Title="User Email">
+        @{
+            var email = customers
+                .FirstOrDefault(c => c.User?.Id == vacationrequest.UserId)
+                ?.User?.Email ?? "Unknown";
+        }
+        @email
+    </TemplateColumn>
+    <PropertyColumn Property="vacationrequest => vacationrequest.Country"/>
+    <TemplateColumn Context="vacationrequest" Title="Start Date">
+        @vacationrequest.StartDate.ToString("MMM dd, yyyy")
+    </TemplateColumn>
+
+    <TemplateColumn Context="vacationrequest" Title="End Date">
+        @vacationrequest.EndDate.ToString("MMM dd, yyyy")
+    </TemplateColumn>
+    <PropertyColumn Property="vacationrequest => vacationrequest.Status"/>
+    
 
     <TemplateColumn Context="vacationrequest">
         <a href="@($"vacationrequests/edit?vacationrequestid={vacationrequest.VacationRequestId}")">Edit</a> |
@@ -36,10 +45,17 @@
 
 @code {
     private ApplicationDbContext context = default!;
-
-    protected override void OnInitialized()
+    private List<VacationRequest> vacationRequests = new();
+    private List<Customer> customers = new();
+    
+    protected override async Task OnInitializedAsync()
     {
         context = DbFactory.CreateDbContext();
+
+        vacationRequests = await context.VacationRequests
+            .ToListAsync();
+        customers = await ExtendedUserService.GetCustomersWithUsersAsync();
+
     }
 
     public async ValueTask DisposeAsync() => await context.DisposeAsync();
