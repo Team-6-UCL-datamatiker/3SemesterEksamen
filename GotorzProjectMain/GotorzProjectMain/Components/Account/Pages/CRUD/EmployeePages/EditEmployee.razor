@@ -142,7 +142,6 @@ else
 			Uri? newProfilePictureUri = await SaveProfilePicture(profilePictureFile);
 			if (newProfilePictureUri != null)
 			{
-				// Assuming your ApplicationUser has a ProfilePicture property.
 				employee.ProfilePicture = newProfilePictureUri;
 			}
 		}
