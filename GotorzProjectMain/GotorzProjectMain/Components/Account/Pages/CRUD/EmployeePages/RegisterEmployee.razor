@@ -131,11 +131,13 @@
             return;
         }
 
+        var defaultPicture = new Uri("/images/DefaultProfilePicture.jpg", UriKind.Relative);
+
         var employee = new Employee
 			{
 				Id = user.Id,
 				Role = Input.IsAdmin, // Sets the role
-				ProfilePicture = profilePictureUri
+				ProfilePicture = profilePictureUri ?? defaultPicture, // Default picture if none uploaded
 			};
 
         DbContext.Employees.Add(employee);

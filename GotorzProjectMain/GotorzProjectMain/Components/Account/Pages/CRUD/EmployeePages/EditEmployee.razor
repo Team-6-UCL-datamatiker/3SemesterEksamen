@@ -21,204 +21,220 @@
 <hr />
 @if (employee is null || employee.User is null)
 {
-    <p><em>Loading...</em></p>
+	<p><em>Loading...</em></p>
 }
 else
 {
-    <div class="row">
-        <div class="col-md-4">
-            <!-- Had to change the EditForm to this from what it was originally -->
-            <EditForm Model="employee" OnValidSubmit="UpdateEmployee" FormName="edit">
-                <DataAnnotationsValidator />
-                <ValidationSummary role="alert" />
-                <input type="hidden" name="Employee.Id" value="@employee.Id" />
+	<div class="row">
+		<div class="col-md-4">
+			<!-- Had to change the EditForm to this from what it was originally -->
+			<EditForm Model="employee" OnValidSubmit="UpdateEmployee" FormName="edit">
+				<DataAnnotationsValidator />
+				<ValidationSummary role="alert" />
+				<input type="hidden" name="Employee.Id" value="@employee.Id" />
 
-                <div class="mb-3">
-                    <label for="firstname" class="form-label">First Name:</label>
-                    <InputText id="firstname" @bind-Value="firstName" class="form-control" aria-required="true" />
-                    <ValidationMessage For="() => employee.User.FirstName" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="lastname" class="form-label">Last Name:</label>
-                    <InputText id="lastname" @bind-Value="lastName" class="form-control" aria-required="true" />
-                    <ValidationMessage For="() => employee.User.LastName" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email:</label>
-                    <InputText id="email" @bind-Value="email" class="form-control" aria-required="true" />
-                    <ValidationMessage For="() => employee.User.Email" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="phone" class="form-label">Phone:</label>
-                    <InputText id="phone" @bind-Value="phoneNumber" class="form-control" aria-required="true" />
-                    <ValidationMessage For="() => employee.User.PhoneNumber" class="text-danger" />
-                </div>
+				<div class="mb-3">
+					<label for="firstname" class="form-label">First Name:</label>
+					<InputText id="firstname" @bind-Value="firstName" class="form-control" aria-required="true" />
+					<ValidationMessage For="() => employee.User.FirstName" class="text-danger" />
+				</div>
+				<div class="mb-3">
+					<label for="lastname" class="form-label">Last Name:</label>
+					<InputText id="lastname" @bind-Value="lastName" class="form-control" aria-required="true" />
+					<ValidationMessage For="() => employee.User.LastName" class="text-danger" />
+				</div>
+				<div class="mb-3">
+					<label for="email" class="form-label">Email:</label>
+					<InputText id="email" @bind-Value="email" class="form-control" aria-required="true" />
+					<ValidationMessage For="() => employee.User.Email" class="text-danger" />
+				</div>
+				<div class="mb-3">
+					<label for="phone" class="form-label">Phone:</label>
+					<InputText id="phone" @bind-Value="phoneNumber" class="form-control" aria-required="true" />
+					<ValidationMessage For="() => employee.User.PhoneNumber" class="text-danger" />
+				</div>
 
-                <div class="mb-3">
-                    <label for="profilePicture" class="form-label">Profile Picture:</label>
-                    <InputFile id="profilePicture" accept="image/*" OnChange="HandleProfilePictureUpload" class="form-control" />
-                    @if (profilePictureFile != null)
-                    {
-                        <p>New file selected: @profilePictureFile.Name</p>
-                    }
-                </div>
+				@if (employee?.ProfilePicture != null)
+				{
+					<img src="@employee.ProfilePicture"
+						 alt="Profile picture"
+						 style="max-width:200px; max-height:200px;"
+						 class="img-thumbnail" />
+				}
 
-                <div class="mb-3">
-                    <div class="form-check">
-                        <InputCheckbox id="terms" @bind-Value="employee.Role" class="form-check-input" aria-required="true" />
-                        <label for="terms" class="form-check-label">Admin</label>
-                    </div>
-                    <ValidationMessage For="() => employee.Role" class="text-danger" />
-                </div>
-                <button type="submit" class="btn btn-primary">Save</button>
-            </EditForm>
-        </div>
-    </div>
+				<div class="mb-3">
+					<label for="profilePicture" class="form-label">Profile Picture:</label>
+					<InputFile id="profilePicture" accept="image/*" OnChange="HandleProfilePictureUpload" class="form-control" />
+					@if (profilePictureFile != null)
+					{
+						<p>New file selected: @profilePictureFile.Name</p>
+					}
+				</div>
+
+				<div class="mb-3">
+					<div class="form-check">
+						<InputCheckbox id="terms" @bind-Value="employee.Role" class="form-check-input" aria-required="true" />
+						<label for="terms" class="form-check-label">Admin</label>
+					</div>
+					<ValidationMessage For="() => employee.Role" class="text-danger" />
+				</div>
+				<button type="submit" class="btn btn-primary">Save</button>
+			</EditForm>
+		</div>
+	</div>
 }
 
 <div>
-    <a href="/employees">Back to List</a>
+	<a href="/employees">Back to List</a>
 </div>
 
 @code {
-    // This is required because of the current employee.user structure
-    private string? firstName;
-    private string? lastName;
-    private string? email;
-    private string? phoneNumber;
+	// This is required because of the current employee.user structure
+	private string? firstName;
+	private string? lastName;
+	private string? email;
+	private string? phoneNumber;
 
-    // New profile picture file
-    private IBrowserFile? profilePictureFile;
+	// New profile picture file
+	private IBrowserFile? profilePictureFile;
 
 
-    [SupplyParameterFromQuery]
-    private string Id { get; set; }
+	[SupplyParameterFromQuery]
+	private string Id { get; set; }
 
-    [SupplyParameterFromForm]
-    private Employee? employee { get; set; }
+	[SupplyParameterFromForm]
+	private Employee? employee { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-        employee = await UserService.GetEmployeeByIdAsync(Id);
+	protected override async Task OnInitializedAsync()
+	{
+		employee = await UserService.GetEmployeeByIdAsync(Id);
 
-        if (employee is null)
-        {
-            NavigationManager.NavigateTo("notfound");
-        }
-        else
-        {
-            if (employee.User != null)
-            {
-                firstName = employee.User.FirstName;
-                lastName = employee.User.LastName;
-                email = employee.User.Email;
-                phoneNumber = employee.User.PhoneNumber;
-            }
-        }
+		if (employee is null)
+		{
+			NavigationManager.NavigateTo("notfound");
+		}
+		else
+		{
+			if (employee.User != null)
+			{
+				firstName = employee.User.FirstName;
+				lastName = employee.User.LastName;
+				email = employee.User.Email;
+				phoneNumber = employee.User.PhoneNumber;
+			}
+		}
 
-    }
+	}
 
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
-    private async Task UpdateEmployee()
-    {
-        // Update the ApplicationUser properties
-        employee.User.FirstName = firstName;
-        employee.User.LastName = lastName;
-        employee.User.Email = email;
-        employee.User.PhoneNumber = phoneNumber;
+	// To protect from overposting attacks, enable the specific properties you want to bind to.
+	// For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+	private async Task UpdateEmployee()
+	{
+		// Update the ApplicationUser properties
+		employee.User.FirstName = firstName;
+		employee.User.LastName = lastName;
+		employee.User.Email = email;
+		employee.User.PhoneNumber = phoneNumber;
 
-        // If a new profile picture file was selected, update the picture.
-        if (profilePictureFile != null)
-        {
-            Uri? newProfilePictureUri = await SaveProfilePicture(profilePictureFile);
-            if (newProfilePictureUri != null)
-            {
-                // Assuming your ApplicationUser has a ProfilePicture property.
-                employee.ProfilePicture = newProfilePictureUri;
-            }
-        }
+		// If a new profile picture file was selected, update the picture.
+		if (profilePictureFile != null)
+		{
+			Uri? newProfilePictureUri = await SaveProfilePicture(profilePictureFile);
+			if (newProfilePictureUri != null)
+			{
+				employee.ProfilePicture = newProfilePictureUri;
+			}
+		}
 
-        using var context = DbFactory.CreateDbContext();
+		using var context = DbFactory.CreateDbContext();
 
-        // Detach any existing tracked instance of ApplicationUser
-        var trackedUser = context.ChangeTracker.Entries<ApplicationUser>()
-            .FirstOrDefault(e => e.Entity.Id == employee.User.Id);
-        if (trackedUser != null)
-        {
-            context.Entry(trackedUser.Entity).State = EntityState.Detached;
-        }
+		// Detach any existing tracked instance of ApplicationUser
+		var trackedUser = context.ChangeTracker.Entries<ApplicationUser>()
+			.FirstOrDefault(e => e.Entity.Id == employee.User.Id);
+		if (trackedUser != null)
+		{
+			context.Entry(trackedUser.Entity).State = EntityState.Detached;
+		}
 
-        // Attach the Employee entity and mark it as modified
-        context.Attach(employee).State = EntityState.Modified;
+		// Attach the Employee entity and mark it as modified
+		context.Attach(employee).State = EntityState.Modified;
 
-        try
-        {
+		try
+		{
 
-            await context.SaveChangesAsync();
+			await context.SaveChangesAsync();
 
-            // Update the related ApplicationUser fields (FirstName, LastName, Email, PhoneNumber)
-            if (employee.User != null)
-            {
-                context.Attach(employee.User).State = EntityState.Modified;
-                await context.SaveChangesAsync();
-            }
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!EmployeeExists(employee.Id))
-            {
-                NavigationManager.NavigateTo("notfound");
-            }
-            else
-            {
-                throw;
-            }
-        }
+			// Update the related ApplicationUser fields (FirstName, LastName, Email, PhoneNumber)
+			if (employee.User != null)
+			{
+				context.Attach(employee.User).State = EntityState.Modified;
+				await context.SaveChangesAsync();
+			}
+		}
+		catch (DbUpdateConcurrencyException)
+		{
+			if (!EmployeeExists(employee.Id))
+			{
+				NavigationManager.NavigateTo("notfound");
+			}
+			else
+			{
+				throw;
+			}
+		}
 
-        NavigationManager.NavigateTo("/employees");
-    }
+		NavigationManager.NavigateTo("/employees");
+	}
 
-    private bool EmployeeExists(string id)
-    {
-        using var context = DbFactory.CreateDbContext();
-        return context.Employees.Any(e => e.Id == id);
-    }
+	private bool EmployeeExists(string id)
+	{
+		using var context = DbFactory.CreateDbContext();
+		return context.Employees.Any(e => e.Id == id);
+	}
 
-    // Helper method to save the uploaded profile picture.
-    private async Task<Uri?> SaveProfilePicture(IBrowserFile file)
-    {
-        try
-        {
-            var fileName = Path.GetFileName(file.Name);
-            var imagesFolder = Path.Combine(WebHostEnvironment.WebRootPath, "images");
+	// Helper method to save the uploaded profile picture.
+	private async Task<Uri?> SaveProfilePicture(IBrowserFile file)
+	{
+		try
+		{
+			var fileName = Path.GetFileName(file.Name);
+			var imagesFolder = Path.Combine(WebHostEnvironment.WebRootPath, "images");
 
-            if (!Directory.Exists(imagesFolder))
-            {
-                Directory.CreateDirectory(imagesFolder);
-            }
+			if (!Directory.Exists(imagesFolder))
+			{
+				Directory.CreateDirectory(imagesFolder);
+			}
 
-            var filePath = Path.Combine(imagesFolder, fileName);
-            if (!File.Exists(filePath))
-            {
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await file.OpenReadStream().CopyToAsync(stream);
-                }
-            }
+			var filePath = Path.Combine(imagesFolder, fileName);
+			if (!File.Exists(filePath))
+			{
+				using (var stream = new FileStream(filePath, FileMode.Create))
+				{
+					await file.OpenReadStream().CopyToAsync(stream);
+				}
+			}
 
-            var relativePath = "/images/" + fileName;
-            return new Uri(relativePath, UriKind.Relative);
-        }
-        catch (Exception ex)
-        {
-            return null;
-        }
-    }
+			var relativePath = "/images/" + fileName;
+			return new Uri(relativePath, UriKind.Relative);
+		}
+		catch (Exception ex)
+		{
+			return null;
+		}
+	}
 
-    // Event handler for file input changes.
-    private async Task HandleProfilePictureUpload(InputFileChangeEventArgs e)
-    {
-        profilePictureFile = e.File;
-    }
+	// Event handler for file input changes.
+	private async Task HandleProfilePictureUpload(InputFileChangeEventArgs e)
+	{
+		var file = e.File;
+		if (file == null || employee == null) return;
+
+		var newUri = await SaveProfilePicture(file);
+		if (newUri != null)
+		{
+			// updates the model so it can be seen in realtime on the edit page
+			employee.ProfilePicture = newUri;
+			StateHasChanged();  // force a UI refresh
+		}
+	}
 }
