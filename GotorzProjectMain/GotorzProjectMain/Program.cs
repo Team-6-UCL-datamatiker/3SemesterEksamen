@@ -1,14 +1,12 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using GotorzProjectMain.Client.Pages;
 using GotorzProjectMain.Components;
 using GotorzProjectMain.Components.Account;
 using GotorzProjectMain.Data;
 using Microsoft.AspNetCore.ResponseCompression;
 using GotorzProjectMain.Hubs;
 using GotorzProjectMain.Services;
-using static System.Formats.Asn1.AsnWriter;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +35,8 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
+
+builder.Services.AddScoped<VacationRequestSignalRService>();
 
 builder.Services.AddAuthentication(options =>
 	{
@@ -82,6 +82,8 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddSignalR();
 
+
+
 builder.Services.AddResponseCompression(opts =>
 {
 	opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
@@ -116,8 +118,13 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseRouting();
 app.UseAntiforgery();
+
+
+
+app.MapHub<VacationRequestHub>("/vacationrequesthub");
 
 app.MapRazorComponents<App>()
 	.AddInteractiveServerRenderMode()
@@ -127,6 +134,6 @@ app.MapRazorComponents<App>()
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
 
-app.MapHub<VacationRequestHub>("/vacationrequesthub");
+
 
 app.Run();

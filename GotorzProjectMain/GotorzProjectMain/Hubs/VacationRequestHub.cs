@@ -4,8 +4,12 @@ namespace GotorzProjectMain.Hubs;
 
 public class VacationRequestHub : Hub
 {
-    public async Task SendVacationRequest(int vacationId)
+    public async Task SendVacationRequest()
     {
-        await Clients.All.SendAsync("ReceiveVacationRequest", vacationId);
+        Console.WriteLine($"[INBOUND] Hub received vacation request.");
+
+        await Clients.All.SendAsync("ReceiveVacationRequest");
+
+        Console.WriteLine($"[OUTBOUND] Hub broadcasted vacation request.");
     }
 }

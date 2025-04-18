@@ -5,19 +5,16 @@
 @using GotorzProjectMain.Data
 @using GotorzProjectMain.Services
 @using Microsoft.AspNetCore.SignalR.Client
-@using Mono.TextTemplating
-@implements IAsyncDisposable
-@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject IUserService ExtendedUserService
 @inject NavigationManager NavigationManager
+@inject VacationRequestSignalRService SignalRService
 
 @rendermode InteractiveServer
 
 <PageTitle>Index</PageTitle>
 
 <h1>Index</h1>
-
-<p>SignalR Status: @(hubConnection?.State.ToString() ?? "Not Connected")</p>
 @* For debugging *@
 <p>Last updated: @lastUpdated.ToLongTimeString()</p>
 
@@ -51,10 +48,8 @@
         <a href="@($"vacationrequests/delete?vacationrequestid={vacationrequest.VacationRequestId}")">Delete</a>
     </TemplateColumn>
 </QuickGrid>
-
 @code {
 
-    private HubConnection? hubConnection;
     private bool _connected = false;
     
     //For debugging
@@ -68,52 +63,47 @@
     {
         context = DbFactory.CreateDbContext();
         await LoadDataAsync();
+
+        await SignalRService.InitializeAsync();
         
-        if (hubConnection is null)
+        SignalRService.OnVacationRequestReceived += async () =>
         {
-            Console.WriteLine("🔄 Setting up SignalR hub connection (from OnInitializedAsync)");
+            Console.WriteLine("🔥 Handler started");
+            await LoadDataAsync();
+            Console.WriteLine("✅ Handler finished LoadDataAsync()");
+            lastUpdated = DateTime.Now;
+            StateHasChanged();
+        };
 
-            hubConnection = new HubConnectionBuilder()
-                .WithUrl(NavigationManager.ToAbsoluteUri("/vacationrequesthub"))
-                .WithAutomaticReconnect()
-                .Build();
+        Console.WriteLine("🔗 SignalR event handler attached in Index.razor");
 
-            hubConnection.On("ReceiveVacationRequest", async () =>
+// ✅ Check if we missed an update
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(500); // small delay to allow signal to arrive and be deferred
+            if (SignalRService.HasMissedUpdate)
             {
-                Console.WriteLine("⚡ ReceiveVacationRequest event received.");
-                await LoadDataAsync();
-                lastUpdated = DateTime.Now;
-                InvokeAsync(StateHasChanged);
-            });
-
-            try
-            {
-                await hubConnection.StartAsync();
-                Console.WriteLine("✅ SignalR hub started (from OnInitializedAsync).");
+                Console.WriteLine("💡 Missed update detected. Reloading manually.");
+                await InvokeAsync(async () =>
+                {
+                    await LoadDataAsync();
+                    SignalRService.ClearMissedUpdate();
+                    Console.WriteLine("🧹 Missed update handled.");
+                });
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Failed to start SignalR hub: {ex.Message}");
-            }
-        }
+        });
     }
     
     private async Task LoadDataAsync()
     {
-        vacationRequests = await context.VacationRequests.ToListAsync();
+        Console.WriteLine("📦 Starting LoadDataAsync()");
+        var newList = await context.VacationRequests.ToListAsync();
+        vacationRequests = new List<VacationRequest>(newList); // 🔁 Force new reference
         customers = await ExtendedUserService.GetCustomersWithUsersAsync();
-        // For debugging
+
         lastUpdated = DateTime.Now;
         Console.WriteLine("Data reloaded at " + lastUpdated);
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        if (hubConnection is not null)
-        {
-            await hubConnection.DisposeAsync();
-        }
-
-        await context.DisposeAsync();
-    }
+    
 }

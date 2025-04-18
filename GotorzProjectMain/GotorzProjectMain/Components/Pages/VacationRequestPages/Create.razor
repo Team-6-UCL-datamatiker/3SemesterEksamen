@@ -1,10 +1,13 @@
 ﻿@page "/vacationrequests/create"
 @using Microsoft.EntityFrameworkCore
 @using GotorzProjectMain.Models
+@using GotorzProjectMain.Services
 @using Microsoft.AspNetCore.SignalR
+@using Microsoft.AspNetCore.SignalR.Client
 @inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 @inject IHubContext<GotorzProjectMain.Hubs.VacationRequestHub> HubContext
+@inject VacationRequestSignalRService SignalRService
 
 <PageTitle>Create</PageTitle>
 
@@ -87,6 +90,7 @@
 </div>
 
 @code {
+    private HubConnection? hubConnection;
     [SupplyParameterFromForm]
     private VacationRequest VacationRequest { get; set; } = new();
 
@@ -96,10 +100,11 @@
         using var context = DbFactory.CreateDbContext();
         context.VacationRequests.Add(VacationRequest);
         await context.SaveChangesAsync();
-        
-        await HubContext.Clients.All.SendAsync("ReceiveVacationRequest");
-        Console.WriteLine("SignalR message sent.");
-        
+
+        await SignalRService.InitializeAsync(); // ✅ Make sure connection is started
+        await Task.Delay(1000);
+        await SignalRService.SendVacationRequestAsync(); // ✅ Then send the message
+
         NavigationManager.NavigateTo("/");
     }
 }
