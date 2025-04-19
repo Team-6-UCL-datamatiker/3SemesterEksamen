@@ -72,7 +72,7 @@
             await LoadDataAsync();
             Console.WriteLine("✅ Handler finished LoadDataAsync()");
             lastUpdated = DateTime.Now;
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         };
 
         Console.WriteLine("🔗 SignalR event handler attached in Index.razor");
