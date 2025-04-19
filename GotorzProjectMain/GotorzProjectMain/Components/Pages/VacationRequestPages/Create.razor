@@ -66,16 +66,6 @@
 				<ValidationMessage For="() => VacationRequest.Misc" class="text-danger" />
 			</div>
 			<div class="mb-3">
-				<label for="status" class="form-label">Status:</label>
-				<InputSelect id="status" @bind-Value="VacationRequest.Status" class="form-control">
-					@foreach (Status status in Enum.GetValues(typeof(Status)))
-					{
-						<option value="@status">@status</option>
-					}
-				</InputSelect>
-				<ValidationMessage For="() => VacationRequest.Status" class="text-danger" />
-			</div>
-			<div class="mb-3">
 				<label for="userid" class="form-label">UserId:</label>
 				<InputText id="userid" @bind-Value="VacationRequest.UserId" class="form-control" />
 				<ValidationMessage For="() => VacationRequest.UserId" class="text-danger" />
@@ -96,6 +86,10 @@
 
 	protected override async Task OnInitializedAsync()
 	{
+		// Sets status to pending request by default
+		VacationRequest.Status = Status.PendingRequest;
+
+		// Sets default dates to today
 		VacationRequest.StartDate = DateTime.Now;
 		VacationRequest.EndDate = DateTime.Now;
 	}
