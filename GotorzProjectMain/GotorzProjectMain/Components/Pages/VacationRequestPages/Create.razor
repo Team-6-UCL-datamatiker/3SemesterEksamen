@@ -4,6 +4,7 @@
 @using GotorzProjectMain.Services
 @using Microsoft.AspNetCore.SignalR
 @using Microsoft.AspNetCore.SignalR.Client
+@using System.Security.Claims
 @inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 @inject IHubContext<GotorzProjectMain.Hubs.VacationRequestHub> HubContext
@@ -65,11 +66,11 @@
 				<InputText id="misc" @bind-Value="VacationRequest.Misc" class="form-control" />
 				<ValidationMessage For="() => VacationRequest.Misc" class="text-danger" />
 			</div>
-			<div class="mb-3">
+			@* 		<div class="mb-3">
 				<label for="userid" class="form-label">UserId:</label>
 				<InputText id="userid" @bind-Value="VacationRequest.UserId" class="form-control" />
 				<ValidationMessage For="() => VacationRequest.UserId" class="text-danger" />
-			</div>
+			</div> *@
 			<button type="submit" class="btn btn-primary">Create</button>
 		</EditForm>
 	</div>
@@ -84,8 +85,19 @@
 	[SupplyParameterFromForm]
 	private VacationRequest VacationRequest { get; set; } = new();
 
+	[CascadingParameter]
+	private Task<AuthenticationState> authenticationStateTask { get; set; } = default!;
+
 	protected override async Task OnInitializedAsync()
 	{
+		var authState = await authenticationStateTask;
+		// Returns the claim of the current user
+		var user = authState.User;
+
+		// Searches for UserID and sets the Id if found
+		VacationRequest.UserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+									?? throw new InvalidOperationException("User not authenticated");
+
 		// Sets status to pending request by default
 		VacationRequest.Status = Status.PendingRequest;
 
@@ -105,6 +117,6 @@
 		await Task.Delay(1000);
 		await SignalRService.SendVacationRequestAsync(); // ✅ Then send the message
 
-		NavigationManager.NavigateTo("/");
+		NavigationManager.NavigateTo("/vacationrequests");
 	}
 }
