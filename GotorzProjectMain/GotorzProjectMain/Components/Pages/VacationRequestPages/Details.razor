@@ -23,22 +23,24 @@
             <dd class="col-sm-10">@vacationrequest.StartDate</dd>
             <dt class="col-sm-2">EndDate</dt>
             <dd class="col-sm-10">@vacationrequest.EndDate</dd>
-            <dt class="col-sm-2">ChildrenAmount</dt>
+            <dt class="col-sm-2">Children Amount</dt>
             <dd class="col-sm-10">@vacationrequest.ChildrenAmount</dd>
-            <dt class="col-sm-2">AdultsAmount</dt>
+            <dt class="col-sm-2">Adults Amount</dt>
             <dd class="col-sm-10">@vacationrequest.AdultsAmount</dd>
-            <dt class="col-sm-2">RoomsAmount</dt>
+            <dt class="col-sm-2">Rooms Amount</dt>
             <dd class="col-sm-10">@vacationrequest.RoomsAmount</dd>
-            <dt class="col-sm-2">HotelRequest</dt>
+            <dt class="col-sm-2">Hotel Request</dt>
             <dd class="col-sm-10">@vacationrequest.HotelRequest</dd>
-            <dt class="col-sm-2">FlightRequest</dt>
+            <dt class="col-sm-2">Flight Request</dt>
             <dd class="col-sm-10">@vacationrequest.FlightRequest</dd>
             <dt class="col-sm-2">Misc</dt>
             <dd class="col-sm-10">@vacationrequest.Misc</dd>
             <dt class="col-sm-2">Status</dt>
             <dd class="col-sm-10">@vacationrequest.Status</dd>
-            <dt class="col-sm-2">UserId</dt>
-            <dd class="col-sm-10">@vacationrequest.UserId</dd>
+            <dt class="col-sm-2">Name</dt>
+            <dd class="col-sm-10">@customerName</dd>
+            <dt class="col-sm-2">Email</dt>
+            <dd class="col-sm-10">@customerMail</dd>
         </dl>
         <div>
             <a href="@($"/vacationrequests/edit?vacationrequestid={vacationrequest.VacationRequestId}")">Edit</a> |
@@ -49,6 +51,8 @@
 
 @code {
     private VacationRequest? vacationrequest;
+    private string customerName = "Unknown";
+    private string customerMail = "Unknown";
 
     [SupplyParameterFromQuery]
     private int VacationRequestId { get; set; }
@@ -61,6 +65,16 @@
         if (vacationrequest is null)
         {
             NavigationManager.NavigateTo("notfound");
+        }
+
+    var customer = await context.Customers
+    .Include(c => c.User)
+    .FirstOrDefaultAsync(c => c.Id == vacationrequest.UserId);
+
+        if (customer != null)
+        {
+            customerName = customer.CustomUserName ?? "Unknown";
+            customerMail = customer.User?.Email ?? "Unknown";
         }
     }
 }
