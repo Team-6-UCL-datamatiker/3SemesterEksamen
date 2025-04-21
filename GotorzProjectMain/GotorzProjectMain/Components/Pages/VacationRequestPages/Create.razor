@@ -9,7 +9,7 @@
 @inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 @inject IHubContext<GotorzProjectMain.Hubs.VacationRequestHub> HubContext
-@inject VacationRequestSignalRService SignalRService
+@inject IVacationRequestSignalRService SignalRService
 
 @attribute [Authorize]
 

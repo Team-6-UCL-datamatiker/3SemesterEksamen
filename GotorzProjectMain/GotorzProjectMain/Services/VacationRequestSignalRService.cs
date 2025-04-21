@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace GotorzProjectMain.Services;
 
-public class VacationRequestSignalRService : IAsyncDisposable
+public class VacationRequestSignalRService : IVacationRequestSignalRService ,IAsyncDisposable
 {
     private readonly NavigationManager _navigationManager;
     private HubConnection? _hubConnection;

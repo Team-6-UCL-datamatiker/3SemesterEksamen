@@ -36,7 +36,8 @@ builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
 
-builder.Services.AddScoped<VacationRequestSignalRService>();
+builder.Services.AddScoped<IVacationRequestSignalRService, VacationRequestSignalRService>();
+
 
 builder.Services.AddAuthentication(options =>
 	{
