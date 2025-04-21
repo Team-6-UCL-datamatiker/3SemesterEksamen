@@ -32,7 +32,7 @@ namespace GotorzProjectMain.Models
 	public enum Status
 	{
 		PendingRequest,
-		WatingApproval,
+		WaitingApproval,
 		BookingUnderway,
 		Done
 	}

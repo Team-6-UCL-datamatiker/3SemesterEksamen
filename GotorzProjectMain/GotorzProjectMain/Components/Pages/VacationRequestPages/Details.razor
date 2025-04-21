@@ -11,7 +11,7 @@
 <h1>Details</h1>
 
 <div>
-    <h2>VacationRequest</h2>
+    <h2>Vacation Request</h2>
     <hr />
     @if (vacationrequest is null)
     {
@@ -22,9 +22,9 @@
             <dt class="col-sm-2">Country</dt>
             <dd class="col-sm-10">@vacationrequest.Country</dd>
             <dt class="col-sm-2">StartDate</dt>
-            <dd class="col-sm-10">@vacationrequest.StartDate</dd>
+            <dd class="col-sm-10">@vacationrequest.StartDate.ToShortDateString()</dd>
             <dt class="col-sm-2">EndDate</dt>
-            <dd class="col-sm-10">@vacationrequest.EndDate</dd>
+            <dd class="col-sm-10">@vacationrequest.EndDate.ToShortDateString()</dd>
             <dt class="col-sm-2">Children Amount</dt>
             <dd class="col-sm-10">@vacationrequest.ChildrenAmount</dd>
             <dt class="col-sm-2">Adults Amount</dt>
@@ -43,6 +43,7 @@
             <dd class="col-sm-10">@customer.User.FirstName @customer.User.LastName</dd>
             <dt class="col-sm-2">Email</dt>
             <dd class="col-sm-10">@customer.User.Email</dd>
+            <dd class="col-sm-10" style="display:none">@vacationrequest.UserId</dd>
         </dl>
         <div>
             <a href="@($"/vacationrequests/edit?vacationrequestid={vacationrequest.VacationRequestId}")">Edit</a> |
