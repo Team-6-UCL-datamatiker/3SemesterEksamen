@@ -193,34 +193,46 @@ else
             <EditForm Model="Customer" OnValidSubmit="UpdateCustomer" FormName="edit">
                 <DataAnnotationsValidator />
                 <ValidationSummary role="alert" />
-                <input type="hidden" name="Customer.Id" value="@Customer.Id" />
 
                 <div class="mb-3">
                     <label for="customusername" class="form-label">CustomUserName:</label>
                     <InputText id="customusername" @bind-Value="Customer.CustomUserName" class="form-control" aria-required="true" />
                     <ValidationMessage For="() => Customer.CustomUserName" class="text-danger" />
                 </div>
+
                 <div class="mb-3">
                     <label for="firstname" class="form-label">First Name:</label>
-                    <InputText id="firstname" @bind-Value="firstName" class="form-control" aria-required="true" />
+                    <InputText id="firstname" @bind-Value="Customer.User.FirstName" class="form-control" aria-required="true" />
                     <ValidationMessage For="() => Customer.User.FirstName" class="text-danger" />
                 </div>
+
                 <div class="mb-3">
                     <label for="lastname" class="form-label">Last Name:</label>
-                    <InputText id="lastname" @bind-Value="lastName" class="form-control" aria-required="true" />
+                    <InputText id="lastname" @bind-Value="Customer.User.LastName" class="form-control" aria-required="true" />
                     <ValidationMessage For="() => Customer.User.LastName" class="text-danger" />
                 </div>
+
                 <div class="mb-3">
                     <label for="email" class="form-label">Email:</label>
-                    <InputText id="email" @bind-Value="email" class="form-control" aria-required="true" />
+                    <InputText id="email" @bind-Value="Customer.User.Email" class="form-control" aria-required="true" />
                     <ValidationMessage For="() => Customer.User.Email" class="text-danger" />
                 </div>
+
                 <div class="mb-3">
                     <label for="phone" class="form-label">Phone:</label>
-                    <InputText id="phone" @bind-Value="phoneNumber" class="form-control" aria-required="true" />
+                    <InputText id="phone" @bind-Value="Customer.User.PhoneNumber" class="form-control" aria-required="true" />
                     <ValidationMessage For="() => Customer.User.PhoneNumber" class="text-danger" />
                 </div>
+
                 <button type="submit" class="btn btn-primary">Save</button>
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="alert alert-danger mt-3" role="alert">
+                        @errorMessage
+                    </div>
+                }
+
             </EditForm>
         </div>
     </div>
@@ -231,16 +243,11 @@ else
 </div>
 
 @code {
-    // This is required because of the current customer.user structure
-    private string? firstName;
-    private string? lastName;
-    private string? email;
-    private string? phoneNumber;
+    private string? errorMessage;
 
     [SupplyParameterFromQuery]
     private string Id { get; set; }
 
-    [SupplyParameterFromForm]
     private Customer? Customer { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -249,17 +256,8 @@ else
 
         if (Customer is null)
         {
-            _navigationManager.NavigateTo("notfound");
-        }
-        else
-        {
-            if (Customer.User != null)
-            {
-                firstName = Customer.User.FirstName;
-                lastName = Customer.User.LastName;
-                email = Customer.User.Email;
-                phoneNumber = Customer.User.PhoneNumber;
-            }
+            // _navigationManager.NavigateTo("notfound");
+            _navigationManager.NavigateTo("/customers");
         }
     }
 
@@ -267,34 +265,14 @@ else
     // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task UpdateCustomer()
     {
-        // Update the ApplicationUser properties
-        Customer.User.FirstName = firstName;
-        Customer.User.LastName = lastName;
-        Customer.User.Email = email;
-        Customer.User.PhoneNumber = phoneNumber;
-
         try
         {
-            // Save the Customer fields (CustomUserName)
             await _context.SaveChangesAsync();
+            _navigationManager.NavigateTo("/customers");
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!CustomerExists(Customer.Id))
-            {
-                _navigationManager.NavigateTo("notfound");
-            }
-            else
-            {
-                throw;
-            }
+            errorMessage = "Another user has modified this data since you started editing. Your changes were not saved. Please reload and try again.";
         }
-
-        _navigationManager.NavigateTo("/customers");
-    }
-
-    public bool CustomerExists(string id)
-    {
-        return _context.Customers.Any(e => e.Id == id);
     }
 }

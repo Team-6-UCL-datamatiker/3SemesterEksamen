@@ -15,7 +15,7 @@ namespace TestProject.UnitTests;
 [TestClass]
 public class EmployeePagesTests : Bunit.TestContext
 {
-    private Mock<IUserService> mockUserService;
+    private Mock<IExtendedUserService> mockUserService;
     private Mock<IDbContextFactory<ApplicationDbContext>> mockDbFactory;
     private Mock<UserManager<ApplicationUser>> mockUserManager;
     private FakeNavigationManager navMan;
@@ -23,7 +23,7 @@ public class EmployeePagesTests : Bunit.TestContext
     [TestInitialize]
     public void Setup()
     {
-        mockUserService = new Mock<IUserService>();
+        mockUserService = new Mock<IExtendedUserService>();
         mockDbFactory = new Mock<IDbContextFactory<ApplicationDbContext>>();
         mockUserManager = new Mock<UserManager<ApplicationUser>>(
             Mock.Of<IUserStore<ApplicationUser>>(),

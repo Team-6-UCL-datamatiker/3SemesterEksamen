@@ -7,6 +7,7 @@ using GotorzProjectMain.Components.Account;
 using GotorzProjectMain.Data;
 using GotorzProjectMain.Services;
 using static System.Formats.Asn1.AsnWriter;
+using GotorzProjectMain.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 

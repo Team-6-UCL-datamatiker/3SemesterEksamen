@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using GotorzProjectMain.Client;
-using GotorzProjectMain.Data;
+using GotorzProjectMain.Models;
 
 namespace GotorzProjectMain.Components.Account;
 

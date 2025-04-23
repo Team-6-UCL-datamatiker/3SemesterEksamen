@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using GotorzProjectMain.Components.Account.Pages;
 using GotorzProjectMain.Components.Account.Pages.Manage;
-using GotorzProjectMain.Data;
+using GotorzProjectMain.Models;
 
 namespace Microsoft.AspNetCore.Routing;
 

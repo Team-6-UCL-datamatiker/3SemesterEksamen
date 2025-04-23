@@ -22,7 +22,7 @@ namespace GotorzProjectMain.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("GotorzProjectMain.Data.ApplicationUser", b =>
+            modelBuilder.Entity("GotorzProjectMain.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -69,6 +69,12 @@ namespace GotorzProjectMain.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -312,7 +318,7 @@ namespace GotorzProjectMain.Migrations
 
             modelBuilder.Entity("GotorzProjectMain.Models.Customer", b =>
                 {
-                    b.HasOne("GotorzProjectMain.Data.ApplicationUser", "User")
+                    b.HasOne("GotorzProjectMain.Models.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("Id")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -323,7 +329,7 @@ namespace GotorzProjectMain.Migrations
 
             modelBuilder.Entity("GotorzProjectMain.Models.Employee", b =>
                 {
-                    b.HasOne("GotorzProjectMain.Data.ApplicationUser", "User")
+                    b.HasOne("GotorzProjectMain.Models.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("Id")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -354,7 +360,7 @@ namespace GotorzProjectMain.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("GotorzProjectMain.Data.ApplicationUser", null)
+                    b.HasOne("GotorzProjectMain.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -363,7 +369,7 @@ namespace GotorzProjectMain.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("GotorzProjectMain.Data.ApplicationUser", null)
+                    b.HasOne("GotorzProjectMain.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -378,7 +384,7 @@ namespace GotorzProjectMain.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GotorzProjectMain.Data.ApplicationUser", null)
+                    b.HasOne("GotorzProjectMain.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -387,7 +393,7 @@ namespace GotorzProjectMain.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("GotorzProjectMain.Data.ApplicationUser", null)
+                    b.HasOne("GotorzProjectMain.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

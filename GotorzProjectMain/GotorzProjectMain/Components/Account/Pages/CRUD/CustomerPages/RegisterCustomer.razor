@@ -4,6 +4,7 @@
 @using System.Text
 @using System.Text.Encodings.Web
 @using GotorzProjectMain.Models
+@using GotorzProjectMain.Models.Forms
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using GotorzProjectMain.Data
@@ -98,7 +99,7 @@
 	private IEnumerable<IdentityError>? identityErrors;
 
 	[SupplyParameterFromForm]
-	private InputModel Input { get; set; } = new();
+	private CustomerInput Input { get; set; } = new();
 
 	[SupplyParameterFromQuery]
 	private string? ReturnUrl { get; set; }
@@ -219,41 +220,4 @@
 	// 		UsernameCheckMessage = "";
 	// 	}
 	// }
-
-	private sealed class InputModel
-	{
-		[Required]
-		[Display(Name = "FirstName")]
-		public string FirstName { get; set; } = "";
-
-		[Required]
-		[Display(Name = "LastName")]
-		public string LastName { get; set; } = "";
-
-		[Required]
-		[EmailAddress]
-		[Display(Name = "Email")]
-		public string Email { get; set; } = "";
-
-		// Added to make sure a username is written
-		[Required]
-		[Display(Name = "Username")]
-		public string CustomUserName { get; set; } = "";
-
-		[Required]
-		[StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
-		[DataType(DataType.Password)]
-		[Display(Name = "Password")]
-		public string Password { get; set; } = "";
-
-		[DataType(DataType.Password)]
-		[Display(Name = "Confirm password")]
-		[Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
-		public string ConfirmPassword { get; set; } = "";
-
-		[Phone]
-		[Display(Name = "Phone")]
-		public string Phone { get; set; } = "";
-
-	}
 }

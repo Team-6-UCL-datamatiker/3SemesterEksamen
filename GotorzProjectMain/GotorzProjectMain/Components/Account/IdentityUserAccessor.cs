@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Identity;
-using GotorzProjectMain.Data;
+using GotorzProjectMain.Models;
 
 namespace GotorzProjectMain.Components.Account;
 
