@@ -1,4 +1,4 @@
-﻿@page "/customers/edit"
+﻿@* @page "/customers/edit"
 @using GotorzProjectMain.Data
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
@@ -157,5 +157,144 @@ else
     {
         using var context = DbFactory.CreateDbContext();
         return context.Customers.Any(e => e.Id == id);
+    }
+}
+ *@
+
+@page "/customers/edit"
+@attribute [Authorize(Policy = "Admin")]
+@rendermode InteractiveServer
+
+@using GotorzProjectMain.Data
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
+@using GotorzProjectMain.Models
+
+@inject ApplicationDbContext _context
+@inject NavigationManager _navigationManager
+@inject UserManager<ApplicationUser> _userManager
+@inject Services.IExtendedUserService _userService
+
+<PageTitle>Edit Customer</PageTitle>
+
+<h1>Edit Customer</h1>
+
+<hr />
+@if (Customer is null || Customer.User is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <!-- Had to change the EditForm to this from what it was originally -->
+            <EditForm Model="Customer" OnValidSubmit="UpdateCustomer" FormName="edit">
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert" />
+                <input type="hidden" name="Customer.Id" value="@Customer.Id" />
+
+                <div class="mb-3">
+                    <label for="customusername" class="form-label">CustomUserName:</label>
+                    <InputText id="customusername" @bind-Value="Customer.CustomUserName" class="form-control" aria-required="true" />
+                    <ValidationMessage For="() => Customer.CustomUserName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="firstname" class="form-label">First Name:</label>
+                    <InputText id="firstname" @bind-Value="firstName" class="form-control" aria-required="true" />
+                    <ValidationMessage For="() => Customer.User.FirstName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="lastname" class="form-label">Last Name:</label>
+                    <InputText id="lastname" @bind-Value="lastName" class="form-control" aria-required="true" />
+                    <ValidationMessage For="() => Customer.User.LastName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email:</label>
+                    <InputText id="email" @bind-Value="email" class="form-control" aria-required="true" />
+                    <ValidationMessage For="() => Customer.User.Email" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Phone:</label>
+                    <InputText id="phone" @bind-Value="phoneNumber" class="form-control" aria-required="true" />
+                    <ValidationMessage For="() => Customer.User.PhoneNumber" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/customers">Back to List</a>
+</div>
+
+@code {
+    // This is required because of the current customer.user structure
+    private string? firstName;
+    private string? lastName;
+    private string? email;
+    private string? phoneNumber;
+
+    [SupplyParameterFromQuery]
+    private string Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private Customer? Customer { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Customer = await _userService.GetCustomerByIdAsync(Id);
+
+        if (Customer is null)
+        {
+            _navigationManager.NavigateTo("notfound");
+        }
+        else
+        {
+            if (Customer.User != null)
+            {
+                firstName = Customer.User.FirstName;
+                lastName = Customer.User.LastName;
+                email = Customer.User.Email;
+                phoneNumber = Customer.User.PhoneNumber;
+            }
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateCustomer()
+    {
+        // Update the ApplicationUser properties
+        Customer.User.FirstName = firstName;
+        Customer.User.LastName = lastName;
+        Customer.User.Email = email;
+        Customer.User.PhoneNumber = phoneNumber;
+
+        try
+        {
+            // Save the Customer fields (CustomUserName)
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!CustomerExists(Customer.Id))
+            {
+                _navigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        _navigationManager.NavigateTo("/customers");
+    }
+
+    public bool CustomerExists(string id)
+    {
+        return _context.Customers.Any(e => e.Id == id);
     }
 }

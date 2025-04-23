@@ -20,13 +20,18 @@ builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnC
 					 .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
 					 .AddJsonFile("Connection.json", optional: false, reloadOnChange: true);
 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
-			options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+			options.UseSqlServer(connectionString));
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 
 //Used for getting the user data everytime an employee or customer is loaded
-builder.Services.AddScoped<IUserService, ExtendedUserService>();
+builder.Services.AddScoped<IExtendedUserService, ExtendedUserService>();
 
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -42,10 +47,6 @@ builder.Services.AddAuthentication(options =>
 		options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
 	})
 	.AddIdentityCookies();
-
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-	options.UseSqlServer(connectionString));
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
 	.AddRoles<IdentityRole>()
