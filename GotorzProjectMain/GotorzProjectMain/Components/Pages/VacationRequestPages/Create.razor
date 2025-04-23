@@ -24,6 +24,23 @@
 		<EditForm method="post" Model="VacationRequest" OnValidSubmit="AddVacationRequest" FormName="create" Enhance>
 			<DataAnnotationsValidator />
 			<ValidationSummary class="text-danger" role="alert" />
+
+			@* Custom error message *@
+			@if (!string.IsNullOrEmpty(FormErrorMessage))
+			{
+				<div class="alert alert-danger" role="alert">@FormErrorMessage</div>
+			}
+
+			@* If the logged-in user is an employee, allow entering a customer email *@
+			@if (IsEmployee)
+			{
+				<div class="mb-3">
+					<label for="customerEmail" class="form-label">Customer Email:</label>
+					<InputText id="customerEmail" @bind-Value="CustomerEmail" @bind-Value:event="oninput" class="form-control" />
+					<ValidationMessage For="() => CustomerEmail" class="text-danger" />
+				</div>
+			}
+
 			<div class="mb-3">
 				<label for="country" class="form-label">Country:</label>
 				<InputText id="country" @bind-Value="VacationRequest.Country" class="form-control" />
@@ -82,6 +99,13 @@
 	private HubConnection? hubConnection;
 	[SupplyParameterFromForm]
 	private VacationRequest VacationRequest { get; set; } = new();
+	[SupplyParameterFromForm]
+	private string? CustomerEmail { get; set; }
+
+	private bool IsEmployee { get; set; }
+
+	// For custom error message
+	private string? FormErrorMessage { get; set; }
 
 	[CascadingParameter]
 	private Task<AuthenticationState> authenticationStateTask { get; set; } = default!;
@@ -92,14 +116,24 @@
 		// Returns the claim of the current user
 		var user = authState.User;
 
-		// Searches for UserID and sets the Id if found
-		VacationRequest.UserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+		// Searches for UserID
+		var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
 									?? throw new InvalidOperationException("User not authenticated");
 
-		// Sets status to pending request by default
-		VacationRequest.Status = Status.PendingRequest;
+		// Determine if current user is an employee
+		using (var context = DbFactory.CreateDbContext())
+		{
+			IsEmployee = await context.Employees.AnyAsync(e => e.Id == userId);
+		}
 
-		// Sets default dates to today
+		// If customer, set userid now
+		if (!IsEmployee)
+		{
+			VacationRequest.UserId = userId;
+		}
+
+		// Sets default values
+		VacationRequest.Status = Status.PendingRequest;
 		VacationRequest.StartDate = DateTime.Now;
 		VacationRequest.EndDate = DateTime.Now;
 	}
@@ -108,6 +142,28 @@
 	private async Task AddVacationRequest()
 	{
 		using var context = DbFactory.CreateDbContext();
+
+		// For employee: find customer by email
+		if (IsEmployee)
+		{
+			if (string.IsNullOrWhiteSpace(CustomerEmail))
+			{
+				FormErrorMessage = "Customer email is required.";
+				return;
+			}
+
+			var customerUser = await context.Users.FirstOrDefaultAsync(u => u.Email == CustomerEmail);
+			
+			// if no customer with that email is found
+			if (customerUser == null)
+			{
+				FormErrorMessage = $"Customer with email '{CustomerEmail}' not found.";
+				return;
+			}
+
+			VacationRequest.UserId = customerUser.Id;
+		}
+
 		context.VacationRequests.Add(VacationRequest);
 		await context.SaveChangesAsync();
 
