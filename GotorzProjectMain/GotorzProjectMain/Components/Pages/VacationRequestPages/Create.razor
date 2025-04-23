@@ -154,6 +154,7 @@
 
 			var customerUser = await context.Users.FirstOrDefaultAsync(u => u.Email == CustomerEmail);
 			
+			// if no customer with that email is found
 			if (customerUser == null)
 			{
 				FormErrorMessage = $"Customer with email '{CustomerEmail}' not found.";
