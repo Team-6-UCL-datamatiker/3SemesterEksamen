@@ -1,4 +1,5 @@
 ﻿@page "/vacationrequests/create"
+@using GotorzProjectMain.Data
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using GotorzProjectMain.Models
@@ -6,9 +7,9 @@
 @using Microsoft.AspNetCore.SignalR
 @using Microsoft.AspNetCore.SignalR.Client
 @using System.Security.Claims
-@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+
+@inject ApplicationDbContext DbContext
 @inject NavigationManager NavigationManager
-@inject IHubContext<GotorzProjectMain.Hubs.VacationRequestHub> HubContext
 @inject VacationRequestSignalRService SignalRService
 
 @attribute [Authorize]
@@ -96,7 +97,6 @@
 </div>
 
 @code {
-	private HubConnection? hubConnection;
 	[SupplyParameterFromForm]
 	private VacationRequest VacationRequest { get; set; } = new();
 	[SupplyParameterFromForm]
@@ -121,10 +121,8 @@
 									?? throw new InvalidOperationException("User not authenticated");
 
 		// Determine if current user is an employee
-		using (var context = DbFactory.CreateDbContext())
-		{
-			IsEmployee = await context.Employees.AnyAsync(e => e.Id == userId);
-		}
+		IsEmployee = await DbContext.Employees.AnyAsync(e => e.Id == userId);
+
 
 		// If customer, set userid now
 		if (!IsEmployee)
@@ -141,8 +139,6 @@
 	// To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
 	private async Task AddVacationRequest()
 	{
-		using var context = DbFactory.CreateDbContext();
-
 		// For employee: find customer by email
 		if (IsEmployee)
 		{
@@ -152,8 +148,8 @@
 				return;
 			}
 
-			var customerUser = await context.Users.FirstOrDefaultAsync(u => u.Email == CustomerEmail);
-			
+			var customerUser = await DbContext.Users.FirstOrDefaultAsync(u => u.Email == CustomerEmail);
+
 			// if no customer with that email is found
 			if (customerUser == null)
 			{
@@ -164,13 +160,13 @@
 			VacationRequest.UserId = customerUser.Id;
 		}
 
-		context.VacationRequests.Add(VacationRequest);
-		await context.SaveChangesAsync();
+			DbContext.VacationRequests.Add(VacationRequest);
+			await DbContext.SaveChangesAsync();
 
-		await SignalRService.InitializeAsync(); // ✅ Make sure connection is started
-		await Task.Delay(1000);
-		await SignalRService.SendVacationRequestAsync(); // ✅ Then send the message
+			await SignalRService.InitializeAsync(); // ✅ Make sure connection is started
+			await Task.Delay(1000);
+			await SignalRService.SendVacationRequestAsync(); // ✅ Then send the message
 
-		NavigationManager.NavigateTo("/vacationrequests");
+			NavigationManager.NavigateTo("/vacationrequests");
 	}
 }
