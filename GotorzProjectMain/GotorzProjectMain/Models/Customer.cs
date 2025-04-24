@@ -14,6 +14,9 @@ namespace GotorzProjectMain.Models
         public string CustomUserName { get; set; }
 
         public ApplicationUser User { get; set; }
-    }
+
+		[Timestamp]
+		public byte[] RowVersion { get; set; } = new byte[8];
+	}
 
 }

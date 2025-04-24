@@ -27,6 +27,9 @@ namespace GotorzProjectMain.Models
 
 		public string UserId { get; set; }
 		public Customer Customer { get; set; }
+
+		[Timestamp]
+		public byte[] RowVersion { get; set; } = new byte[8];
 	}
 
 	public enum Status

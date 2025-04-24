@@ -8,12 +8,12 @@ namespace TestProject.UnitTests
     [TestClass]
     public sealed class MockUserServiceTest
     {
-        private Mock<IUserService> mockUserService;
+        private Mock<IExtendedUserService> mockUserService;
 
         [TestInitialize]
         public void TestInitialize()
         {
-            mockUserService = new Mock<IUserService>();
+            mockUserService = new Mock<IExtendedUserService>();
 
             List<Customer>mockCustomers = new List<Customer>
             {
