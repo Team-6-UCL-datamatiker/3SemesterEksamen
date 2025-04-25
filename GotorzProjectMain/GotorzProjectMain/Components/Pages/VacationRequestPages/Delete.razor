@@ -4,10 +4,12 @@
 @using GotorzProjectMain.Models
 @using Microsoft.AspNetCore.SignalR
 @using Microsoft.AspNetCore.SignalR.Client
-@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
-@inject NavigationManager NavigationManager
+@using GotorzProjectMain.Data
+
+@inject ApplicationDbContext _context
+@inject NavigationManager _navigationManager
 @inject VacationRequestSignalRService SignalRService
-@inject IExtendedUserService UserService
+@inject Services.IExtendedUserService _userService
 
 
 <PageTitle>Delete</PageTitle>
@@ -72,9 +74,9 @@
             <dd class="col-sm-10">@customer.User.Email</dd>
         </dl>
         <dl class="row" style="display:none;">
-                   <dt class="col-sm-2">UserId</dt>
-                   <dd class="col-sm-10">@vacationrequest.UserId</dd>
-               </dl>
+            <dt class="col-sm-2">UserId</dt>
+            <dd class="col-sm-10">@vacationrequest.UserId</dd>
+        </dl>
         <EditForm method="post" Model="vacationrequest" OnValidSubmit="DeleteVacationRequest" FormName="delete" Enhance>
             <button type="submit" class="btn btn-danger" disabled="@(vacationrequest is null)">Delete</button> |
             <a href="/vacationrequests">Back to List</a>
@@ -83,36 +85,42 @@
 </div>
 
 @code {
-    private VacationRequest? vacationrequest;
-    private Customer? customer { get; set; }
+    private string? errorMessage;
 
     [SupplyParameterFromQuery]
     private int VacationRequestId { get; set; }
+    private VacationRequest? vacationrequest;
+    private Customer? customer { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        vacationrequest = await context.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
+        vacationrequest = await _context.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
 
         if (vacationrequest is null)
         {
-            NavigationManager.NavigateTo("notfound");
+            _navigationManager.NavigateTo("/vacationrequests");
         }
-
-		customer = await UserService.GetCustomerByIdAsync(vacationrequest.UserId);
-
+        
+        customer = await _userService.GetCustomerByIdAsync(vacationrequest.UserId);
     }
 
     private async Task DeleteVacationRequest()
     {
-        using var context = DbFactory.CreateDbContext();
-        context.VacationRequests.Remove(vacationrequest!);
-        await context.SaveChangesAsync();
+        try
+        {
+            _context.VacationRequests.Remove(vacationrequest!);
+            await _context.SaveChangesAsync();
 
-        await SignalRService.InitializeAsync();
-        await Task.Delay(1000);
-        await SignalRService.SendVacationRequestAsync();
+            // Notify the SignalR service about the deletion
+            await SignalRService.InitializeAsync();
+            await Task.Delay(1000);
+            await SignalRService.SendVacationRequestAsync();
 
-        NavigationManager.NavigateTo("/vacationrequests");
+            _navigationManager.NavigateTo("/vacationrequests");
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+                errorMessage = "This vacation request has already been deleted. Go back to vacation requests";
+        }
     }
 }
