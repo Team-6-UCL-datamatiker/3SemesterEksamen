@@ -7,6 +7,7 @@ using GotorzProjectMain.Data;
 using Microsoft.AspNetCore.ResponseCompression;
 using GotorzProjectMain.Hubs;
 using GotorzProjectMain.Services;
+using GotorzProjectMain.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,4 +1,4 @@
-﻿using GotorzProjectMain.Data;
+﻿using GotorzProjectMain.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using System.Net;

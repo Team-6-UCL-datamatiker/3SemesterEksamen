@@ -7,25 +7,21 @@ namespace GotorzProjectMain.Models
 		[Key]
 		public int VacationRequestId { get; set; }
 		public string Country { get; set; }
-		public DateTime StartDate { get; set; }
-		public DateTime EndDate { get; set; }
+		public DateTime StartDate { get; set; } = DateTime.Now;
+        public DateTime EndDate { get; set; } = DateTime.Now;
 
-
-		[Range(0, int.MaxValue, ErrorMessage = "Children cannot be below 0")]
 		public int ChildrenAmount { get; set; }
 
-		[Range(1, int.MaxValue, ErrorMessage = "Adults cannot be below 1")]
 		public int AdultsAmount { get; set; }
 
-		[Range(1, int.MaxValue, ErrorMessage = "Rooms cannot be below 1")]
 		public int RoomsAmount { get; set; }
 
 		public string HotelRequest { get; set; }
 		public string FlightRequest { get; set; }
 		public string Misc { get; set; }
-		public Status Status { get; set; }
+		public Status Status { get; set; } = Status.PendingRequest;
 
-		public string UserId { get; set; }
+        public string UserId { get; set; }
 		public Customer Customer { get; set; }
 
 		[Timestamp]
