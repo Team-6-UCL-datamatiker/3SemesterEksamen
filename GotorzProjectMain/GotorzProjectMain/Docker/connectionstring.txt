@@ -1,0 +1,1 @@
+﻿Server=localhost,1433;Database=GotorzDatabase;User Id=sa;Password=Password123!;TrustServerCertificate=true;
