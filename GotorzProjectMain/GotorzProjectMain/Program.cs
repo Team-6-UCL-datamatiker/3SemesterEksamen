@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.ResponseCompression;
 using GotorzProjectMain.Hubs;
 using GotorzProjectMain.Services;
 using GotorzProjectMain.Models;
+using AutoMapper;
+using GotorzProjectMain.Services.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +17,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents()
 	.AddInteractiveWebAssemblyComponents();
+
+builder.Services.AddAutoMapper(typeof(UserMappingProfiles));
 
 // Ensure the configuration file is being read correctly
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -29,6 +33,7 @@ builder.Services.AddQuickGridEntityFrameworkAdapter();
 //Used for getting the user data everytime an employee or customer is loaded
 builder.Services.AddScoped<IExtendedUserService, ExtendedUserService>();
 
+builder.Services.AddScoped<ICustomerRegistrationService, CustomerRegistrationService>();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
