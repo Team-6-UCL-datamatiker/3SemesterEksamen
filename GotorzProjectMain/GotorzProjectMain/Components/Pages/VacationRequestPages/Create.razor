@@ -111,7 +111,10 @@
 
 	protected override async Task OnInitializedAsync()
 	{
+		// Get the current user
 		var user = (await AuthenticationStateTask).User;
+
+		// Sets userid to the current user's ID if the user is authenticated
 		var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
 						?? throw new InvalidOperationException("User not authenticated");
 
