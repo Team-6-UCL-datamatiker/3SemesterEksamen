@@ -3,6 +3,7 @@
 @using System.ComponentModel.DataAnnotations
 @using System.Text
 @using System.Text.Encodings.Web
+@using AutoMapper
 @using GotorzProjectMain.InputModels.Users.CustomerInputModels
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Services
@@ -18,7 +19,7 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 @inject ApplicationDbContext DbContext
-@inject ICustomerRegistrationService RegistrationService
+@inject IMapper Mapper
 
 
 <PageTitle>Register</PageTitle>
@@ -27,7 +28,7 @@
 
 <div class="row">
 	<div class="col-md-4">
-		<EditForm Model="Input" OnValidSubmit="RegisterUser">
+		<EditForm Model="Input" OnValidSubmit="RegisterUser" FormName="register">
 			<DataAnnotationsValidator />
 			<h2>Create a new account.</h2>
 			<hr />
@@ -78,31 +79,68 @@
 			<button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
 		</EditForm>
 
-		<StatusMessage Message="@Message" />
+		<StatusMessage Message="@_message" />
 	</div>
 	@* // <ExternalLoginPicker /> can be used to add third party authentications systems such as Google*@
 </div>
 
 @code {
-	private IEnumerable<IdentityError>? identityErrors;
-
 	[SupplyParameterFromForm]
 	private RegisterCustomerInputModel Input { get; set; } = new();
-
 	[SupplyParameterFromQuery]
 	private string? ReturnUrl { get; set; }
-
-	private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
+	private IEnumerable<IdentityError> _identityErrors = Enumerable.Empty<IdentityError>();
+	private string? _message => !_identityErrors.Any() ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
 
 	public async Task RegisterUser()
 	{
-		identityErrors = await RegistrationService.RegisterAsync(Input);
+		try
+		{
+			var user = new ApplicationUser();
 
+			// UserStore = The object that actually knows how to create, read, update, delete users from your database.
+			//await _userStore.SetUserNameAsync(user, input.Email, CancellationToken.None);
+
+			// Casts userstore to an IUserEmailStore<ApplicationUser>. Meaning: it forces the underlying database / user - store thing to support email operations like setting, getting, verifying emails for users.
+			var emailStore = (IUserEmailStore<ApplicationUser>)UserStore;
+			await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
+			// Giver identityErrors en værdi hvis metoden ikke returnerer succes. identityErrors bliver vist i browseren i så fald.
+			_identityErrors = _identityErrors.Concat(await ExecuteAsync(() => UserManager.CreateAsync(user, Input.Password)));
+			_identityErrors = _identityErrors.Concat(await ExecuteAsync(() => UserManager.AddToRoleAsync(user, "Customer")));
+
+			var customer = new Customer
+				{
+					Id = user.Id,
+					User = user
+				};
+
+			Mapper.Map(Input, customer);
+
+			DbContext.Customers.Add(customer);
+			await DbContext.SaveChangesAsync();
+
+			// Er det her noget vi bruger?
+			Logger.LogInformation($"User ({user.Id}) created a new account with password.");
+
+			await SendConfirmationEmailAndRedirect(user);
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "An unexpected error occurred.");
+			throw;
+		}
+
+	}
+
+	private async Task SendConfirmationEmailAndRedirect(ApplicationUser user)
+	{
+		// Link til emailbekræftelse, tror jeg? Noget i den stil.
 		var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
 		code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
 		var callbackUrl = NavigationManager.GetUriWithQueryParameters(
 			NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-			new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
+			new Dictionary<string, object?> { ["userId"] = user.Id, ["code"] = code, ["returnUrl"] = ReturnUrl });
 
 		await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
 
@@ -115,5 +153,11 @@
 
 		await SignInManager.SignInAsync(user, isPersistent: false);
 		RedirectManager.RedirectTo(ReturnUrl);
+	}
+
+	private async Task<IEnumerable<IdentityError>> ExecuteAsync(Func<Task<IdentityResult>> action)
+	{
+		var result = await action();
+		return result.Succeeded ? Enumerable.Empty<IdentityError>() : result.Errors;
 	}
 }

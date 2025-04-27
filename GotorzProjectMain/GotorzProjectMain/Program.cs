@@ -33,8 +33,6 @@ builder.Services.AddQuickGridEntityFrameworkAdapter();
 //Used for getting the user data everytime an employee or customer is loaded
 builder.Services.AddScoped<IExtendedUserService, ExtendedUserService>();
 
-builder.Services.AddScoped<ICustomerRegistrationService, CustomerRegistrationService>();
-
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddCascadingAuthenticationState();

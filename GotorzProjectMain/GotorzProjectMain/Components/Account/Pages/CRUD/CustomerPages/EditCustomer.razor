@@ -168,6 +168,8 @@ else
 @using AutoMapper
 @using GotorzProjectMain.Data
 @using GotorzProjectMain.InputModels.Users.CustomerInputModels
+@using GotorzProjectMain.Models
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Authorization
@@ -178,6 +180,7 @@ else
 @inject UserManager<ApplicationUser> UserManager
 @inject Services.IExtendedUserService UserService
 @inject IMapper Mapper
+@inject ILogger<EditCustomer> Logger
 
 <PageTitle>Edit Customer</PageTitle>
 
@@ -229,10 +232,10 @@ else
 
                 <button type="submit" class="btn btn-primary">Save</button>
 
-                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                @if (!string.IsNullOrWhiteSpace(_errorMessage))
                 {
                     <div class="alert alert-danger mt-3" role="alert">
-                        @errorMessage
+                        @_errorMessage
                     </div>
                 }
 
@@ -246,13 +249,10 @@ else
 </div>
 
 @code {
-    private CustomerBaseInputModel Input = new();
-
-    private string? errorMessage;
-
     [SupplyParameterFromQuery]
-    private string Id { get; set; }
-
+    private string? Id { get; set; }
+    private CustomerBaseInputModel Input { get; set; } = new();
+    private string? _errorMessage;
     private Customer? Customer { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -264,21 +264,29 @@ else
             // _navigationManager.NavigateTo("notfound");
             NavigationManager.NavigateTo("/customers");
         }
+        else
+        {
+            Mapper.Map(Customer, Input);
+        }
     }
 
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task UpdateCustomer()
     {
         try
         {
-            Customer = Mapper.Map<Customer>(Input);
+            Mapper.Map(Input, Customer);
             await Context.SaveChangesAsync();
             NavigationManager.NavigateTo("/customers");
         }
-        catch (DbUpdateConcurrencyException)
+        catch (DbUpdateConcurrencyException ex)
         {
-            errorMessage = "Another user has modified this data since you started editing. Your changes were not saved. Please reload and try again.";
+            _errorMessage = "Another user has modified this data since you started editing. Your changes were not saved. Please reload and try again.";
+            Logger.LogWarning(ex, _errorMessage);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "An unexpected error occurred. Please try again.";
+            Logger.LogError(ex, _errorMessage);
         }
     }
 }
