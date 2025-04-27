@@ -3,8 +3,6 @@
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Authorization
 @using GotorzProjectMain.Models
-<!-- Injecting the Userservice so it can be used to find user data -->
-@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 @inject Services.IExtendedUserService UserService
 
@@ -57,7 +55,15 @@
 
     protected override async Task OnInitializedAsync()
     {
-        customer = await UserService.GetCustomerByIdAsync(Id);
+        try
+        {
+            customer = await UserService.GetCustomerByIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            // Handle other exceptions if needed
+            Console.WriteLine($"Error fetching customer: {ex.Message}");
+        }
 
         if (customer is null)
         {
