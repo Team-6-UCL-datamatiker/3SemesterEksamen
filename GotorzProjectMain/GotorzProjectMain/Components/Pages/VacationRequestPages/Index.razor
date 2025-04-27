@@ -1,16 +1,18 @@
 ﻿@page "/vacationrequests"
+@rendermode InteractiveServer
+
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Data
 @using GotorzProjectMain.Services
 @using Microsoft.AspNetCore.SignalR.Client
-@inject IDbContextFactory<ApplicationDbContext> DbFactory
+
+@inject ApplicationDbContext _context
 @inject IExtendedUserService ExtendedUserService
 @inject NavigationManager NavigationManager
 @inject VacationRequestSignalRService SignalRService
 
-@rendermode InteractiveServer
 
 <PageTitle>Index</PageTitle>
 
@@ -48,18 +50,13 @@
 </QuickGrid>
 @code {
 
-    private bool _connected = false;
-    
-    //For debugging
     private DateTime lastUpdated = DateTime.Now;
     
-    private ApplicationDbContext context = default!;
     private List<VacationRequest> vacationRequests = new();
     private List<Customer> customers = new();
     
     protected override async Task OnInitializedAsync()
     {
-        context = DbFactory.CreateDbContext();
         await LoadDataAsync();
 
         await SignalRService.InitializeAsync();
@@ -75,28 +72,12 @@
 
         Console.WriteLine("🔗 SignalR event handler attached in Index.razor");
 
-// ✅ Check if we missed an update
-        _ = Task.Run(async () =>
-        {
-            await Task.Delay(500); // small delay to allow signal to arrive and be deferred
-            if (SignalRService.HasMissedUpdate)
-            {
-                Console.WriteLine("💡 Missed update detected. Reloading manually.");
-                await InvokeAsync(async () =>
-                {
-                    await LoadDataAsync();
-                    SignalRService.ClearMissedUpdate();
-                    Console.WriteLine("🧹 Missed update handled.");
-                });
-            }
-        });
     }
     
     private async Task LoadDataAsync()
     {
         Console.WriteLine("📦 Starting LoadDataAsync()");
-        var newList = await context.VacationRequests.ToListAsync();
-        vacationRequests = new List<VacationRequest>(newList); // 🔁 Force new reference
+        vacationRequests = await _context.VacationRequests.ToListAsync();
         customers = await ExtendedUserService.GetCustomersWithUsersAsync();
 
         lastUpdated = DateTime.Now;
