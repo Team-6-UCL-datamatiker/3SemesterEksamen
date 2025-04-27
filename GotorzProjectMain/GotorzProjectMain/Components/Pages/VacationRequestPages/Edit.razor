@@ -99,8 +99,8 @@ else
 @code {
     private Customer? customer { get; set; }
 
-    [SupplyParameterFromQuery]
-    private string Id { get; set; }
+    [SupplyParameterFromQuery(Name = "vacationrequestid")]
+    private int VacationRequestId { get; set; }
 
     [SupplyParameterFromForm]
     private EditVacationRequestInputModel InputModel { get; set; }
@@ -124,7 +124,7 @@ else
     {
         try
         {
-            VacationRequest ??= await DbContext.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == Int32.Parse(Id));
+            VacationRequest ??= await DbContext.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
 
             if (VacationRequest is null)
             {
