@@ -99,7 +99,7 @@
 			var user = new ApplicationUser();
 
 			// UserStore = The object that actually knows how to create, read, update, delete users from your database.
-			//await _userStore.SetUserNameAsync(user, input.Email, CancellationToken.None);
+			await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
 
 			// Casts userstore to an IUserEmailStore<ApplicationUser>. Meaning: it forces the underlying database / user - store thing to support email operations like setting, getting, verifying emails for users.
 			var emailStore = (IUserEmailStore<ApplicationUser>)UserStore;

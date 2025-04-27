@@ -1,3 +1,4 @@
+using GotorzProjectMain.InputModels.VacationRequestInputModels;
 using GotorzProjectMain.Models;
 using System.ComponentModel.DataAnnotations;
 
@@ -21,8 +22,9 @@ public class VacationRequestModelValidationTests
 	public void ChildrenAmount_Negative_IsInvalid()
 	{
 		// Arrange
-		var request = new VacationRequest { ChildrenAmount = -1, AdultsAmount = 0, RoomsAmount = 0 };
-		
+		var request = new CreateVacationRequestInputModel { ChildrenAmount = -1, AdultsAmount = 1, RoomsAmount = 1, Country = "Denmark", StartDate = DateTime.Today, EndDate = DateTime.Today.AddDays(7) };
+
+
 		// Act
 		var results = Validate(request);
 
@@ -35,7 +37,7 @@ public class VacationRequestModelValidationTests
 	public void AdultsAmount_Negative_IsInvalid()
 	{
 		// Arrange
-		var request = new VacationRequest { ChildrenAmount = 0, AdultsAmount = -5, RoomsAmount = 0 };
+		var request = new CreateVacationRequestInputModel { ChildrenAmount = 0, AdultsAmount = -5, RoomsAmount = 1, Country = "Denmark", StartDate = DateTime.Today, EndDate = DateTime.Today.AddDays(7) };
 
 		// Act
 		var results = Validate(request);
@@ -49,7 +51,7 @@ public class VacationRequestModelValidationTests
 	public void RoomsAmount_Negative_IsInvalid()
 	{
 		// Arrange
-		var request = new VacationRequest { ChildrenAmount = 0, AdultsAmount = 0, RoomsAmount = -2 };
+		var request = new CreateVacationRequestInputModel { ChildrenAmount = 0, AdultsAmount = 1, RoomsAmount = -2, Country = "Denmark", StartDate = DateTime.Today, EndDate = DateTime.Today.AddDays(7) };
 
 		// Act
 		var results = Validate(request);
@@ -63,10 +65,10 @@ public class VacationRequestModelValidationTests
 	public void AllAmounts_NonNegative_IsValid()
 	{
 		// Arrange
-		var vr = new VacationRequest { ChildrenAmount = 1, AdultsAmount = 2, RoomsAmount = 3 };
+		var request = new CreateVacationRequestInputModel { ChildrenAmount = 1, AdultsAmount = 2, RoomsAmount = 3, Country = "Denmark", StartDate = DateTime.Today, EndDate = DateTime.Today.AddDays(7) };
 
 		// Act
-		var results = Validate(vr);
+		var results = Validate(request);
 
 		// Assert
 		Assert.AreEqual(0, results.Count, "Ingen valideringsfejl forventes når alle ≥ 0");

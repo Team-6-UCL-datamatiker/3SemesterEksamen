@@ -11,12 +11,12 @@ namespace GotorzProjectMain.InputModels.VacationRequestInputModels
 
         [Required]
         [Display(Name = "Start Date")]
-        public DateTime StartDate { get; set; }
-        [Required]
+        public DateTime StartDate { get; set; } = DateTime.Now;
+		[Required]
         [Display(Name = "End Date")]
-        public DateTime EndDate { get; set; }
+        public DateTime EndDate { get; set; } = DateTime.Now;
 
-        [Display(Name = "Children")]
+		[Display(Name = "Children")]
         [Range(0, int.MaxValue, ErrorMessage = "Children cannot be below 0")]
         public int ChildrenAmount { get; set; }
 
