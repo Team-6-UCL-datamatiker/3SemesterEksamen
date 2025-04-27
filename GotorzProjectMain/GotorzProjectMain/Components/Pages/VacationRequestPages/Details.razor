@@ -1,10 +1,11 @@
 ﻿@page "/vacationrequests/details"
+@using GotorzProjectMain.Data
 @using Microsoft.EntityFrameworkCore
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Services
-@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
 @inject IExtendedUserService UserService
+@inject ApplicationDbContext _context
 
 <PageTitle>Details</PageTitle>
 
@@ -61,14 +62,31 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        vacationrequest = await context.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
+        try
+        {
+            vacationrequest = await _context.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
+        }
+        catch (Exception ex)
+        {
+            // Handle the exception (e.g., log it, show a message, etc.)
+            Console.WriteLine($"Error fetching vacation request: {ex.Message}");
+        }
+
 
         if (vacationrequest is null)
         {
             NavigationManager.NavigateTo("notfound");
         }
 
-        customer = await UserService.GetCustomerByIdAsync(vacationrequest.UserId);
+        try
+        {
+            customer = await UserService.GetCustomerByIdAsync(vacationrequest.UserId);
+        }
+        catch (Exception ex)
+        {
+            // Handle the exception (e.g., log it, show a message, etc.)
+            Console.WriteLine($"Error fetching customer details: {ex.Message}");
+        }
+    
     }
 }
