@@ -12,6 +12,8 @@
 @inject ApplicationDbContext DbContext
 @inject NavigationManager NavigationManager
 @inject VacationRequestSignalRService SignalRService
+@inject AutoMapper.IMapper Mapper
+
 
 @attribute [Authorize]
 
@@ -127,18 +129,7 @@
 		}
 
 		// Map InputModel to entity
-		var vacationRequest = new VacationRequest
-			{
-				Country = InputModel.Country,
-				StartDate = InputModel.StartDate,
-				EndDate = InputModel.EndDate,
-				ChildrenAmount = InputModel.ChildrenAmount,
-				AdultsAmount = InputModel.AdultsAmount,
-				RoomsAmount = InputModel.RoomsAmount,
-				HotelRequest = InputModel.HotelRequest,
-				FlightRequest = InputModel.FlightRequest,
-				Misc = InputModel.Misc,
-			};
+		var vacationRequest = Mapper.Map<VacationRequest>(InputModel);
 
 		// Determine UserId
 		var authUser = (await AuthenticationStateTask).User;
