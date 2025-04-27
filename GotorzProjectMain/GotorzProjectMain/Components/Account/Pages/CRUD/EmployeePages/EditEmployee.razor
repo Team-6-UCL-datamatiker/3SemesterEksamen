@@ -73,10 +73,10 @@ else
 
 				<div class="mb-3">
 					<div class="form-check">
-						<InputCheckbox id="terms" @bind-Value="employee.Role" class="form-check-input" aria-required="true" />
+						<InputCheckbox id="terms" @bind-Value="employee.IsAdmin" class="form-check-input" aria-required="true" />
 						<label for="terms" class="form-check-label">Admin</label>
 					</div>
-					<ValidationMessage For="() => employee.Role" class="text-danger" />
+					<ValidationMessage For="() => employee.IsAdmin" class="text-danger" />
 				</div>
 				<button type="submit" class="btn btn-primary">Save</button>
 			</EditForm>

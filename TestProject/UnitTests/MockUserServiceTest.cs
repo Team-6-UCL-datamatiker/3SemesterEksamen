@@ -36,14 +36,14 @@ namespace TestProject.UnitTests
                 {
                     Id = "1",
                     ProfilePicture = new Uri("https://example.com/profile1.jpg"),
-                    Role = true,
+                    IsAdmin = true,
                     User = new ApplicationUser { UserName = "TestUser1" }
                 },
                 new Employee
                 {
                     Id = "2",
                     ProfilePicture = new Uri("https://example.com/profile2.jpg"),
-                    Role = false,
+                    IsAdmin = false,
                     User = new ApplicationUser { UserName = "TestUser2" }
                 }
             };
@@ -142,7 +142,7 @@ namespace TestProject.UnitTests
             {
                 Id = "1",
                 ProfilePicture = new Uri("https://example.com/profile1.jpg"),
-                Role = true,
+                IsAdmin = true,
                 User = new ApplicationUser { UserName = "TestUser1" }
             };
 
@@ -160,7 +160,7 @@ namespace TestProject.UnitTests
             {
                 Id = "99",
                 ProfilePicture = new Uri("https://example.com/profile1.jpg"),
-                Role = true,
+                IsAdmin = true,
                 User = new ApplicationUser { UserName = "TestUser99" }
             };
 

@@ -2,6 +2,7 @@
 using AutoMapper;
 using GotorzProjectMain.InputModels.Users;
 using GotorzProjectMain.InputModels.Users.CustomerInputModels;
+using GotorzProjectMain.InputModels.Users.EmployeeInputModels;
 
 namespace GotorzProjectMain.Services.Mapping;
 
@@ -19,6 +20,10 @@ public class UserMappingProfiles : Profile
             .ForMember(inputModel => inputModel.CustomUserName, opt => opt.MapFrom(user => user.CustomUserName))
             .IncludeBase<BaseUser, UserBaseInputModel>();
 
+        CreateMap<Employee, EmployeeBaseInputModel>()
+            .ForMember(inputModel => inputModel.IsAdmin, opt => opt.MapFrom(user => user.IsAdmin))
+            .IncludeBase<BaseUser, UserBaseInputModel>();
+
         CreateMap<UserBaseInputModel, BaseUser>()
             .ForPath(user => user.User.FirstName, opt => opt.MapFrom(inputModel => inputModel.FirstName))
             .ForPath(user => user.User.LastName, opt => opt.MapFrom(inputModel => inputModel.LastName))
@@ -27,6 +32,10 @@ public class UserMappingProfiles : Profile
 
         CreateMap<CustomerBaseInputModel, Customer>()
             .ForMember(user => user.CustomUserName, opt => opt.MapFrom(inputModel => inputModel.CustomUserName))
+            .IncludeBase<UserBaseInputModel, BaseUser>();
+
+        CreateMap<EmployeeBaseInputModel, Employee>()
+            .ForMember(user => user.IsAdmin, opt => opt.MapFrom(inputModel => inputModel.IsAdmin))
             .IncludeBase<UserBaseInputModel, BaseUser>();
     }
 }

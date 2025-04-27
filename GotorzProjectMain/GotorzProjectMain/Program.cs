@@ -18,7 +18,7 @@ builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents()
 	.AddInteractiveWebAssemblyComponents();
 
-builder.Services.AddAutoMapper(typeof(UserMappingProfiles));
+builder.Services.AddAutoMapper(typeof(UserMappingProfiles), typeof(VacationRequestMappingProfiles));
 
 // Ensure the configuration file is being read correctly
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
