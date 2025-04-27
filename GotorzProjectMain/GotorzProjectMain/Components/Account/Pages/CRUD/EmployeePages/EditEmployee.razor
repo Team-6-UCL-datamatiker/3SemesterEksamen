@@ -1,14 +1,18 @@
 ﻿@page "/employees/edit"
+@using AutoMapper
 @using GotorzProjectMain.Data
+@using GotorzProjectMain.InputModels.Users.EmployeeInputModels
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Authorization
 @using GotorzProjectMain.Models
-@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+@inject ApplicationDbContext Context
 @inject NavigationManager NavigationManager
 @inject Services.IExtendedUserService UserService
 @inject UserManager<ApplicationUser> UserManager
 @inject IWebHostEnvironment WebHostEnvironment
+@inject IMapper Mapper
+@inject ILogger<EditEmployee> Logger
 
 @attribute [Authorize(Policy = "Admin")]
 
@@ -19,7 +23,8 @@
 <h1>Edit Employee</h1>
 
 <hr />
-@if (employee is null || employee.User is null)
+<hr />
+@if (Employee == null || Employee.User == null)
 {
 	<p><em>Loading...</em></p>
 }
@@ -27,58 +32,67 @@ else
 {
 	<div class="row">
 		<div class="col-md-4">
-			<!-- Had to change the EditForm to this from what it was originally -->
-			<EditForm Model="employee" OnValidSubmit="UpdateEmployee" FormName="edit">
+			<EditForm Model="Input" OnValidSubmit="UpdateEmployee" FormName="edit">
 				<DataAnnotationsValidator />
 				<ValidationSummary role="alert" />
-				<input type="hidden" name="Employee.Id" value="@employee.Id" />
 
 				<div class="mb-3">
-					<label for="firstname" class="form-label">First Name:</label>
-					<InputText id="firstname" @bind-Value="firstName" class="form-control" aria-required="true" />
-					<ValidationMessage For="() => employee.User.FirstName" class="text-danger" />
+					<label for="first-name" class="form-label">First Name:</label>
+					<InputText id="first-name" @bind-Value="Input.FirstName" class="form-control" />
+					<ValidationMessage For="() => Input.FirstName" class="text-danger" />
 				</div>
+
 				<div class="mb-3">
-					<label for="lastname" class="form-label">Last Name:</label>
-					<InputText id="lastname" @bind-Value="lastName" class="form-control" aria-required="true" />
-					<ValidationMessage For="() => employee.User.LastName" class="text-danger" />
+					<label for="last-name" class="form-label">Last Name:</label>
+					<InputText id="last-name" @bind-Value="Input.LastName" class="form-control" />
+					<ValidationMessage For="() => Input.LastName" class="text-danger" />
 				</div>
+
 				<div class="mb-3">
 					<label for="email" class="form-label">Email:</label>
-					<InputText id="email" @bind-Value="email" class="form-control" aria-required="true" />
-					<ValidationMessage For="() => employee.User.Email" class="text-danger" />
-				</div>
-				<div class="mb-3">
-					<label for="phone" class="form-label">Phone:</label>
-					<InputText id="phone" @bind-Value="phoneNumber" class="form-control" aria-required="true" />
-					<ValidationMessage For="() => employee.User.PhoneNumber" class="text-danger" />
+					<InputText id="email" @bind-Value="Input.Email" class="form-control" />
+					<ValidationMessage For="() => Input.Email" class="text-danger" />
 				</div>
 
-				@if (employee?.ProfilePicture != null)
+				<div class="mb-3">
+					<label for="phone" class="form-label">Phone:</label>
+					<InputText id="phone" @bind-Value="Input.Phone" class="form-control" />
+					<ValidationMessage For="() => Input.Phone" class="text-danger" />
+				</div>
+
+				<div class="mb-3">
+					<div class="form-check">
+						<InputCheckbox id="is-admin" @bind-Value="Input.IsAdmin" class="form-check-input" />
+						<label for="is-admin" class="form-check-label">Is Admin</label>
+					</div>
+					<ValidationMessage For="() => Input.IsAdmin" class="text-danger" />
+				</div>
+
+				<div class="mb-3">
+					<label for="profile-picture" class="form-label">Profile Picture:</label>
+					<InputFile id="profile-picture" OnChange="HandleProfilePictureUpload" class="form-control" />
+					@if (Input.ProfilePictureFile != null)
+					{
+						<p>New file selected: @Input.ProfilePictureFile.Name</p>
+					}
+				</div>
+
+				@if (Employee.ProfilePicture != null)
 				{
-					<img src="@employee.ProfilePicture"
+					<img src="@Employee.ProfilePicture"
 						 alt="Profile picture"
 						 style="max-width:200px; max-height:200px;"
 						 class="img-thumbnail" />
 				}
 
-				<div class="mb-3">
-					<label for="profilePicture" class="form-label">Profile Picture:</label>
-					<InputFile id="profilePicture" accept="image/*" OnChange="HandleProfilePictureUpload" class="form-control" />
-					@if (profilePictureFile != null)
-					{
-						<p>New file selected: @profilePictureFile.Name</p>
-					}
-				</div>
-
-				<div class="mb-3">
-					<div class="form-check">
-						<InputCheckbox id="terms" @bind-Value="employee.IsAdmin" class="form-check-input" aria-required="true" />
-						<label for="terms" class="form-check-label">Admin</label>
-					</div>
-					<ValidationMessage For="() => employee.IsAdmin" class="text-danger" />
-				</div>
 				<button type="submit" class="btn btn-primary">Save</button>
+
+				@if (!string.IsNullOrWhiteSpace(ErrorMessage))
+				{
+					<div class="alert alert-danger mt-3" role="alert">
+						@ErrorMessage
+					</div>
+				}
 			</EditForm>
 		</div>
 	</div>
@@ -89,107 +103,59 @@ else
 </div>
 
 @code {
-	// This is required because of the current employee.user structure
-	private string? firstName;
-	private string? lastName;
-	private string? email;
-	private string? phoneNumber;
-
-	// New profile picture file
-	private IBrowserFile? profilePictureFile;
-
-
 	[SupplyParameterFromQuery]
-	private string Id { get; set; }
+	private string? Id { get; set; }
 
-	[SupplyParameterFromForm]
-	private Employee? employee { get; set; }
+	private EmployeeBaseInputModel Input { get; set; } = new();
+	private Employee? Employee { get; set; }
+	private string? ErrorMessage { get; set; }
 
 	protected override async Task OnInitializedAsync()
 	{
-		employee = await UserService.GetEmployeeByIdAsync(Id);
+		// Fetch the employee by ID in the query string
+		Employee = await UserService.GetEmployeeByIdAsync(Id);
 
-		if (employee is null)
+		if (Employee == null)
 		{
-			NavigationManager.NavigateTo("notfound");
+			NavigationManager.NavigateTo("/employees"); // Redirect if not found
 		}
 		else
 		{
-			if (employee.User != null)
-			{
-				firstName = employee.User.FirstName;
-				lastName = employee.User.LastName;
-				email = employee.User.Email;
-				phoneNumber = employee.User.PhoneNumber;
-			}
+			Mapper.Map(Employee, Input); // Map to input model
 		}
-
 	}
 
 	// To protect from overposting attacks, enable the specific properties you want to bind to.
 	// For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
 	private async Task UpdateEmployee()
 	{
-		// Update the ApplicationUser properties
-		employee.User.FirstName = firstName;
-		employee.User.LastName = lastName;
-		employee.User.Email = email;
-		employee.User.PhoneNumber = phoneNumber;
-
-		// If a new profile picture file was selected, update the picture.
-		if (profilePictureFile != null)
-		{
-			Uri? newProfilePictureUri = await SaveProfilePicture(profilePictureFile);
-			if (newProfilePictureUri != null)
-			{
-				employee.ProfilePicture = newProfilePictureUri;
-			}
-		}
-
-		using var context = DbFactory.CreateDbContext();
-
-		// Detach any existing tracked instance of ApplicationUser
-		var trackedUser = context.ChangeTracker.Entries<ApplicationUser>()
-			.FirstOrDefault(e => e.Entity.Id == employee.User.Id);
-		if (trackedUser != null)
-		{
-			context.Entry(trackedUser.Entity).State = EntityState.Detached;
-		}
-
-		// Attach the Employee entity and mark it as modified
-		context.Attach(employee).State = EntityState.Modified;
-
 		try
 		{
+			// Copy input back into Employee
+			Mapper.Map(Input, Employee);
 
-			await context.SaveChangesAsync();
-
-			// Update the related ApplicationUser fields (FirstName, LastName, Email, PhoneNumber)
-			if (employee.User != null)
+			if (Input.ProfilePictureFile != null)
 			{
-				context.Attach(employee.User).State = EntityState.Modified;
-				await context.SaveChangesAsync();
+				var newUri = await SaveProfilePicture(Input.ProfilePictureFile);
+				if (newUri != null)
+				{
+					Employee.ProfilePicture = newUri;
+				}
 			}
+
+			await Context.SaveChangesAsync();
+			NavigationManager.NavigateTo("/employees");
 		}
-		catch (DbUpdateConcurrencyException)
+		catch (DbUpdateConcurrencyException ex)
 		{
-			if (!EmployeeExists(employee.Id))
-			{
-				NavigationManager.NavigateTo("notfound");
-			}
-			else
-			{
-				throw;
-			}
+			ErrorMessage = "Another user has modified this data since you started editing. Your changes were not saved. Please reload and try again.";
+			Logger.LogWarning(ex, ErrorMessage);
 		}
-
-		NavigationManager.NavigateTo("/employees");
-	}
-
-	private bool EmployeeExists(string id)
-	{
-		using var context = DbFactory.CreateDbContext();
-		return context.Employees.Any(e => e.Id == id);
+		catch (Exception ex)
+		{
+			ErrorMessage = "An unexpected error occurred. Please try again.";
+			Logger.LogError(ex, ErrorMessage);
+		}
 	}
 
 	// Helper method to save the uploaded profile picture.
@@ -200,12 +166,15 @@ else
 			var fileName = Path.GetFileName(file.Name);
 			var imagesFolder = Path.Combine(WebHostEnvironment.WebRootPath, "images");
 
+			// Ensure the images folder exists
 			if (!Directory.Exists(imagesFolder))
 			{
 				Directory.CreateDirectory(imagesFolder);
 			}
 
 			var filePath = Path.Combine(imagesFolder, fileName);
+			
+			// Check if the file already exists
 			if (!File.Exists(filePath))
 			{
 				using (var stream = new FileStream(filePath, FileMode.Create))
@@ -219,22 +188,16 @@ else
 		}
 		catch (Exception ex)
 		{
+			Logger.LogError(ex, "Failed to save profile picture.");
 			return null;
 		}
 	}
 
-	// Event handler for file input changes.
 	private async Task HandleProfilePictureUpload(InputFileChangeEventArgs e)
 	{
-		var file = e.File;
-		if (file == null || employee == null) return;
-
-		var newUri = await SaveProfilePicture(file);
-		if (newUri != null)
+		if (e.File != null)
 		{
-			// updates the model so it can be seen in realtime on the edit page
-			employee.ProfilePicture = newUri;
-			StateHasChanged();  // force a UI refresh
+			Input.ProfilePictureFile = e.File;
 		}
 	}
 }
