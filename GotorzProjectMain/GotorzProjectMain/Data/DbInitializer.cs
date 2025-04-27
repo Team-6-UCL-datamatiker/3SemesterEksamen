@@ -40,7 +40,7 @@ public static class DbInitializer
 
     private static async Task CreateAdminIfNotExists(ApplicationDbContext context, UserManager<ApplicationUser> manager)
     {
-        bool adminExists = context.Employees.Any(e => e.Role == true);
+        bool adminExists = context.Employees.Any(e => e.IsAdmin == true);
 
         if (!adminExists)
         {
@@ -68,7 +68,7 @@ public static class DbInitializer
 
 			var employee = new Employee
             {
-                Role = true,
+                IsAdmin = true,
                 User = user
             };
 
