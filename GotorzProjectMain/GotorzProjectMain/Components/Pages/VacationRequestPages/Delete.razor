@@ -119,8 +119,14 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-		isLoading = true;
-        
+        isLoading = true;
+
+        if (VacationRequestId == 0)
+        {
+            _navigationManager.NavigateTo("/vacationrequests");
+            return;
+        }
+
         try
         {
             await SetupSignalRConnection();
