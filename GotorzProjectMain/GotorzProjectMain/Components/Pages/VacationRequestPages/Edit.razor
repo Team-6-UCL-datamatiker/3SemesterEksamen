@@ -72,7 +72,7 @@ else
                 <div class="mb-3">
                     <label for="status" class="form-label">Status:</label>
                     <InputSelect id="status" @bind-Value="VacationRequest.Status" class="form-control">
-                        @foreach (Status status in Enum.GetValues(typeof(Status)))
+                        @foreach (RequestStatus status in Enum.GetValues(typeof(RequestStatus)))
                         {
                             <option value="@status">@status</option>
                         }

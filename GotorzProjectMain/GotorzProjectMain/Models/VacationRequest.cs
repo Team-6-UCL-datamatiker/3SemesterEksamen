@@ -19,7 +19,7 @@ namespace GotorzProjectMain.Models
 		public string HotelRequest { get; set; }
 		public string FlightRequest { get; set; }
 		public string Misc { get; set; }
-		public Status Status { get; set; } = Status.PendingRequest;
+		public RequestStatus Status { get; set; } = RequestStatus.PendingRequest;
 
         public string UserId { get; set; }
 		public Customer Customer { get; set; }
@@ -28,7 +28,7 @@ namespace GotorzProjectMain.Models
 		public byte[] RowVersion { get; set; } = new byte[8];
 	}
 
-	public enum Status
+	public enum RequestStatus
 	{
 		PendingRequest,
 		WaitingApproval,
