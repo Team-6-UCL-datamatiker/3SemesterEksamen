@@ -2,21 +2,21 @@
 @using GotorzProjectMain.Services
 @using Microsoft.EntityFrameworkCore
 @using GotorzProjectMain.Models
-@using Microsoft.AspNetCore.SignalR
-@using Microsoft.AspNetCore.SignalR.Client
 @using GotorzProjectMain.Data
 @using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.SignalR
 
 @inject ApplicationDbContext _context
 @inject NavigationManager _navigationManager
-@inject VacationRequestSignalRService SignalRService
 @inject Services.IExtendedUserService _userService
+@inject ILogger<Delete> Logger
+@inject VacationRequestSignalRService SignalRService
 
 <PageTitle>Delete Vacation Request</PageTitle>
 
 <h1>Delete</h1>
 
-@if (isLoading)
+@if (vacationrequest is null && string.IsNullOrEmpty(_errorMessage))
 {
     <p><em>Loading...</em></p>
 }
@@ -26,16 +26,16 @@ else if (vacationrequest is null)
         <h4 class="alert-heading"><strong>Vacation Request Not Found</strong></h4>
         <p>The vacation request could not be found.</p>
         <p>It may have been deleted by another user.</p>
-        <hr/>
+        <hr />
         <p>Please return to the list of vacation requests</p>
     </div>
 }
 else
 {
-    @if (!string.IsNullOrEmpty(errorMessage))
+    @if (!string.IsNullOrEmpty(_errorMessage))
     {
         <div class="alert alert-danger">
-            @errorMessage
+            @_errorMessage
         </div>
     }
 
@@ -48,11 +48,11 @@ else
         </dl>
         <dl class="row">
             <dt class="col-sm-2">Start Date</dt>
-            <dd class="col-sm-10">@vacationrequest.StartDate</dd>
+            <dd class="col-sm-10">@vacationrequest.StartDate.ToShortDateString()</dd>
         </dl>
         <dl class="row">
             <dt class="col-sm-2">End Date</dt>
-            <dd class="col-sm-10">@vacationrequest.EndDate</dd>
+            <dd class="col-sm-10">@vacationrequest.EndDate.ToShortDateString()</dd>
         </dl>
         <dl class="row">
             <dt class="col-sm-2">Children Amount</dt>
@@ -99,15 +99,14 @@ else
 
 <!-- Always include the form, regardless of vacation request state -->
 <EditForm method="post" Model="@formModel" OnValidSubmit="DeleteVacationRequest" FormName="delete" Enhance>
-    <button type="submit" class="btn btn-danger" disabled="@(vacationrequest is null || !string.IsNullOrEmpty(errorMessage))">
+    <button type="submit" class="btn btn-danger" disabled="@(vacationrequest is null || !string.IsNullOrEmpty(_errorMessage))">
         Delete
     </button> |
     <a href="/vacationrequests" class="btn btn-secondary">Back to List</a>
 </EditForm>
 
 @code {
-    private string? errorMessage;
-    private bool isLoading = true;
+    private string? _errorMessage;
     // Using a separate model for the form to ensure it's never null
     private VacationRequest formModel = new VacationRequest();
 
@@ -115,22 +114,22 @@ else
     private int VacationRequestId { get; set; }
     private VacationRequest? vacationrequest;
     private Customer? customer { get; set; }
-    private HubConnection? hubConnection;
 
     protected override async Task OnInitializedAsync()
     {
-		isLoading = true;
-        
+        if (VacationRequestId == 0)
+        {
+            _navigationManager.NavigateTo("/vacationrequests");
+            return;
+        }
+
         try
         {
-            await SetupSignalRConnection();
-
             vacationrequest = await _context.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
 
             if (vacationrequest is null)
             {
-                errorMessage = "Vacation request not found.";
-                isLoading = false;
+                _errorMessage = "Vacation request not found.";
                 return;
             }
 
@@ -141,80 +140,45 @@ else
                 };
 
             customer = await _userService.GetCustomerByIdAsync(vacationrequest.UserId);
-            isLoading = false;
         }
         catch (Exception ex)
         {
-            errorMessage = $"An error occurred: {ex.Message}";
-            isLoading = false;
+            _errorMessage = $"An error occurred: {ex.Message}";
         }
-    }
-
-    private async Task SetupSignalRConnection()
-    {
-        // Set up SignalR connection to listen for updates
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl(_navigationManager.ToAbsoluteUri("/vacationrequesthub"))
-            .WithAutomaticReconnect()
-            .Build();
-
-        hubConnection.On("ReceiveVacationRequestUpdate", async () =>
-        {
-            // Check if the vacation request still exists
-            var requestExists = await _context.VacationRequests.AnyAsync(m => m.VacationRequestId == VacationRequestId);
-
-            if (!requestExists && vacationrequest != null)
-            {
-                vacationrequest = null;
-                await InvokeAsync(StateHasChanged);
-            }
-        });
-
-        await hubConnection.StartAsync();
     }
 
     private async Task DeleteVacationRequest()
     {
         try
         {
-            // Verify the request still exists before attempting to delete
-            var currentRequest = await _context.VacationRequests.FindAsync(VacationRequestId);
-
-            if (currentRequest == null)
+            // Verifies the request still exists before attempting to delete
+            if (vacationrequest == null)
             {
-                vacationrequest = null;
+                _errorMessage = "Vacation request was not found or already deleted.";
                 return;
             }
 
             _context.VacationRequests.Remove(vacationrequest!);
             await _context.SaveChangesAsync();
-
-            // Notify the SignalR service about the deletion
-            await SignalRService.InitializeAsync();
-            await SignalRService.SendVacationRequestAsync();
-
-            _navigationManager.NavigateTo("/vacationrequests");
         }
-        catch (DbUpdateConcurrencyException)
+        catch (DbUpdateConcurrencyException ex)
         {
-            vacationrequest = null;
+            _errorMessage = "Another user has deleted this data since you entered the page.";
+			Logger.LogWarning(ex, _errorMessage);
         }
         catch (NavigationException)
         {
-            // This is expected during navigation - re-throw to allow normal navigation
             throw;
         }
         catch (Exception ex)
         {
-            errorMessage = $"An error occurred while trying to delete: {ex.Message}";
+            _errorMessage = $"An error occurred while trying to delete: {ex.Message}";
         }
-    }
 
-    public async ValueTask DisposeAsync()
-    {
-        if (hubConnection is not null)
-        {
-            await hubConnection.DisposeAsync();
-        }
+        await SignalRService.InitializeAsync();
+        await Task.Delay(500);
+        await SignalRService.SendVacationRequestAsync();
+
+        _navigationManager.NavigateTo("/vacationrequests");
     }
 }

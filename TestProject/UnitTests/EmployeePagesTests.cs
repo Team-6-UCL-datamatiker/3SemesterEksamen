@@ -1,4 +1,5 @@
-﻿using GotorzProjectMain.Data;
+﻿using AutoMapper;
+using GotorzProjectMain.Data;
 using GotorzProjectMain.Models;
 using GotorzProjectMain.Services;
 using Microsoft.AspNetCore.Components;
@@ -7,6 +8,7 @@ using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Bunit.TestDoubles;
 using GotorzProjectMain.Components.Account.Pages.CRUD.EmployeePages;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 
@@ -16,7 +18,6 @@ namespace TestProject.UnitTests;
 public class EmployeePagesTests : Bunit.TestContext
 {
     private Mock<IExtendedUserService> mockUserService;
-    private Mock<IDbContextFactory<ApplicationDbContext>> mockDbFactory;
     private Mock<UserManager<ApplicationUser>> mockUserManager;
     private FakeNavigationManager navMan;
 
@@ -24,14 +25,22 @@ public class EmployeePagesTests : Bunit.TestContext
     public void Setup()
     {
         mockUserService = new Mock<IExtendedUserService>();
-        mockDbFactory = new Mock<IDbContextFactory<ApplicationDbContext>>();
         mockUserManager = new Mock<UserManager<ApplicationUser>>(
             Mock.Of<IUserStore<ApplicationUser>>(),
             null, null, null, null, null, null, null, null
         );
+        
+        var mockContext = new Mock<ApplicationDbContext>(new DbContextOptions<ApplicationDbContext>());
+        Services.AddSingleton(mockContext.Object);
+        
+        var mockMapper = new Mock<IMapper>();
+        Services.AddSingleton(mockMapper.Object);
+        
+        var mockWebHostEnvironment = new Mock<IWebHostEnvironment>();
+        mockWebHostEnvironment.Setup(e => e.WebRootPath).Returns(Path.GetTempPath()); // You can set a temp folder
+        Services.AddSingleton(mockWebHostEnvironment.Object);
 
         Services.AddSingleton(mockUserService.Object);
-        Services.AddSingleton(mockDbFactory.Object);
         Services.AddSingleton(mockUserManager.Object);
 
         navMan = Services.GetRequiredService<NavigationManager>() as FakeNavigationManager;
@@ -70,7 +79,7 @@ public class EmployeePagesTests : Bunit.TestContext
         var cut = RenderComponent<EditEmployee>();
 
         // Assert
-        Assert.AreEqual("http://localhost/notfound", navMan.Uri);
+        Assert.AreEqual("http://localhost/employees", navMan.Uri);
     }
 
     [TestMethod]

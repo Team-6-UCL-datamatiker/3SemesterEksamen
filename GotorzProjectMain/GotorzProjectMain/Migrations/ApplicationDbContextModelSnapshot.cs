@@ -192,11 +192,9 @@ namespace GotorzProjectMain.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("VacationRequestId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("VacationRequests", (string)null);
                 });
@@ -354,17 +352,6 @@ namespace GotorzProjectMain.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("GotorzProjectMain.Models.VacationRequest", b =>
-                {
-                    b.HasOne("GotorzProjectMain.Models.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

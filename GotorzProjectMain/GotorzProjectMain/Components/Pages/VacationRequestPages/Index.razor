@@ -1,18 +1,21 @@
 ﻿@page "/vacationrequests"
 @rendermode InteractiveServer
 
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Data
 @using GotorzProjectMain.Services
 @using Microsoft.AspNetCore.SignalR.Client
+@using System.Security.Claims
 
 @inject ApplicationDbContext _context
 @inject IExtendedUserService ExtendedUserService
 @inject NavigationManager NavigationManager
 @inject VacationRequestSignalRService SignalRService
 
+@attribute [Authorize]
 
 <PageTitle>Index</PageTitle>
 
@@ -40,7 +43,7 @@
         @vacationrequest.EndDate.ToString("MMM dd, yyyy")
     </TemplateColumn>
     <PropertyColumn Property="vacationrequest => vacationrequest.Status"/>
-    
+
 
     <TemplateColumn Context="vacationrequest">
         <a href="@($"vacationrequests/edit?vacationrequestid={vacationrequest.VacationRequestId}")">Edit</a> |
@@ -50,13 +53,26 @@
 </QuickGrid>
 @code {
 
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
+
     private DateTime lastUpdated = DateTime.Now;
-    
+
     private List<VacationRequest> vacationRequests = new();
     private List<Customer> customers = new();
-    
+    private bool isEmployee;
+    private string? userId;
+
     protected override async Task OnInitializedAsync()
     {
+        // Determine current user and role
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+        userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        // Check if logged in user is an employee
+        isEmployee = await _context.Employees.AnyAsync(e => e.Id == userId);
+
         await LoadDataAsync();
 
         await SignalRService.InitializeAsync();
@@ -76,8 +92,19 @@
     
     private async Task LoadDataAsync()
     {
+        // Load requests -  all for employees, only own for customers
+        if (isEmployee)
+        {
+            vacationRequests = await _context.VacationRequests.ToListAsync();
+        }
+        else
+        {
+            vacationRequests = await _context.VacationRequests
+                .Where(v => v.UserId == userId)
+                .ToListAsync();
+        }
+
         Console.WriteLine("📦 Starting LoadDataAsync()");
-        vacationRequests = await _context.VacationRequests.ToListAsync();
         customers = await ExtendedUserService.GetCustomersWithUsersAsync();
 
         lastUpdated = DateTime.Now;
