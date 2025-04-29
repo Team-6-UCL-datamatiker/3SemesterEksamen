@@ -22,7 +22,6 @@ namespace GotorzProjectMain.Models
 		public RequestStatus Status { get; set; } = RequestStatus.PendingRequest;
 
         public string UserId { get; set; }
-		public Customer Customer { get; set; }
 
 		[Timestamp]
 		public byte[] RowVersion { get; set; } = new byte[8];
