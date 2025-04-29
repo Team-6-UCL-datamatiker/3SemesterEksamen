@@ -25,9 +25,6 @@ builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnC
 					 .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
 					 .AddJsonFile("Connection.json", optional: false, reloadOnChange: true);
 
-builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
-			options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 
 //Used for getting the user data everytime an employee or customer is loaded

@@ -32,7 +32,7 @@ else
 {
 	<div class="row">
 		<div class="col-md-4">
-			<EditForm Model="Input" OnValidSubmit="UpdateEmployee" FormName="edit">
+			<EditForm EditContext="_ec" OnValidSubmit="UpdateEmployee" FormName="edit">
 				<DataAnnotationsValidator />
 				<ValidationSummary role="alert" />
 
@@ -56,7 +56,7 @@ else
 
 				<div class="mb-3">
 					<label for="phone" class="form-label">Phone:</label>
-					<InputText id="phone" @bind-Value="Input.Phone" class="form-control" />
+					<InputText id="phone" @bind-Value="Input.Phone" class="form-control" aria-required="true" onblur="@((FocusEventArgs e) => { if (string.IsNullOrWhiteSpace(Input.Phone)) { Input.Phone = null; _ec.Validate(); }})" />
 					<ValidationMessage For="() => Input.Phone" class="text-danger" />
 				</div>
 
@@ -109,10 +109,13 @@ else
 	private EmployeeBaseInputModel Input { get; set; } = new();
 	private Employee? Employee { get; set; }
 	private string? ErrorMessage { get; set; }
+	private EditContext? _ec;
 
 	protected override async Task OnInitializedAsync()
 	{
-		// Fetch the employee by ID in the query string
+
+		_ec = new EditContext(Input);
+	// Fetch the employee by ID in the query string
 		Employee = await UserService.GetEmployeeByIdAsync(Id);
 
 		if (Employee == null)

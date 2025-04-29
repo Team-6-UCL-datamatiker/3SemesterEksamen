@@ -33,7 +33,7 @@
 
 <div class="row">
 	<div class="col-md-4">
-		<EditForm Model="Input" OnValidSubmit="RegisterUser" FormName="register">
+		<EditForm EditContext="_ec" OnValidSubmit="RegisterUser" FormName="register">
 			<DataAnnotationsValidator />
 			<h2>Create a new employee account.</h2>
 			<hr />
@@ -69,11 +69,12 @@
 				<ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
 			</div>
 
-			<div class="form-floating mb-3">
-				<InputText id="phone" type="phone" @bind-Value="Input.Phone" class="form-control" autocomplete="tel" aria-required="true" placeholder="phone number" />
-				<label for="phone">Phone Number (optional)</label>
+			<div class="mb-3">
+				<InputText id="phone" @bind-Value="Input.Phone" class="form-control" aria-required="true" onblur="@((FocusEventArgs e) => { if (string.IsNullOrWhiteSpace(Input.Phone)) { Input.Phone = null; _ec.Validate(); }})" />
+				<label for="phone" class="form-label">Phone:</label>
 				<ValidationMessage For="() => Input.Phone" class="text-danger" />
 			</div>
+
 			<div class="mb-3">
 				<label for="profilePicture" class="form-label">Profile Picture:</label>
 				<InputFile id="profilePicture" accept="image/*" OnChange="HandleProfilePictureUpload" class="form-control" />
@@ -112,6 +113,12 @@
 	private string? ReturnUrl { get; set; }
 	private IEnumerable<IdentityError> _identityErrors = Enumerable.Empty<IdentityError>();
 	private string? _message => !_identityErrors.Any() ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
+	private EditContext? _ec;
+
+	protected override void OnInitialized()
+	{
+		_ec = new EditContext(Input);
+	}
 
 	// private Uri? profilePictureUri = null;
 
@@ -129,10 +136,8 @@
 			await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
 
 			// Giver identityErrors en værdi hvis metoden ikke returnerer succes. identityErrors bliver vist i browseren i så fald.
-			_identityErrors = _identityErrors.Concat(await ExecuteAsync(() => UserManager.CreateAsync(user, Input.Password)));
-			_identityErrors = _identityErrors.Concat(await ExecuteAsync(() => UserManager.AddToRoleAsync(user, "Customer")));
-
-
+			var result = await UserManager.CreateAsync(user, Input.Password);
+			_identityErrors = _identityErrors.Concat(result.Succeeded ? Enumerable.Empty<IdentityError>() : result.Errors);
 
 			//If a profile picture was uploaded, handle file processing
 			Uri? profilePictureUri = null;
@@ -153,16 +158,11 @@
 
 			Mapper.Map(Input, employee);
 
-
-
 			// Assign user to either Admin or Employee role based on the checkbox
 			string roleToAssign = Input.IsAdmin ? "Admin" : "Employee";
-			var roleResult = await UserManager.AddToRoleAsync(user, roleToAssign);
-			if (!roleResult.Succeeded)
-			{
-				identityErrors = roleResult.Errors;
-				return;
-			}
+			result = await UserManager.AddToRoleAsync(user, roleToAssign);
+			_identityErrors = _identityErrors.Concat(result.Succeeded ? Enumerable.Empty<IdentityError>() : result.Errors);
+
 			_context.Employees.Add(employee);
 			await _context.SaveChangesAsync();
 
@@ -200,12 +200,6 @@
 			await SignInManager.SignInAsync(user, isPersistent: false);
 			NavigationManager.NavigateTo(ReturnUrl ?? "/");
 		}
-	}
-
-	private async Task<IEnumerable<IdentityError>> ExecuteAsync(Func<Task<IdentityResult>> action)
-	{
-		var result = await action();
-		return result.Succeeded ? Enumerable.Empty<IdentityError>() : result.Errors;
 	}
 
 	// Helper method to save the profile picture and return the file URI

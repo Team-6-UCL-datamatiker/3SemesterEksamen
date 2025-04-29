@@ -5,19 +5,17 @@ namespace GotorzProjectMain.InputModels.Users;
 public abstract class UserBaseInputModel
 {
     [Required]
-    [Display(Name = "FirstName")]
+    [Display(Name = "First name")]
     public string FirstName { get; set; } = "";
 
     [Required]
-    [Display(Name = "LastName")]
+    [Display(Name = "Last name")]
     public string LastName { get; set; } = "";
 
     [Required]
     [EmailAddress]
-    [Display(Name = "Email")]
     public string Email { get; set; } = "";
 
     [Phone]
-    [Display(Name = "Phone")]
-    public string Phone { get; set; } = "";
+    public string? Phone { get; set; }
 }
