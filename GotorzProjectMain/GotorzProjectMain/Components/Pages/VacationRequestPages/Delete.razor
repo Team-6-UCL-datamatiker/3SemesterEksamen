@@ -4,13 +4,13 @@
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Data
 @using Microsoft.AspNetCore.Components
-@* @using Microsoft.AspNetCore.SignalR *@
+@using Microsoft.AspNetCore.SignalR
 
 @inject ApplicationDbContext _context
 @inject NavigationManager _navigationManager
 @inject Services.IExtendedUserService _userService
 @inject ILogger<Delete> Logger
-@* @inject VacationRequestSignalRService SignalRService *@
+@inject VacationRequestSignalRService SignalRService
 
 <PageTitle>Delete Vacation Request</PageTitle>
 
@@ -151,10 +151,8 @@ else
     {
         try
         {
-            // Verify the request still exists before attempting to delete
-            var currentRequest = await _context.VacationRequests.FindAsync(VacationRequestId);
-
-            if (currentRequest == null)
+            // Verifies the request still exists before attempting to delete
+            if (vacationrequest == null)
             {
                 _errorMessage = "Vacation request was not found or already deleted.";
                 return;
@@ -162,12 +160,11 @@ else
 
             _context.VacationRequests.Remove(vacationrequest!);
             await _context.SaveChangesAsync();
-
         }
         catch (DbUpdateConcurrencyException ex)
         {
             _errorMessage = "Another user has deleted this data since you entered the page.";
-
+			Logger.LogWarning(ex, _errorMessage);
         }
         catch (NavigationException)
         {
@@ -178,9 +175,9 @@ else
             _errorMessage = $"An error occurred while trying to delete: {ex.Message}";
         }
 
-        // await SignalRService.InitializeAsync();
-        // await Task.Delay(500);
-        // await SignalRService.SendVacationRequestAsync();
+        await SignalRService.InitializeAsync();
+        await Task.Delay(500);
+        await SignalRService.SendVacationRequestAsync();
 
         _navigationManager.NavigateTo("/vacationrequests");
     }
