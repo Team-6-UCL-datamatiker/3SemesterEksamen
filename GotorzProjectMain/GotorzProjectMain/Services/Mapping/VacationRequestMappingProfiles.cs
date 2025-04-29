@@ -7,7 +7,7 @@ namespace GotorzProjectMain.Services.Mapping;
 
 public class VacationRequestMappingProfiles : Profile
 {
-    public VacationRequestMappingProfiles() 
+    public VacationRequestMappingProfiles()
     {
         CreateMap<VacationRequest, VacationRequestBaseInputModel>()
         .ForMember(inputModel => inputModel.Country, opt => opt.MapFrom(user => user.Country))

@@ -8,6 +8,8 @@
 @inject NavigationManager NavigationManager
 @inject IExtendedUserService ExtendedUserService
 @inject IMapper Mapper
+@rendermode InteractiveServer
+
 
 <PageTitle>Edit</PageTitle>
 
@@ -23,15 +25,14 @@ else
 {
     <div class="row">
         <div class="col-md-4">
-            <EditForm method="post" Model="InputModel" OnValidSubmit="UpdateVacationRequest" FormName="edit" Enhance>
+            <EditForm Model="InputModel" OnValidSubmit="UpdateVacationRequest" FormName="edit" Enhance>
                 <DataAnnotationsValidator />
                 <ValidationSummary role="alert"/>
-               @*  <input type="hidden" name="VacationRequest.VacationRequestId" value="@VacationRequest.VacationRequestId" />
                 <div class="mb-3">
                     <label for="country" class="form-label">Country:</label>
-                    <InputText id="country" @bind-Value="VacationRequest.Country" class="form-control" />
-                    <ValidationMessage For="() => VacationRequest.Country" class="text-danger" />
-                </div> *@
+                    <InputText id="country" @bind-Value="InputModel.Country" class="form-control" />
+                    <ValidationMessage For="() => InputModel.Country" class="text-danger" />
+                </div>
                 <div class="mb-3">
                     <label for="startdate" class="form-label">StartDate:</label>
                     <InputDate id="startdate" @bind-Value="InputModel.StartDate" class="form-control" />
@@ -73,16 +74,6 @@ else
                     <ValidationMessage For="() => InputModel.Misc" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="status" class="form-label">Status:</label>
-                    <InputSelect id="status" @bind-Value="InputModel.Status" class="form-control">
-                        @foreach (Status status in Enum.GetValues(typeof(Status)))
-                        {
-                            <option value="@status">@status</option>
-                        }
-                    </InputSelect>
-                    <ValidationMessage For="() => InputModel.Status" class="text-danger" />
-                </div>
-                <div class="mb-3">
                     <label class="form-label">Customer Email:</label>
                     <input type="text" class="form-control" value="@customer?.User?.Email" readonly />
                 </div>
@@ -102,24 +93,10 @@ else
     [SupplyParameterFromQuery(Name = "vacationrequestid")]
     private int VacationRequestId { get; set; }
 
-    [SupplyParameterFromForm]
-    private EditVacationRequestInputModel InputModel { get; set; }
+    private VacationRequestBaseInputModel InputModel { get; set; } = new();
 
-    [SupplyParameterFromForm]
     private VacationRequest? VacationRequest { get; set; }
 
-    // protected override async Task OnInitializedAsync()
-    // {
-    //     VacationRequest ??= await DbContext.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
-
-    //     if (VacationRequest is null)
-    //     {
-    //         NavigationManager.NavigateTo("notfound");
-    //         return;
-    //     }
-
-    //     customer = await ExtendedUserService.GetCustomerByIdAsync(VacationRequest.UserId);
-    // }
     protected override async Task OnInitializedAsync()
     {
         try
@@ -131,7 +108,7 @@ else
                 NavigationManager.NavigateTo("notfound");
                 return;
             }
-            InputModel = Mapper.Map<EditVacationRequestInputModel>(VacationRequest);
+            Mapper.Map(VacationRequest, InputModel);
             customer = await ExtendedUserService.GetCustomerByIdAsync(VacationRequest.UserId);
         }
         catch (Exception ex)
@@ -141,38 +118,14 @@ else
         }
     }
 
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
-    // private async Task UpdateVacationRequest()
-    // {
-    //     DbContext.Attach(VacationRequest!).State = EntityState.Modified;
-
-    //     try
-    //     {
-    //         await DbContext.SaveChangesAsync();
-    //     }
-    //     catch (DbUpdateConcurrencyException)
-    //     {
-    //         if (!VacationRequestExists(VacationRequest!.VacationRequestId))
-    //         {
-    //             NavigationManager.NavigateTo("notfound");
-    //         }
-    //         else
-    //         {
-    //             throw;
-    //         }
-    //     }
-
-    //     NavigationManager.NavigateTo("/vacationrequests");
-    // }
     private async Task UpdateVacationRequest()
     {
         try
         {
             Mapper.Map(InputModel, VacationRequest);
             await DbContext.SaveChangesAsync();
-
             NavigationManager.NavigateTo("/vacationrequests");
+            
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -190,12 +143,9 @@ else
             Console.Error.WriteLine($"Error updating vacation request: {ex.Message}");
             NavigationManager.NavigateTo("error");
         }
+        
     }
 
-    // private bool VacationRequestExists(int vacationrequestid)
-    // {
-    //     return DbContext.VacationRequests.Any(e => e.VacationRequestId == vacationrequestid);
-    // }
     private bool VacationRequestExists(int vacationrequestid)
     {
         try
