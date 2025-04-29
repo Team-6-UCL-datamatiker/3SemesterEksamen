@@ -20,7 +20,7 @@
 @inject IEmailSender<ApplicationUser> EmailSender
 @inject ILogger<RegisterCustomer> Logger
 @inject NavigationManager NavigationManager
-@inject ApplicationDbContext DbContext
+@inject ApplicationDbContext Context
 @inject IMapper Mapper
 
 <PageTitle>Register</PageTitle>
@@ -132,8 +132,8 @@
 
 			Mapper.Map(Input, customer);
 
-			DbContext.Customers.Add(customer);
-			await DbContext.SaveChangesAsync();
+			Context.Customers.Add(customer);
+			await Context.SaveChangesAsync();
 
 			// Er det her noget vi bruger?
 			Logger.LogInformation($"User ({user.Id}) created a new account with password.");
@@ -162,7 +162,7 @@
 			}
 
 			await Task.Delay(500, _debounceCts.Token); // 500ms debounce
-			_userNameErrorMessage = await DbContext.Customers.AnyAsync(c => c.CustomUserName.ToLower() == e.Value.ToString().ToLower()) ? "Sorry, that username is already in use. Please try a different one." : null;
+			_userNameErrorMessage = await Context.Customers.AnyAsync(c => c.CustomUserName.ToLower() == e.Value.ToString().ToLower()) ? "Sorry, that username is already in use. Please try a different one." : null;
 
 			if (_userNameErrorMessage is not null)
 			{

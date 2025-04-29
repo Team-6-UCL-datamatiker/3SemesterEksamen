@@ -10,7 +10,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using System.Security.Claims
 
-@inject ApplicationDbContext _context
+@inject ApplicationDbContext Context
 @inject IExtendedUserService ExtendedUserService
 @inject NavigationManager NavigationManager
 @inject VacationRequestSignalRService SignalRService
@@ -71,7 +71,7 @@
         userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
 
         // Check if logged in user is an employee
-        isEmployee = await _context.Employees.AnyAsync(e => e.Id == userId);
+        isEmployee = await Context.Employees.AnyAsync(e => e.Id == userId);
 
         await LoadDataAsync();
 
@@ -95,11 +95,11 @@
         // Load requests -  all for employees, only own for customers
         if (isEmployee)
         {
-            vacationRequests = await _context.VacationRequests.ToListAsync();
+            vacationRequests = await Context.VacationRequests.ToListAsync();
         }
         else
         {
-            vacationRequests = await _context.VacationRequests
+            vacationRequests = await Context.VacationRequests
                 .Where(v => v.UserId == userId)
                 .ToListAsync();
         }

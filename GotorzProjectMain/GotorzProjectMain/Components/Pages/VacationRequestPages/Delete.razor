@@ -6,9 +6,9 @@
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.SignalR
 
-@inject ApplicationDbContext _context
-@inject NavigationManager _navigationManager
-@inject Services.IExtendedUserService _userService
+@inject ApplicationDbContext Context
+@inject NavigationManager NavigationManager
+@inject Services.IExtendedUserService UserService
 @inject ILogger<Delete> Logger
 @inject VacationRequestSignalRService SignalRService
 
@@ -84,11 +84,11 @@ else
         </dl>
         <dl class="row">
             <dt class="col-sm-2">Full Name</dt>
-            <dd class="col-sm-10">@customer?.User.FirstName @customer?.User.LastName</dd>
+            <dd class="col-sm-10">@Customer?.User.FirstName @Customer?.User.LastName</dd>
         </dl>
         <dl class="row">
             <dt class="col-sm-2">Mail</dt>
-            <dd class="col-sm-10">@customer?.User.Email</dd>
+            <dd class="col-sm-10">@Customer?.User.Email</dd>
         </dl>
         <dl class="row" style="display:none;">
             <dt class="col-sm-2">UserId</dt>
@@ -113,19 +113,19 @@ else
     [SupplyParameterFromQuery]
     private int VacationRequestId { get; set; }
     private VacationRequest? vacationrequest;
-    private Customer? customer { get; set; }
+    private Customer? Customer { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         if (VacationRequestId == 0)
         {
-            _navigationManager.NavigateTo("/vacationrequests");
+            NavigationManager.NavigateTo("/vacationrequests");
             return;
         }
 
         try
         {
-            vacationrequest = await _context.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
+            vacationrequest = await Context.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
 
             if (vacationrequest is null)
             {
@@ -139,7 +139,7 @@ else
                     VacationRequestId = vacationrequest.VacationRequestId
                 };
 
-            customer = await _userService.GetCustomerByIdAsync(vacationrequest.UserId);
+            Customer = await UserService.GetCustomerByIdAsync(vacationrequest.UserId);
         }
         catch (Exception ex)
         {
@@ -158,8 +158,8 @@ else
                 return;
             }
 
-            _context.VacationRequests.Remove(vacationrequest!);
-            await _context.SaveChangesAsync();
+            Context.VacationRequests.Remove(vacationrequest!);
+            await Context.SaveChangesAsync();
         }
         catch (DbUpdateConcurrencyException ex)
         {
@@ -179,6 +179,6 @@ else
         await Task.Delay(500);
         await SignalRService.SendVacationRequestAsync();
 
-        _navigationManager.NavigateTo("/vacationrequests");
+        NavigationManager.NavigateTo("/vacationrequests");
     }
 }

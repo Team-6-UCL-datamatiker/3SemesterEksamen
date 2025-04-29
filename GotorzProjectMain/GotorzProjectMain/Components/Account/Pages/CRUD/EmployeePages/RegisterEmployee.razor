@@ -21,7 +21,7 @@
 @inject ILogger<RegisterEmployee> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
-@inject ApplicationDbContext _context
+@inject ApplicationDbContext Context
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IMapper Mapper
 
@@ -163,8 +163,8 @@
 			result = await UserManager.AddToRoleAsync(user, roleToAssign);
 			_identityErrors = _identityErrors.Concat(result.Succeeded ? Enumerable.Empty<IdentityError>() : result.Errors);
 
-			_context.Employees.Add(employee);
-			await _context.SaveChangesAsync();
+			Context.Employees.Add(employee);
+			await Context.SaveChangesAsync();
 
 			// Er det her noget vi bruger?
 			Logger.LogInformation($"User ({user.Id}) created a new account with password.");

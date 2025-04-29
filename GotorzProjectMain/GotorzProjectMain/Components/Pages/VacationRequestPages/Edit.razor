@@ -4,7 +4,7 @@
 @using Microsoft.EntityFrameworkCore
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Services
-@inject GotorzProjectMain.Data.ApplicationDbContext DbContext
+@inject GotorzProjectMain.Data.ApplicationDbContext Context
 @inject NavigationManager NavigationManager
 @inject IExtendedUserService ExtendedUserService
 @inject IMapper Mapper
@@ -76,7 +76,7 @@ else
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Customer Email:</label>
-                    <input type="text" class="form-control" value="@customer?.User?.Email" readonly />
+                    <input type="text" class="form-control" value="@Customer?.User?.Email" readonly />
                 </div>
                 <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>
@@ -89,7 +89,7 @@ else
 </div>
 
 @code {
-    private Customer? customer { get; set; }
+    private Customer? Customer { get; set; }
 
     [SupplyParameterFromQuery(Name = "vacationrequestid")]
     private int VacationRequestId { get; set; }
@@ -102,7 +102,7 @@ else
     {
         try
         {
-            VacationRequest ??= await DbContext.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
+            VacationRequest ??= await Context.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
 
             if (VacationRequest is null)
             {
@@ -110,7 +110,7 @@ else
                 return;
             }
             Mapper.Map(VacationRequest, InputModel);
-            customer = await ExtendedUserService.GetCustomerByIdAsync(VacationRequest.UserId);
+            Customer = await ExtendedUserService.GetCustomerByIdAsync(VacationRequest.UserId);
         }
         catch (Exception ex)
         {
@@ -124,7 +124,7 @@ else
         try
         {
             Mapper.Map(InputModel, VacationRequest);
-            await DbContext.SaveChangesAsync();
+            await Context.SaveChangesAsync();
             NavigationManager.NavigateTo("/vacationrequests");
             
         }
@@ -151,7 +151,7 @@ else
     {
         try
         {
-            return DbContext.VacationRequests.Any(e => e.VacationRequestId == vacationrequestid);
+            return Context.VacationRequests.Any(e => e.VacationRequestId == vacationrequestid);
         }
         catch (Exception ex)
         {

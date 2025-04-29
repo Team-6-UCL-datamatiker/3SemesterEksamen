@@ -5,7 +5,7 @@
 @using GotorzProjectMain.Models
 @inject NavigationManager NavigationManager
 @inject Services.IExtendedUserService UserService
-@inject ApplicationDbContext _context
+@inject ApplicationDbContext Context
 @inject ILogger<RemoveEmployee> Logger
 
 @attribute [Authorize(Policy = "Admin")]
@@ -81,15 +81,15 @@
             if (employee is not null)
             {
                 // 🔥 Load the ApplicationUser
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == employee.Id);
+                var user = await Context.Users.FirstOrDefaultAsync(u => u.Id == employee.Id);
 
                 if (user is not null)
                 {
-                    _context.Users.Remove(user); // Delete the Identity user
+                    Context.Users.Remove(user); // Delete the Identity user
                 }
 
-                _context.Employees.Remove(employee); // Delete the Customer
-                await _context.SaveChangesAsync();
+                Context.Employees.Remove(employee); // Delete the Customer
+                await Context.SaveChangesAsync();
             }
         }
         catch (DbUpdateConcurrencyException ex)
