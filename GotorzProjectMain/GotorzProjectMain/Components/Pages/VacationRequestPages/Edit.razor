@@ -1,10 +1,15 @@
 ﻿@page "/vacationrequests/edit"
+@using AutoMapper
+@using GotorzProjectMain.InputModels.VacationRequestInputModels
 @using Microsoft.EntityFrameworkCore
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Services
-@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+@inject GotorzProjectMain.Data.ApplicationDbContext DbContext
 @inject NavigationManager NavigationManager
 @inject IExtendedUserService ExtendedUserService
+@inject IMapper Mapper
+@rendermode InteractiveServer
+
 
 <PageTitle>Edit</PageTitle>
 
@@ -20,69 +25,54 @@ else
 {
     <div class="row">
         <div class="col-md-4">
-            <EditForm method="post" Model="VacationRequest" OnValidSubmit="UpdateVacationRequest" FormName="edit" Enhance>
+            <EditForm Model="InputModel" OnValidSubmit="UpdateVacationRequest" FormName="edit" Enhance>
                 <DataAnnotationsValidator />
                 <ValidationSummary role="alert"/>
-                <input type="hidden" name="VacationRequest.VacationRequestId" value="@VacationRequest.VacationRequestId" />
                 <div class="mb-3">
                     <label for="country" class="form-label">Country:</label>
-                    <InputText id="country" @bind-Value="VacationRequest.Country" class="form-control" />
-                    <ValidationMessage For="() => VacationRequest.Country" class="text-danger" />
+                    <InputText id="country" @bind-Value="InputModel.Country" class="form-control" />
+                    <ValidationMessage For="() => InputModel.Country" class="text-danger" />
                 </div>
                 <div class="mb-3">
                     <label for="startdate" class="form-label">StartDate:</label>
-                    <InputDate id="startdate" @bind-Value="VacationRequest.StartDate" class="form-control" />
-                    <ValidationMessage For="() => VacationRequest.StartDate" class="text-danger" />
+                    <InputDate id="startdate" @bind-Value="InputModel.StartDate" class="form-control" />
+                    <ValidationMessage For="() => InputModel.StartDate" class="text-danger" />
                 </div>
                 <div class="mb-3">
                     <label for="enddate" class="form-label">EndDate:</label>
-                    <InputDate id="enddate" @bind-Value="VacationRequest.EndDate" class="form-control" />
-                    <ValidationMessage For="() => VacationRequest.EndDate" class="text-danger" />
+                    <InputDate id="enddate" @bind-Value="InputModel.EndDate" class="form-control" />
+                    <ValidationMessage For="() => InputModel.EndDate" class="text-danger" />
                 </div>
                 <div class="mb-3">
                     <label for="childrenamount" class="form-label">ChildrenAmount:</label>
-                    <InputNumber id="childrenamount" @bind-Value="VacationRequest.ChildrenAmount" class="form-control" />
-                    <ValidationMessage For="() => VacationRequest.ChildrenAmount" class="text-danger" />
+                    <InputNumber id="childrenamount" @bind-Value="InputModel.ChildrenAmount" class="form-control" />
+                    <ValidationMessage For="() => InputModel.ChildrenAmount" class="text-danger" />
                 </div>
                 <div class="mb-3">
                     <label for="adultsamount" class="form-label">AdultsAmount:</label>
-                    <InputNumber id="adultsamount" @bind-Value="VacationRequest.AdultsAmount" class="form-control" />
-                    <ValidationMessage For="() => VacationRequest.AdultsAmount" class="text-danger" />
+                    <InputNumber id="adultsamount" @bind-Value="InputModel.AdultsAmount" class="form-control" />
+                    <ValidationMessage For="() => InputModel.AdultsAmount" class="text-danger" />
                 </div>
                 <div class="mb-3">
                     <label for="roomsamount" class="form-label">RoomsAmount:</label>
-                    <InputNumber id="roomsamount" @bind-Value="VacationRequest.RoomsAmount" class="form-control" />
-                    <ValidationMessage For="() => VacationRequest.RoomsAmount" class="text-danger" />
+                    <InputNumber id="roomsamount" @bind-Value="InputModel.RoomsAmount" class="form-control" />
+                    <ValidationMessage For="() => InputModel.RoomsAmount" class="text-danger" />
                 </div>
                 <div class="mb-3">
                     <label for="hotelrequest" class="form-label">HotelRequest:</label>
-                    <InputText id="hotelrequest" @bind-Value="VacationRequest.HotelRequest" class="form-control" />
-                    <ValidationMessage For="() => VacationRequest.HotelRequest" class="text-danger" />
+                    <InputText id="hotelrequest" @bind-Value="InputModel.HotelRequest" class="form-control" />
+                    <ValidationMessage For="() => InputModel.HotelRequest" class="text-danger" />
                 </div>
                 <div class="mb-3">
                     <label for="flightrequest" class="form-label">FlightRequest:</label>
-                    <InputText id="flightrequest" @bind-Value="VacationRequest.FlightRequest" class="form-control" />
-                    <ValidationMessage For="() => VacationRequest.FlightRequest" class="text-danger" />
+                    <InputText id="flightrequest" @bind-Value="InputModel.FlightRequest" class="form-control" />
+                    <ValidationMessage For="() => InputModel.FlightRequest" class="text-danger" />
                 </div>
                 <div class="mb-3">
                     <label for="misc" class="form-label">Misc:</label>
-                    <InputText id="misc" @bind-Value="VacationRequest.Misc" class="form-control" />
-                    <ValidationMessage For="() => VacationRequest.Misc" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="status" class="form-label">Status:</label>
-                    <InputSelect id="status" @bind-Value="VacationRequest.Status" class="form-control">
-                        @foreach (RequestStatus status in Enum.GetValues(typeof(RequestStatus)))
-                        {
-                            <option value="@status">@status</option>
-                        }
-                    </InputSelect>
-                    <ValidationMessage For="() => VacationRequest.Status" class="text-danger" />
-                </div>
-                <div style="display:none;" class="mb-3">
-                    <label for="userid" class="form-label">UserId:</label>
-                    <InputText id="userid" @bind-Value="VacationRequest.UserId" class="form-control" />
-                    <ValidationMessage For="() => VacationRequest.UserId" class="text-danger" />
+                    <InputText id="misc" @bind-Value="InputModel.Misc" class="form-control" />
+                    <ValidationMessage For="() => InputModel.Misc" class="text-danger" />
+                    
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Customer Email:</label>
@@ -101,34 +91,42 @@ else
 @code {
     private Customer? customer { get; set; }
 
-    [SupplyParameterFromQuery]
+    [SupplyParameterFromQuery(Name = "vacationrequestid")]
     private int VacationRequestId { get; set; }
 
-    [SupplyParameterFromForm]
+    private VacationRequestBaseInputModel InputModel { get; set; } = new();
+
     private VacationRequest? VacationRequest { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        VacationRequest ??= await context.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
-
-        if (VacationRequest is null)
-        {
-            NavigationManager.NavigateTo("notfound");
-        }
-       customer = await ExtendedUserService.GetCustomerByIdAsync(VacationRequest.UserId);
-    }
-
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
-    private async Task UpdateVacationRequest()
-    {
-        using var context = DbFactory.CreateDbContext();
-        context.Attach(VacationRequest!).State = EntityState.Modified;
-
         try
         {
-            await context.SaveChangesAsync();
+            VacationRequest ??= await DbContext.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
+
+            if (VacationRequest is null)
+            {
+                NavigationManager.NavigateTo("notfound");
+                return;
+            }
+            Mapper.Map(VacationRequest, InputModel);
+            customer = await ExtendedUserService.GetCustomerByIdAsync(VacationRequest.UserId);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading vacation request: {ex.Message}");
+            NavigationManager.NavigateTo("error");
+        }
+    }
+
+    private async Task UpdateVacationRequest()
+    {
+        try
+        {
+            Mapper.Map(InputModel, VacationRequest);
+            await DbContext.SaveChangesAsync();
+            NavigationManager.NavigateTo("/vacationrequests");
+            
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -141,13 +139,24 @@ else
                 throw;
             }
         }
-
-        NavigationManager.NavigateTo("/vacationrequests");
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error updating vacation request: {ex.Message}");
+            NavigationManager.NavigateTo("error");
+        }
+        
     }
 
     private bool VacationRequestExists(int vacationrequestid)
     {
-        using var context = DbFactory.CreateDbContext();
-        return context.VacationRequests.Any(e => e.VacationRequestId == vacationrequestid);
+        try
+        {
+            return DbContext.VacationRequests.Any(e => e.VacationRequestId == vacationrequestid);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error checking vacation request existence: {ex.Message}");
+            return false;
+        }
     }
 }

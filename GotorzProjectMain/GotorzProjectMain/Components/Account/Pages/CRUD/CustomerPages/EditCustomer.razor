@@ -2,22 +2,16 @@
 @rendermode InteractiveServer
 @attribute [Authorize(Policy = "Admin")]
 
-@using AutoMapper
 @using GotorzProjectMain.Data
-@using GotorzProjectMain.InputModels.Users.CustomerInputModels
-@using GotorzProjectMain.Models
-@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Authorization
 @using GotorzProjectMain.Models
 
-@inject ApplicationDbContext Context
-@inject NavigationManager NavigationManager
-@inject UserManager<ApplicationUser> UserManager
-@inject Services.IExtendedUserService UserService
-@inject IMapper Mapper
-@inject ILogger<EditCustomer> Logger
+@inject ApplicationDbContext _context
+@inject NavigationManager _navigationManager
+@inject UserManager<ApplicationUser> _userManager
+@inject Services.IExtendedUserService _userService
 
 <PageTitle>Edit Customer</PageTitle>
 
