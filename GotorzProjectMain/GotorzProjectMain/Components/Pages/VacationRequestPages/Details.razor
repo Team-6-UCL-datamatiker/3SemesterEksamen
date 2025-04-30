@@ -1,15 +1,18 @@
 ﻿@page "/vacationrequests/details"
+@using GotorzProjectMain.Data
 @using Microsoft.EntityFrameworkCore
 @using GotorzProjectMain.Models
-@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+@using GotorzProjectMain.Services
 @inject NavigationManager NavigationManager
+@inject IExtendedUserService UserService
+@inject ApplicationDbContext Context
 
 <PageTitle>Details</PageTitle>
 
 <h1>Details</h1>
 
 <div>
-    <h2>VacationRequest</h2>
+    <h2>Vacation Request</h2>
     <hr />
     @if (vacationrequest is null)
     {
@@ -20,25 +23,28 @@
             <dt class="col-sm-2">Country</dt>
             <dd class="col-sm-10">@vacationrequest.Country</dd>
             <dt class="col-sm-2">StartDate</dt>
-            <dd class="col-sm-10">@vacationrequest.StartDate</dd>
+            <dd class="col-sm-10">@vacationrequest.StartDate.ToShortDateString()</dd>
             <dt class="col-sm-2">EndDate</dt>
-            <dd class="col-sm-10">@vacationrequest.EndDate</dd>
-            <dt class="col-sm-2">ChildrenAmount</dt>
+            <dd class="col-sm-10">@vacationrequest.EndDate.ToShortDateString()</dd>
+            <dt class="col-sm-2">Children Amount</dt>
             <dd class="col-sm-10">@vacationrequest.ChildrenAmount</dd>
-            <dt class="col-sm-2">AdultsAmount</dt>
+            <dt class="col-sm-2">Adults Amount</dt>
             <dd class="col-sm-10">@vacationrequest.AdultsAmount</dd>
-            <dt class="col-sm-2">RoomsAmount</dt>
+            <dt class="col-sm-2">Rooms Amount</dt>
             <dd class="col-sm-10">@vacationrequest.RoomsAmount</dd>
-            <dt class="col-sm-2">HotelRequest</dt>
+            <dt class="col-sm-2">Hotel Request</dt>
             <dd class="col-sm-10">@vacationrequest.HotelRequest</dd>
-            <dt class="col-sm-2">FlightRequest</dt>
+            <dt class="col-sm-2">Flight Request</dt>
             <dd class="col-sm-10">@vacationrequest.FlightRequest</dd>
             <dt class="col-sm-2">Misc</dt>
             <dd class="col-sm-10">@vacationrequest.Misc</dd>
             <dt class="col-sm-2">Status</dt>
             <dd class="col-sm-10">@vacationrequest.Status</dd>
-            <dt class="col-sm-2">UserId</dt>
-            <dd class="col-sm-10">@vacationrequest.UserId</dd>
+            <dt class="col-sm-2">Full Name</dt>
+            <dd class="col-sm-10">@Customer.User.FirstName @Customer.User.LastName</dd>
+            <dt class="col-sm-2">Email</dt>
+            <dd class="col-sm-10">@Customer.User.Email</dd>
+            <dd class="col-sm-10" style="display:none">@vacationrequest.UserId</dd>
         </dl>
         <div>
             <a href="@($"/vacationrequests/edit?vacationrequestid={vacationrequest.VacationRequestId}")">Edit</a> |
@@ -49,18 +55,38 @@
 
 @code {
     private VacationRequest? vacationrequest;
+    private Customer? Customer { get; set; }
 
     [SupplyParameterFromQuery]
     private int VacationRequestId { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        vacationrequest = await context.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
+        try
+        {
+            vacationrequest = await Context.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
+        }
+        catch (Exception ex)
+        {
+            // Handle the exception (e.g., log it, show a message, etc.)
+            Console.WriteLine($"Error fetching vacation request: {ex.Message}");
+        }
+
 
         if (vacationrequest is null)
         {
             NavigationManager.NavigateTo("notfound");
         }
+
+        try
+        {
+            Customer = await UserService.GetCustomerByIdAsync(vacationrequest.UserId);
+        }
+        catch (Exception ex)
+        {
+            // Handle the exception (e.g., log it, show a message, etc.)
+            Console.WriteLine($"Error fetching customer details: {ex.Message}");
+        }
+    
     }
 }

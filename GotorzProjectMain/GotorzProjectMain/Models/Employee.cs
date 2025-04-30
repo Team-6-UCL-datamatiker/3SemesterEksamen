@@ -1,19 +1,7 @@
-﻿using GotorzProjectMain.Data;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿namespace GotorzProjectMain.Models;
 
-namespace GotorzProjectMain.Models
+public class Employee : BaseUser
 {
-    public class Employee
-    {
-        [Key]
-        [ForeignKey("User")]
-        public string Id { get; set; }
-
-        public Uri? ProfilePicture { get; set; }
-        public bool Role { get; set; }
-
-        public ApplicationUser User { get; set; }
-    }
-
+	public Uri? ProfilePicture { get; set; }
+	public bool IsAdmin { get; set; }
 }

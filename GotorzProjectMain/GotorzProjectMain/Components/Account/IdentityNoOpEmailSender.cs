@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using GotorzProjectMain.Data;
+using GotorzProjectMain.Models;
 
 namespace GotorzProjectMain.Components.Account;
 

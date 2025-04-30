@@ -1,10 +1,12 @@
 ﻿@page "/customers/delete"
+@using GotorzProjectMain.Data
 @using Microsoft.EntityFrameworkCore
 @using GotorzProjectMain.Models
 @using Microsoft.AspNetCore.Authorization
-@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
-@inject Services.IUserService UserService
+@inject Services.IExtendedUserService UserService
+@inject ApplicationDbContext Context
+@inject ILogger<RemoveCustomer> Logger
 
 @attribute [Authorize(Policy = "Admin")]
 
@@ -30,6 +32,12 @@
             <a href="/customers">Back to List</a>
         </EditForm>
     }
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <div class="alert alert-danger mt-3" role="alert">
+            @_errorMessage
+        </div>
+    }
 </div>
 
 @code {
@@ -37,6 +45,7 @@
 
     [SupplyParameterFromQuery]
     private string Id { get; set; }
+    private string? _errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -50,21 +59,31 @@
 
     private async Task DeleteCustomer()
     {
-        using var context = DbFactory.CreateDbContext();
-        if (customer is not null)
+        try
         {
-            // 🔥 Load the ApplicationUser
-            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == customer.Id);
-
-            if (user is not null)
+            if (customer is not null)
             {
-                context.Users.Remove(user); // Delete the Identity user
+                // 🔥 Load the ApplicationUser
+                var user = await Context.Users.FirstOrDefaultAsync(u => u.Id == customer.Id);
+
+                if (user is not null)
+                {
+                    Context.Users.Remove(user); // Delete the Identity user
+                }
+
+                Context.Customers.Remove(customer); // Delete the Customer
+                await Context.SaveChangesAsync();
             }
-
-            context.Customers.Remove(customer); // Delete the Customer
-            await context.SaveChangesAsync();
         }
-
-        NavigationManager.NavigateTo("/customers");
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _errorMessage = "Another user has modified this data since you started editing. Your changes were not saved. Please reload and try again.";
+            Logger.LogWarning(ex, _errorMessage);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting customer: {ex.Message}");
+        }
+    NavigationManager.NavigateTo("/customers");
     }
 }

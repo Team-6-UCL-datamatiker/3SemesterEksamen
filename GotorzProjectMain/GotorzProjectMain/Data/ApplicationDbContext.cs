@@ -27,10 +27,5 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 		modelBuilder.Entity<VacationRequest>()
 			.Property(v => v.Status)
 			.HasConversion<string>();
-
-		modelBuilder.Entity<VacationRequest>()
-			.HasOne(v => v.Customer)
-			.WithMany()  
-			.HasForeignKey(v => v.UserId);
 	}
 }

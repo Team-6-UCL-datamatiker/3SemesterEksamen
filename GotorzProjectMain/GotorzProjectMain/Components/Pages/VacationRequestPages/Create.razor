@@ -1,8 +1,21 @@
 ﻿@page "/vacationrequests/create"
+@using GotorzProjectMain.Data
+@using GotorzProjectMain.InputModels.VacationRequestInputModels
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using GotorzProjectMain.Models
-@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+@using GotorzProjectMain.Services
+@using Microsoft.AspNetCore.SignalR
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Security.Claims
+
+@inject ApplicationDbContext Context
 @inject NavigationManager NavigationManager
+@inject VacationRequestSignalRService SignalRService
+@inject AutoMapper.IMapper Mapper
+
+
+@attribute [Authorize]
 
 <PageTitle>Create</PageTitle>
 
@@ -11,89 +24,149 @@
 <h2>VacationRequest</h2>
 <hr />
 <div class="row">
-    <div class="col-md-4">
-        <EditForm method="post" Model="VacationRequest" OnValidSubmit="AddVacationRequest" FormName="create" Enhance>
-            <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert"/>
-            <div class="mb-3">
-                <label for="country" class="form-label">Country:</label> 
-                <InputText id="country" @bind-Value="VacationRequest.Country" class="form-control" /> 
-                <ValidationMessage For="() => VacationRequest.Country" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="startdate" class="form-label">StartDate:</label> 
-                <InputDate id="startdate" @bind-Value="VacationRequest.StartDate" class="form-control" /> 
-                <ValidationMessage For="() => VacationRequest.StartDate" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="enddate" class="form-label">EndDate:</label> 
-                <InputDate id="enddate" @bind-Value="VacationRequest.EndDate" class="form-control" /> 
-                <ValidationMessage For="() => VacationRequest.EndDate" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="childrenamount" class="form-label">ChildrenAmount:</label> 
-                <InputNumber id="childrenamount" @bind-Value="VacationRequest.ChildrenAmount" class="form-control" /> 
-                <ValidationMessage For="() => VacationRequest.ChildrenAmount" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="adultsamount" class="form-label">AdultsAmount:</label> 
-                <InputNumber id="adultsamount" @bind-Value="VacationRequest.AdultsAmount" class="form-control" /> 
-                <ValidationMessage For="() => VacationRequest.AdultsAmount" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="roomsamount" class="form-label">RoomsAmount:</label> 
-                <InputNumber id="roomsamount" @bind-Value="VacationRequest.RoomsAmount" class="form-control" /> 
-                <ValidationMessage For="() => VacationRequest.RoomsAmount" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="hotelrequest" class="form-label">HotelRequest:</label> 
-                <InputText id="hotelrequest" @bind-Value="VacationRequest.HotelRequest" class="form-control" /> 
-                <ValidationMessage For="() => VacationRequest.HotelRequest" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="flightrequest" class="form-label">FlightRequest:</label> 
-                <InputText id="flightrequest" @bind-Value="VacationRequest.FlightRequest" class="form-control" /> 
-                <ValidationMessage For="() => VacationRequest.FlightRequest" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="misc" class="form-label">Misc:</label> 
-                <InputText id="misc" @bind-Value="VacationRequest.Misc" class="form-control" /> 
-                <ValidationMessage For="() => VacationRequest.Misc" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="status" class="form-label">Status:</label>
-                <InputSelect id="status" @bind-Value="VacationRequest.Status" class="form-control">
-                    @foreach (Status status in Enum.GetValues(typeof(Status)))
-                    {
-                        <option value="@status">@status</option>
-                    }
-                </InputSelect>
-                <ValidationMessage For="() => VacationRequest.Status" class="text-danger" />
-            </div>        
-            <div class="mb-3">
-                <label for="userid" class="form-label">UserId:</label> 
-                <InputText id="userid" @bind-Value="VacationRequest.UserId" class="form-control" /> 
-                <ValidationMessage For="() => VacationRequest.UserId" class="text-danger" /> 
-            </div>        
-            <button type="submit" class="btn btn-primary">Create</button>
-        </EditForm>
-    </div>
+	<div class="col-md-4">
+		<EditForm method="post" Model="InputModel" OnValidSubmit="HandleValidSubmit" FormName="create" Enhance>
+			<DataAnnotationsValidator />
+			<ValidationSummary class="text-danger" role="alert" />
+
+			@* Custom error message *@
+			@if (!string.IsNullOrEmpty(FormErrorMessage))
+			{
+				<div class="alert alert-danger" role="alert">@FormErrorMessage</div>
+			}
+
+			@* If the logged-in user is an employee, allow entering a customer email *@
+			@if (IsEmployee)
+			{
+				<div class="mb-3">
+					<label for="customerEmail" class="form-label">Customer Email:</label>
+					<InputText id="customerEmail" @bind-Value="InputModel.CustomerEmail" @bind-Value:event="oninput" class="form-control" />
+					<ValidationMessage For="() => InputModel.CustomerEmail" class="text-danger" />
+				</div>
+			}
+
+			<div class="mb-3">
+				<label for="country" class="form-label">Country:</label>
+				<InputText id="country" @bind-Value="InputModel.Country" class="form-control" />
+				<ValidationMessage For="() => InputModel.Country" class="text-danger" />
+			</div>
+			<div class="mb-3">
+				<label for="startdate" class="form-label">StartDate:</label>
+				<InputDate id="startdate" @bind-Value="InputModel.StartDate" class="form-control" />
+				<ValidationMessage For="() => InputModel.StartDate" class="text-danger" />
+			</div>
+			<div class="mb-3">
+				<label for="enddate" class="form-label">EndDate:</label>
+				<InputDate id="enddate" @bind-Value="InputModel.EndDate" class="form-control" />
+				<ValidationMessage For="() => InputModel.EndDate" class="text-danger" />
+			</div>
+			<div class="mb-3">
+				<label for="childrenamount" class="form-label">ChildrenAmount:</label>
+				<InputNumber id="childrenamount" @bind-Value="InputModel.ChildrenAmount" class="form-control" />
+				<ValidationMessage For="() => InputModel.ChildrenAmount" class="text-danger" />
+			</div>
+			<div class="mb-3">
+				<label for="adultsamount" class="form-label">AdultsAmount:</label>
+				<InputNumber id="adultsamount" @bind-Value="InputModel.AdultsAmount" class="form-control" />
+				<ValidationMessage For="() => InputModel.AdultsAmount" class="text-danger" />
+			</div>
+			<div class="mb-3">
+				<label for="roomsamount" class="form-label">RoomsAmount:</label>
+				<InputNumber id="roomsamount" @bind-Value="InputModel.RoomsAmount" class="form-control" />
+				<ValidationMessage For="() => InputModel.RoomsAmount" class="text-danger" />
+			</div>
+			<div class="mb-3">
+				<label for="hotelrequest" class="form-label">HotelRequest:</label>
+				<InputText id="hotelrequest" @bind-Value="InputModel.HotelRequest" class="form-control" />
+				<ValidationMessage For="() => InputModel.HotelRequest" class="text-danger" />
+			</div>
+			<div class="mb-3">
+				<label for="flightrequest" class="form-label">FlightRequest:</label>
+				<InputText id="flightrequest" @bind-Value="InputModel.FlightRequest" class="form-control" />
+				<ValidationMessage For="() => InputModel.FlightRequest" class="text-danger" />
+			</div>
+			<div class="mb-3">
+				<label for="misc" class="form-label">Misc:</label>
+				<InputText id="misc" @bind-Value="InputModel.Misc" class="form-control" />
+				<ValidationMessage For="() => InputModel.Misc" class="text-danger" />
+			</div>
+			<button type="submit" class="btn btn-primary">Create</button>
+		</EditForm>
+	</div>
 </div>
 
 <div>
-    <a href="/vacationrequests">Back to List</a>
+	<a href="/vacationrequests">Back to List</a>
 </div>
 
 @code {
-    [SupplyParameterFromForm]
-    private VacationRequest VacationRequest { get; set; } = new();
+	[SupplyParameterFromForm]
+	private CreateVacationRequestInputModel InputModel { get; set; }= new();
 
-    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
-    private async Task AddVacationRequest()
-    {
-        using var context = DbFactory.CreateDbContext();
-        context.VacationRequests.Add(VacationRequest);
-        await context.SaveChangesAsync();
-        NavigationManager.NavigateTo("/vacationrequests");
-    }
+	private bool IsEmployee { get; set; }
+	private string? FormErrorMessage { get; set; }
+
+	[CascadingParameter]
+	private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
+
+	protected override async Task OnInitializedAsync()
+	{
+		// Get the current user
+		var user = (await AuthenticationStateTask).User;
+
+		// Sets userid to the current user's ID if the user is authenticated
+		var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+						?? throw new InvalidOperationException("User not authenticated");
+
+		// Check if the user is an employee
+		IsEmployee = await Context.Employees.AnyAsync(e => e.Id == userId);
+	}
+
+	private async Task HandleValidSubmit()
+	{
+		// Employee validation
+		if (IsEmployee && string.IsNullOrWhiteSpace(InputModel.CustomerEmail))
+		{
+			FormErrorMessage = "Customer email is required.";
+			return;
+		}
+
+		// Map InputModel to entity
+		var vacationRequest = Mapper.Map<VacationRequest>(InputModel);
+
+		// Determine UserId
+		var authUser = (await AuthenticationStateTask).User;
+		var currentUserId = authUser.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+
+		// If the user is an employee, find the customer by email
+		if (IsEmployee)
+		{
+			var customer = await Context.Users
+				.FirstOrDefaultAsync(u => u.Email == InputModel.CustomerEmail);
+
+			if (customer == null)
+			{
+				FormErrorMessage = $"Customer '{InputModel.CustomerEmail}' not found.";
+				return;
+			}
+			// Set the UserId to the customer's ID
+			vacationRequest.UserId = customer.Id;
+		}
+		else
+		{
+			// If the user is not an employee, use their own ID
+			vacationRequest.UserId = currentUserId;
+		}
+
+		// Save
+		Context.VacationRequests.Add(vacationRequest);
+		await Context.SaveChangesAsync();
+
+		// SignalR notification
+		await SignalRService.InitializeAsync();
+		await Task.Delay(500);
+		await SignalRService.SendVacationRequestAsync();
+
+		NavigationManager.NavigateTo("/vacationrequests");
+	}
 }

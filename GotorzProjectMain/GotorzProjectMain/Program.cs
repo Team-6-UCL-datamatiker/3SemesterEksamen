@@ -1,12 +1,15 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using GotorzProjectMain.Client.Pages;
 using GotorzProjectMain.Components;
 using GotorzProjectMain.Components.Account;
 using GotorzProjectMain.Data;
+using Microsoft.AspNetCore.ResponseCompression;
+using GotorzProjectMain.Hubs;
 using GotorzProjectMain.Services;
-using static System.Formats.Asn1.AsnWriter;
+using GotorzProjectMain.Models;
+using AutoMapper;
+using GotorzProjectMain.Services.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,19 +18,17 @@ builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents()
 	.AddInteractiveWebAssemblyComponents();
 
+builder.Services.AddAutoMapper(typeof(UserMappingProfiles), typeof(VacationRequestMappingProfiles));
+
 // Ensure the configuration file is being read correctly
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
 					 .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
 					 .AddJsonFile("Connection.json", optional: false, reloadOnChange: true);
 
-builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
-			options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 
 //Used for getting the user data everytime an employee or customer is loaded
-builder.Services.AddScoped<IUserService, ExtendedUserService>();
-
+builder.Services.AddScoped<IExtendedUserService, ExtendedUserService>();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -35,6 +36,8 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
+
+builder.Services.AddScoped<VacationRequestSignalRService>();
 
 builder.Services.AddAuthentication(options =>
 	{
@@ -78,7 +81,19 @@ builder.Services.AddAuthorization(options =>
 		policy.RequireRole("Customer"));
 });
 
+builder.Services.AddSignalR();
+
+
+
+builder.Services.AddResponseCompression(opts =>
+{
+	opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+		[ "application/octet-stream" ]);
+});
+
 var app = builder.Build();
+
+app.UseResponseCompression();
 
 using (var scope = app.Services.CreateScope())
 {
@@ -104,9 +119,14 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.UseRouting();
+app.UseAuthorization();
 app.UseAntiforgery();
 
 
+
+app.MapHub<VacationRequestHub>("/vacationrequesthub");
 
 app.MapRazorComponents<App>()
 	.AddInteractiveServerRenderMode()
@@ -115,5 +135,7 @@ app.MapRazorComponents<App>()
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
+
+
 
 app.Run();
