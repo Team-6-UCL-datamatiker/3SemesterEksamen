@@ -1,0 +1,129 @@
+﻿@page "/vacationoffers/edit"
+@using Microsoft.EntityFrameworkCore
+@using GotorzProjectMain.Models
+@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>VacationOffer</h2>
+<hr />
+@if (VacationOffer is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="VacationOffer" OnValidSubmit="UpdateVacationOffer" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="VacationOffer.VacationOfferId" value="@VacationOffer.VacationOfferId" />
+                <div class="mb-3">
+                    <label for="vacationrequestid" class="form-label">VacationRequestId:</label>
+                    <InputNumber id="vacationrequestid" @bind-Value="VacationOffer.VacationRequestId" class="form-control" />
+                    <ValidationMessage For="() => VacationOffer.VacationRequestId" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="employeeemail" class="form-label">EmployeeEmail:</label>
+                    <InputText id="employeeemail" @bind-Value="VacationOffer.EmployeeEmail" class="form-control" />
+                    <ValidationMessage For="() => VacationOffer.EmployeeEmail" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="totalprice" class="form-label">TotalPrice:</label>
+                    <InputNumber id="totalprice" @bind-Value="VacationOffer.TotalPrice" class="form-control" />
+                    <ValidationMessage For="() => VacationOffer.TotalPrice" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="country" class="form-label">Country:</label>
+                    <InputText id="country" @bind-Value="VacationOffer.Country" class="form-control" />
+                    <ValidationMessage For="() => VacationOffer.Country" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="startdate" class="form-label">StartDate:</label>
+                    <InputDate id="startdate" @bind-Value="VacationOffer.StartDate" class="form-control" />
+                    <ValidationMessage For="() => VacationOffer.StartDate" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="enddate" class="form-label">EndDate:</label>
+                    <InputDate id="enddate" @bind-Value="VacationOffer.EndDate" class="form-control" />
+                    <ValidationMessage For="() => VacationOffer.EndDate" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="misc" class="form-label">Misc:</label>
+                    <InputText id="misc" @bind-Value="VacationOffer.Misc" class="form-control" />
+                    <ValidationMessage For="() => VacationOffer.Misc" class="text-danger" />
+                </div>
+                @* <div class="mb-3">
+                    <label for="offerstatus" class="form-label">OfferStatus:</label>
+                    <InputText id="offerstatus" @bind-Value="VacationOffer.OfferStatus" class="form-control" />
+                    <ValidationMessage For="() => VacationOffer.OfferStatus" class="text-danger" />
+                </div> *@
+                <div class="mb-3">
+                    <label for="expirationdate" class="form-label">ExpirationDate:</label>
+                    <InputDate id="expirationdate" @bind-Value="VacationOffer.ExpirationDate" class="form-control" />
+                    <ValidationMessage For="() => VacationOffer.ExpirationDate" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/vacationoffers">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int VacationOfferId { get; set; }
+
+    [SupplyParameterFromForm]
+    private VacationOffer? VacationOffer { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        VacationOffer ??= await context.VacationOffers.FirstOrDefaultAsync(m => m.VacationOfferId == VacationOfferId);
+
+        if (VacationOffer is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateVacationOffer()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(VacationOffer!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!VacationOfferExists(VacationOffer!.VacationOfferId))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/vacationoffers");
+    }
+
+    private bool VacationOfferExists(int vacationofferid)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.VacationOffers.Any(e => e.VacationOfferId == vacationofferid);
+    }
+}

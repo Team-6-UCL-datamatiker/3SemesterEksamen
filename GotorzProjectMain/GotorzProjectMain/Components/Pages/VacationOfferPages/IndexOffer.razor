@@ -1,0 +1,44 @@
+﻿@page "/vacationoffers"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using GotorzProjectMain.Models
+@using GotorzProjectMain.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="vacationoffers/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.VacationOffers">
+    <PropertyColumn Property="vacationoffer => vacationoffer.VacationRequestId" />
+    <PropertyColumn Property="vacationoffer => vacationoffer.EmployeeEmail" />
+    <PropertyColumn Property="vacationoffer => vacationoffer.TotalPrice" />
+    <PropertyColumn Property="vacationoffer => vacationoffer.Country" />
+    <PropertyColumn Property="vacationoffer => vacationoffer.StartDate" />
+    <PropertyColumn Property="vacationoffer => vacationoffer.EndDate" />
+    <PropertyColumn Property="vacationoffer => vacationoffer.Misc" />
+    <PropertyColumn Property="vacationoffer => vacationoffer.OfferStatus" />
+    <PropertyColumn Property="vacationoffer => vacationoffer.ExpirationDate" />
+
+    <TemplateColumn Context="vacationoffer">
+        <a href="@($"vacationoffers/edit?vacationofferid={vacationoffer.VacationOfferId}")">Edit</a> |
+        <a href="@($"vacationoffers/details?vacationofferid={vacationoffer.VacationOfferId}")">Details</a> |
+        <a href="@($"vacationoffers/delete?vacationofferid={vacationoffer.VacationOfferId}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private ApplicationDbContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

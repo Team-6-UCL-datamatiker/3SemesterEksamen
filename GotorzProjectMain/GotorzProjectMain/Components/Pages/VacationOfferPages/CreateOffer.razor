@@ -1,0 +1,84 @@
+﻿@page "/vacationoffers/create"
+@using Microsoft.EntityFrameworkCore
+@using GotorzProjectMain.Models
+@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>VacationOffer</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="VacationOffer" OnValidSubmit="AddVacationOffer" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            <div class="mb-3">
+                <label for="vacationrequestid" class="form-label">VacationRequestId:</label> 
+                <InputNumber id="vacationrequestid" @bind-Value="VacationOffer.VacationRequestId" class="form-control" /> 
+                <ValidationMessage For="() => VacationOffer.VacationRequestId" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="employeeemail" class="form-label">EmployeeEmail:</label> 
+                <InputText id="employeeemail" @bind-Value="VacationOffer.EmployeeEmail" class="form-control" /> 
+                <ValidationMessage For="() => VacationOffer.EmployeeEmail" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="totalprice" class="form-label">TotalPrice:</label> 
+                <InputNumber id="totalprice" @bind-Value="VacationOffer.TotalPrice" class="form-control" /> 
+                <ValidationMessage For="() => VacationOffer.TotalPrice" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="country" class="form-label">Country:</label> 
+                <InputText id="country" @bind-Value="VacationOffer.Country" class="form-control" /> 
+                <ValidationMessage For="() => VacationOffer.Country" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="startdate" class="form-label">StartDate:</label> 
+                <InputDate id="startdate" @bind-Value="VacationOffer.StartDate" class="form-control" /> 
+                <ValidationMessage For="() => VacationOffer.StartDate" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="enddate" class="form-label">EndDate:</label> 
+                <InputDate id="enddate" @bind-Value="VacationOffer.EndDate" class="form-control" /> 
+                <ValidationMessage For="() => VacationOffer.EndDate" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="misc" class="form-label">Misc:</label> 
+                <InputText id="misc" @bind-Value="VacationOffer.Misc" class="form-control" /> 
+                <ValidationMessage For="() => VacationOffer.Misc" class="text-danger" /> 
+            </div>        
+            @* <div class="mb-3">
+                <label for="offerstatus" class="form-label">OfferStatus:</label> 
+                <InputText id="offerstatus" @bind-Value="VacationOffer.OfferStatus" class="form-control" /> 
+                <ValidationMessage For="() => VacationOffer.OfferStatus" class="text-danger" /> 
+            </div>    *@     
+            <div class="mb-3">
+                <label for="expirationdate" class="form-label">ExpirationDate:</label> 
+                <InputDate id="expirationdate" @bind-Value="VacationOffer.ExpirationDate" class="form-control" /> 
+                <ValidationMessage For="() => VacationOffer.ExpirationDate" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/vacationoffers">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private VacationOffer VacationOffer { get; set; } = new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddVacationOffer()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.VacationOffers.Add(VacationOffer);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/vacationoffers");
+    }
+}

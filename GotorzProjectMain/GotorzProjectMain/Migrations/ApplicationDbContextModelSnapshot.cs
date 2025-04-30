@@ -141,6 +141,153 @@ namespace GotorzProjectMain.Migrations
                     b.ToTable("Employees", (string)null);
                 });
 
+            modelBuilder.Entity("GotorzProjectMain.Models.FlightBooking", b =>
+                {
+                    b.Property<int>("FlightBookingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FlightBookingId"));
+
+                    b.Property<string>("Airline")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ArrivalAirport")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ArrivalTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("BookingInformationLink")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DepartureAirport")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DepartureTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Misc")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<float>("Price")
+                        .HasColumnType("real");
+
+                    b.Property<int>("SeatNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VacationOfferId")
+                        .HasColumnType("int");
+
+                    b.HasKey("FlightBookingId");
+
+                    b.HasIndex("VacationOfferId");
+
+                    b.ToTable("FlightBookings", (string)null);
+                });
+
+            modelBuilder.Entity("GotorzProjectMain.Models.HotelBooking", b =>
+                {
+                    b.Property<int>("HotelBookingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("HotelBookingId"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BookingInformationLink")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CheckInDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CheckOutDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("HotelLink")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HotelName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Misc")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<float>("Price")
+                        .HasColumnType("real");
+
+                    b.Property<string>("RoomDescription")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("VacationOfferId")
+                        .HasColumnType("int");
+
+                    b.HasKey("HotelBookingId");
+
+                    b.HasIndex("VacationOfferId");
+
+                    b.ToTable("HotelBookings", (string)null);
+                });
+
+            modelBuilder.Entity("GotorzProjectMain.Models.VacationOffer", b =>
+                {
+                    b.Property<int>("VacationOfferId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VacationOfferId"));
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmployeeEmail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpirationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Misc")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OfferStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<float>("TotalPrice")
+                        .HasColumnType("real");
+
+                    b.Property<int>("VacationRequestId")
+                        .HasColumnType("int");
+
+                    b.HasKey("VacationOfferId");
+
+                    b.HasIndex("VacationRequestId");
+
+                    b.ToTable("VacationOffers", (string)null);
+                });
+
             modelBuilder.Entity("GotorzProjectMain.Models.VacationRequest", b =>
                 {
                     b.Property<int>("VacationRequestId")
@@ -192,9 +339,11 @@ namespace GotorzProjectMain.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("VacationRequestId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("VacationRequests", (string)null);
                 });
@@ -352,6 +501,50 @@ namespace GotorzProjectMain.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GotorzProjectMain.Models.FlightBooking", b =>
+                {
+                    b.HasOne("GotorzProjectMain.Models.VacationOffer", "VacationOffer")
+                        .WithMany()
+                        .HasForeignKey("VacationOfferId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("VacationOffer");
+                });
+
+            modelBuilder.Entity("GotorzProjectMain.Models.HotelBooking", b =>
+                {
+                    b.HasOne("GotorzProjectMain.Models.VacationOffer", "VacationOffer")
+                        .WithMany()
+                        .HasForeignKey("VacationOfferId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("VacationOffer");
+                });
+
+            modelBuilder.Entity("GotorzProjectMain.Models.VacationOffer", b =>
+                {
+                    b.HasOne("GotorzProjectMain.Models.VacationRequest", "VacationRequest")
+                        .WithMany()
+                        .HasForeignKey("VacationRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("VacationRequest");
+                });
+
+            modelBuilder.Entity("GotorzProjectMain.Models.VacationRequest", b =>
+                {
+                    b.HasOne("GotorzProjectMain.Models.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GotorzProjectMain.Models
 {
@@ -21,9 +22,12 @@ namespace GotorzProjectMain.Models
 		public string Misc { get; set; }
 		public RequestStatus Status { get; set; } = RequestStatus.PendingRequest;
 
+		[ForeignKey("Customer")]
         public string UserId { get; set; }
 
-		[Timestamp]
+		public Customer Customer { get; set; }
+
+        [Timestamp]
 		public byte[] RowVersion { get; set; } = new byte[8];
 	}
 
