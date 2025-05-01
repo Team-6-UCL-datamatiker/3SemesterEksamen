@@ -1,0 +1,55 @@
+﻿@inject ILogger<EmployeeProfilePicturePreview> Logger
+
+<div class="mb-3">
+	<label for="profile-picture" class="form-label">Profile Picture:</label>
+	<InputFile id="profile-picture" OnChange="HandleProfilePictureUpload" class="form-control" />
+	@if (ProfilePictureFile != null)
+	{
+		<p>New file selected: @ProfilePictureFile.Name</p>
+	}
+</div>
+
+@if (_profilePicture is not null)
+{
+	<img src="@_profilePicture"
+	alt="Profile picture"
+	style="max-width:200px; max-height:200px;"
+	class="img-thumbnail" />
+}
+
+@code {
+	public string? _profilePicture;
+	[Parameter]
+	public IBrowserFile? ProfilePictureFile { get; set; }
+	[Parameter]
+	public EventCallback<IBrowserFile?> ProfilePictureFileChanged { get; set; }
+
+	private async Task HandleProfilePictureUpload(InputFileChangeEventArgs e)
+	{
+		try
+		{
+			if (e.File != null)
+			{
+				ProfilePictureFile = e.File;
+
+				// Ask the browser to shrink the image to 200x200 for preview
+				var thumb = await ProfilePictureFile
+							.RequestImageFileAsync(ProfilePictureFile.ContentType, 200, 200);
+
+				using var ms = new MemoryStream();
+				await thumb.OpenReadStream().CopyToAsync(ms);
+
+				var base64 = Convert.ToBase64String(ms.ToArray());
+				_profilePicture = $"data:{ProfilePictureFile.ContentType};base64,{base64}";
+
+				await ProfilePictureFileChanged.InvokeAsync(e.File);
+			}
+		}
+		catch (Exception ex)
+		{
+			// Det her logger kun til browseren fordi det er client side!!
+			Logger.LogError(ex, $"Failed to show new profile picture");
+			throw;
+		}
+	}
+}
