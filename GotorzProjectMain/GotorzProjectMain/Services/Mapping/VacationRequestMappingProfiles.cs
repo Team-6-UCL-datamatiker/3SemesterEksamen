@@ -7,30 +7,36 @@ namespace GotorzProjectMain.Services.Mapping;
 
 public class VacationRequestMappingProfiles : Profile
 {
-    public VacationRequestMappingProfiles()
-    {
-        CreateMap<VacationRequest, VacationRequestBaseInputModel>()
-        .ForMember(inputModel => inputModel.Country, opt => opt.MapFrom(user => user.Country))
-        .ForMember(inputModel => inputModel.StartDate, opt => opt.MapFrom(user => user.StartDate))
-        .ForMember(inputModel => inputModel.EndDate, opt => opt.MapFrom(user => user.EndDate))
-        .ForMember(inputModel => inputModel.ChildrenAmount, opt => opt.MapFrom(user => user.ChildrenAmount))
-        .ForMember(inputModel => inputModel.AdultsAmount, opt => opt.MapFrom(user => user.AdultsAmount))
-        .ForMember(inputModel => inputModel.RoomsAmount, opt => opt.MapFrom(user => user.RoomsAmount))
-        .ForMember(inputModel => inputModel.HotelRequest, opt => opt.MapFrom(user => user.HotelRequest))
-        .ForMember(inputModel => inputModel.FlightRequest, opt => opt.MapFrom(user => user.FlightRequest))
-        .ForMember(inputModel => inputModel.Misc, opt => opt.MapFrom(user => user.Misc));
+	public VacationRequestMappingProfiles()
+	{
+		CreateMap<VacationRequest, VacationRequestBaseInputModel>()
+		.ForMember(inputmodel => inputmodel.DepartureCity, opt => opt.MapFrom(request => request.DepartureCity))
+		.ForMember(inputmodel => inputmodel.ArrivalCity, opt => opt.MapFrom(request => request.ArrivalCity))
+		.ForMember(inputmodel => inputmodel.DepartureCountry, opt => opt.MapFrom(request => request.DepartureCountry))
+		.ForMember(inputmodel => inputmodel.ArrivalCountry, opt => opt.MapFrom(request => request.ArrivalCountry))
+		.ForMember(inputModel => inputModel.StartDate, opt => opt.MapFrom(request => request.StartDate))
+		.ForMember(inputModel => inputModel.EndDate, opt => opt.MapFrom(request => request.EndDate))
+		.ForMember(inputModel => inputModel.ChildrenAmount, opt => opt.MapFrom(request => request.ChildrenAmount))
+		.ForMember(inputModel => inputModel.AdultsAmount, opt => opt.MapFrom(request => request.AdultsAmount))
+		.ForMember(inputModel => inputModel.RoomsAmount, opt => opt.MapFrom(request => request.RoomsAmount))
+		.ForMember(inputModel => inputModel.HotelRequest, opt => opt.MapFrom(request => request.HotelRequest))
+		.ForMember(inputModel => inputModel.FlightRequest, opt => opt.MapFrom(request => request.FlightRequest))
+		.ForMember(inputModel => inputModel.Misc, opt => opt.MapFrom(request => request.Misc));
 
-        CreateMap<VacationRequestBaseInputModel, VacationRequest>()
-        .ForMember(user => user.Country, opt => opt.MapFrom(inputModel => inputModel.Country))
-        .ForMember(user => user.StartDate, opt => opt.MapFrom(inputModel => inputModel.StartDate))
-        .ForMember(user => user.EndDate, opt => opt.MapFrom(inputModel => inputModel.EndDate))
-        .ForMember(user => user.ChildrenAmount, opt => opt.MapFrom(inputModel => inputModel.ChildrenAmount))
-        .ForMember(user => user.AdultsAmount, opt => opt.MapFrom(inputModel => inputModel.AdultsAmount))
-        .ForMember(user => user.RoomsAmount, opt => opt.MapFrom(inputModel => inputModel.RoomsAmount))
-        .ForMember(user => user.HotelRequest, opt => opt.MapFrom(inputModel => inputModel.HotelRequest))
-        .ForMember(user => user.FlightRequest, opt => opt.MapFrom(inputModel => inputModel.FlightRequest))
-        .ForMember(user => user.Misc, opt => opt.MapFrom(inputModel => inputModel.Misc));
-    }
+		CreateMap<VacationRequestBaseInputModel, VacationRequest>()
+		.ForMember(request => request.DepartureCity, opt => opt.MapFrom(inputmodel => inputmodel.DepartureCity))
+		.ForMember(request => request.ArrivalCity, opt => opt.MapFrom(inputmodel => inputmodel.ArrivalCity))
+		.ForMember(request => request.DepartureCountry, opt => opt.MapFrom(inputmodel => inputmodel.DepartureCountry))
+		.ForMember(request => request.ArrivalCountry, opt => opt.MapFrom(inputmodel => inputmodel.ArrivalCountry))
+		.ForMember(request => request.StartDate, opt => opt.MapFrom(inputModel => inputModel.StartDate))
+		.ForMember(request => request.EndDate, opt => opt.MapFrom(inputModel => inputModel.EndDate))
+		.ForMember(request => request.ChildrenAmount, opt => opt.MapFrom(inputModel => inputModel.ChildrenAmount))
+		.ForMember(request => request.AdultsAmount, opt => opt.MapFrom(inputModel => inputModel.AdultsAmount))
+		.ForMember(request => request.RoomsAmount, opt => opt.MapFrom(inputModel => inputModel.RoomsAmount))
+		.ForMember(request => request.HotelRequest, opt => opt.MapFrom(inputModel => inputModel.HotelRequest))
+		.ForMember(request => request.FlightRequest, opt => opt.MapFrom(inputModel => inputModel.FlightRequest))
+		.ForMember(request => request.Misc, opt => opt.MapFrom(inputModel => inputModel.Misc));
+	}
 
 
 }
