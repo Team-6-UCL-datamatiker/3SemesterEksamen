@@ -20,11 +20,24 @@
     }
     else {
         <dl class="row">
+            @if (Customer?.User is not null)
+            {
+            <dt class="col-sm-2">Full Name</dt>
+            <dd class="col-sm-10">@Customer?.User.FirstName @Customer?.User.LastName</dd>
+            <dt class="col-sm-2">Email</dt>
+            <dd class="col-sm-10">@Customer?.User.Email</dd>
+            }
+            else
+            {
+                <dt class="col-sm-2">Full Name</dt>
+                <dd class="col-sm-10">Customer not found</dd>
+            }
+            <dd class="col-sm-10" style="display:none">@vacationrequest.UserId</dd>
             <dt class="col-sm-2">Country</dt>
             <dd class="col-sm-10">@vacationrequest.Country</dd>
-            <dt class="col-sm-2">StartDate</dt>
+            <dt class="col-sm-2">Start Date</dt>
             <dd class="col-sm-10">@vacationrequest.StartDate.ToShortDateString()</dd>
-            <dt class="col-sm-2">EndDate</dt>
+            <dt class="col-sm-2">End Date</dt>
             <dd class="col-sm-10">@vacationrequest.EndDate.ToShortDateString()</dd>
             <dt class="col-sm-2">Children Amount</dt>
             <dd class="col-sm-10">@vacationrequest.ChildrenAmount</dd>
@@ -40,11 +53,6 @@
             <dd class="col-sm-10">@vacationrequest.Misc</dd>
             <dt class="col-sm-2">Status</dt>
             <dd class="col-sm-10">@vacationrequest.Status</dd>
-            <dt class="col-sm-2">Full Name</dt>
-            <dd class="col-sm-10">@Customer.User.FirstName @Customer.User.LastName</dd>
-            <dt class="col-sm-2">Email</dt>
-            <dd class="col-sm-10">@Customer.User.Email</dd>
-            <dd class="col-sm-10" style="display:none">@vacationrequest.UserId</dd>
         </dl>
         <div>
             <a href="@($"/vacationrequests/edit?vacationrequestid={vacationrequest.VacationRequestId}")">Edit</a> |
