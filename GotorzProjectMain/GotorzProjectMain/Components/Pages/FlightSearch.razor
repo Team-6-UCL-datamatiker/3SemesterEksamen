@@ -10,7 +10,8 @@
 <input @bind="From" placeholder="Origin IATA" />
 <input @bind="To" placeholder="Destination IATA" />
 <input type="date" @bind="Outbound" />
-<input type="date" @bind="Return" />
+<input @bind="AdultCount" type="number" min="1" />
+<input @bind="ChildCount" type="number" min="0" />
 
 <label>
 	<input type="checkbox" @bind="DeepSearch" />
@@ -20,7 +21,7 @@
 <button @onclick="Search">Search</button>
 <button @onclick="DebugFetch">Search</button>
 
-@if (Offers != null)
+@if (Flights != null)
 {
 	<table>
 		<thead>
@@ -33,13 +34,13 @@
 			</tr>
 		</thead>
 		<tbody>
-			@foreach (var o in Offers)
+			@foreach (var o in Flights)
 			{
 				<tr>
 					<td>@o.DepartureAirportCode → @o.ArrivalAirportCode</td>
 					<td>@o.DepartureTime</td>
 					<td>@o.ArrivalTime</td>
-					<td>@o.Price</td>
+					<td>@o.Price DKK</td>
 					<td>@o.Airline</td>
 				</tr>
 			}
@@ -53,18 +54,19 @@
 @code {
 	string From = "CPH", To = "LHR";
 	DateTime Outbound = DateTime.Today.AddDays(7);
-	DateTime? Return = DateTime.Today.AddDays(14);
+	int AdultCount = 1;
+	int ChildCount = 0;
 	bool DeepSearch = false;
-	List<Flight>? Offers;
+	List<Flight>? Flights;
 
 	async Task Search() =>
-			Offers = await FlightService
-		.SearchAsync(From, To, Outbound, Return, DeepSearch);
+			Flights = await FlightService
+		.SearchAsync(From, To, Outbound, AdultCount, ChildCount, DeepSearch);
 
 	string RawJson = "";
 
 	async Task DebugFetch()
 	{
-		RawJson = await FlightService.GetRawJsonAsync(From, To, Outbound, Return, DeepSearch);
+		RawJson = await FlightService.GetRawJsonAsync(From, To, Outbound, DeepSearch);
 	}
 }

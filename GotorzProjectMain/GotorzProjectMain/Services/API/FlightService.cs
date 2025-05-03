@@ -10,14 +10,14 @@ namespace GotorzProjectMain.Services.API
 			string departureIata,
 			string arrivalIata,
 			DateTime outboundDate,
-			DateTime? returnDate = null,
+			int adults = 1,
+			int children = 0,
 			bool deepSearch = false);
 
 		Task<string> GetRawJsonAsync(
 			string departureIata,
 			string arrivalIata,
 			DateTime outboundDate,
-			DateTime? returnDate = null,
 			bool deepSearch = false);
 	}
 
@@ -36,9 +36,11 @@ namespace GotorzProjectMain.Services.API
 			string departureIata,
 			string arrivalIata,
 			DateTime outboundDate,
-			DateTime? returnDate = null,
+			int adults = 1,
+			int children = 0,
 			bool deepSearch = false)
 		{
+			// Prepare the query parameters
 			var query = new Dictionary<string, string>
 			{
 				["engine"] = "google_flights",
@@ -46,18 +48,30 @@ namespace GotorzProjectMain.Services.API
 				["departure_id"] = departureIata,
 				["arrival_id"] = arrivalIata,
 				["outbound_date"] = outboundDate.ToString("yyyy-MM-dd"),
-				["deep_search"] = deepSearch.ToString().ToLowerInvariant()
+				["deep_search"] = deepSearch.ToString().ToLowerInvariant(),
+				["adults"] = adults.ToString(), 
+				["children"] = children.ToString(),
+				["currency"] = "DKK",
+				["type"] = "2" // For the api to know it's a oneway (needed)
 			};
-			if (returnDate.HasValue)
-				query["return_date"] = returnDate.Value.ToString("yyyy-MM-dd");
 
+			// Add the query string to the URL
 			var url = QueryHelpers.AddQueryString("search", query);
+			Console.WriteLine($"Generated URL: {url}"); // Log the URL for debugging
+
+			// Make the GET request to the API
 			var resp = await _http.GetFromJsonAsync<SerpApiFlightsResponse>(url);
+
 			if (resp == null) return new();
 
+			// The API returns a list of flight groups, each containing a list of flights
 			var groups = (resp.BestFlights ?? new())
 					   .Concat(resp.OtherFlights ?? new());
+
+			// Flatten the list of flight groups into a single list of flights
 			var offers = new List<Flight>();
+
+			// Each group contains a list of flights, we need to extract them
 			foreach (var g in groups)
 				foreach (var s in g.Flights)
 					offers.Add(new Flight
@@ -70,7 +84,7 @@ namespace GotorzProjectMain.Services.API
 						ArrivalAirportName = s.Arrival.Name,
 						ArrivalTime = DateTime.Parse(s.Arrival.Time, null,
 												  DateTimeStyles.RoundtripKind),
-						Price = g.Price,    
+						Price = g.Price,
 						Airline = s.Airline,
 						BookingLink = s.BookingLink
 					});
@@ -82,7 +96,6 @@ namespace GotorzProjectMain.Services.API
 			string departureIata,
 			string arrivalIata,
 			DateTime outboundDate,
-			DateTime? returnDate = null,
 			bool deepSearch = false)
 		{
 			var query = new Dictionary<string, string>
@@ -94,8 +107,6 @@ namespace GotorzProjectMain.Services.API
 				["outbound_date"] = outboundDate.ToString("yyyy-MM-dd"),
 				["deep_search"] = deepSearch.ToString().ToLowerInvariant()
 			};
-			if (returnDate.HasValue)
-				query["return_date"] = returnDate.Value.ToString("yyyy-MM-dd");
 
 			var url = QueryHelpers.AddQueryString("search", query);
 			return await _http.GetStringAsync(url);
