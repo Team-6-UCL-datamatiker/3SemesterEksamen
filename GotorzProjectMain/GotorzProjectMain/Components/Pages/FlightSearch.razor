@@ -1,0 +1,70 @@
+﻿@page "/flights/search"
+
+@using GotorzProjectMain.Models
+@using GotorzProjectMain.Services.API
+
+@inject IFlightService FlightService
+
+@rendermode InteractiveServer
+
+<input @bind="From" placeholder="Origin IATA" />
+<input @bind="To" placeholder="Destination IATA" />
+<input type="date" @bind="Outbound" />
+<input type="date" @bind="Return" />
+
+<label>
+	<input type="checkbox" @bind="DeepSearch" />
+	Exact match
+</label>
+
+<button @onclick="Search">Search</button>
+<button @onclick="DebugFetch">Search</button>
+
+@if (Offers != null)
+{
+	<table>
+		<thead>
+			<tr>
+				<th>Route</th>
+				<th>Depart</th>
+				<th>Arrive</th>
+				<th>Price</th>
+				<th>Airline</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var o in Offers)
+			{
+				<tr>
+					<td>@o.DepartureAirportCode → @o.ArrivalAirportCode</td>
+					<td>@o.DepartureTime</td>
+					<td>@o.ArrivalTime</td>
+					<td>@o.Price</td>
+					<td>@o.Airline</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+
+	<pre style="white-space:pre-wrap">@RawJson</pre>
+
+}
+
+@code {
+	string From = "CPH", To = "LHR";
+	DateTime Outbound = DateTime.Today.AddDays(7);
+	DateTime? Return = DateTime.Today.AddDays(14);
+	bool DeepSearch = false;
+	List<Flight>? Offers;
+
+	async Task Search() =>
+			Offers = await FlightService
+		.SearchAsync(From, To, Outbound, Return, DeepSearch);
+
+	string RawJson = "";
+
+	async Task DebugFetch()
+	{
+		RawJson = await FlightService.GetRawJsonAsync(From, To, Outbound, Return, DeepSearch);
+	}
+}
