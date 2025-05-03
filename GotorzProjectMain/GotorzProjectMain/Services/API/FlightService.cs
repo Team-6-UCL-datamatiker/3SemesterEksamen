@@ -11,8 +11,7 @@ namespace GotorzProjectMain.Services.API
 			string arrivalIata,
 			DateTime outboundDate,
 			int adults = 1,
-			int children = 0,
-			bool deepSearch = false);
+			int children = 0);
 
 		Task<string> GetRawJsonAsync(
 			string departureIata,
@@ -37,8 +36,7 @@ namespace GotorzProjectMain.Services.API
 			string arrivalIata,
 			DateTime outboundDate,
 			int adults = 1,
-			int children = 0,
-			bool deepSearch = false)
+			int children = 0)
 		{
 			// Prepare the query parameters
 			var query = new Dictionary<string, string>
@@ -48,7 +46,6 @@ namespace GotorzProjectMain.Services.API
 				["departure_id"] = departureIata,
 				["arrival_id"] = arrivalIata,
 				["outbound_date"] = outboundDate.ToString("yyyy-MM-dd"),
-				["deep_search"] = deepSearch.ToString().ToLowerInvariant(),
 				["adults"] = adults.ToString(), 
 				["children"] = children.ToString(),
 				["currency"] = "DKK",

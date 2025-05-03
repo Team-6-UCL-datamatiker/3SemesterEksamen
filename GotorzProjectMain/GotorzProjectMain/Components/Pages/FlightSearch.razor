@@ -7,21 +7,24 @@
 
 @rendermode InteractiveServer
 
-<input @bind="From" placeholder="Origin IATA" />
-<input @bind="To" placeholder="Destination IATA" />
+
+<input @bind="FromCity" placeholder="Departure city (e.g. Copenhagen)" />
+<input @bind="ToCity" placeholder="Destination city (e.g. London)" />
 <input type="date" @bind="Outbound" />
 <input @bind="AdultCount" type="number" min="1" />
 <input @bind="ChildCount" type="number" min="0" />
 
-<label>
-	<input type="checkbox" @bind="DeepSearch" />
-	Exact match
-</label>
-
 <button @onclick="Search">Search</button>
 <button @onclick="DebugFetch">Search</button>
 
-@if (Flights != null)
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+	<div class="alert alert-warning">
+		@ErrorMessage
+	</div>
+}
+
+else if (Flights != null)
 {
 	<table>
 		<thead>
@@ -52,21 +55,49 @@
 }
 
 @code {
-	string From = "CPH", To = "LHR";
+	string FromCity = "Copenhagen", ToCity = "London";
 	DateTime Outbound = DateTime.Today.AddDays(7);
 	int AdultCount = 1;
 	int ChildCount = 0;
-	bool DeepSearch = false;
-	List<Flight>? Flights;
 
-	async Task Search() =>
-			Flights = await FlightService
-		.SearchAsync(From, To, Outbound, AdultCount, ChildCount, DeepSearch);
+	List<Flight>? Flights;
+	string? ErrorMessage;
+
+	async Task Search()
+	{
+		// reset previous state
+		ErrorMessage = null;
+		Flights = null;
+
+		// 1) resolve cities to airport codes
+		if (!CityAirportMap.Map.TryGetValue(FromCity, out var fromAirports)) //if it gets a match, it saves it to fromAirports else set errormessage
+		{
+			ErrorMessage = $"Origin city “{FromCity}” is not supported.";
+			return;
+		}
+		if (!CityAirportMap.Map.TryGetValue(ToCity, out var toAirports)) //if it gets a match, it saves it to toAirports else set errormessage
+		{
+			ErrorMessage = $"Destination city “{ToCity}” is not supported.";
+			return;
+		}
+
+		// 2) build comma-separated parameters
+		var fromParam = string.Join(",", fromAirports);
+		var toParam = string.Join(",", toAirports);
+
+		// 3) call your existing FlightService
+		Flights = await FlightService.SearchAsync(
+			fromParam,
+			toParam,
+			Outbound,
+			AdultCount,
+			ChildCount);
+	}
 
 	string RawJson = "";
 
 	async Task DebugFetch()
 	{
-		RawJson = await FlightService.GetRawJsonAsync(From, To, Outbound, DeepSearch);
+		RawJson = await FlightService.GetRawJsonAsync(FromCity, ToCity, Outbound);
 	}
 }
