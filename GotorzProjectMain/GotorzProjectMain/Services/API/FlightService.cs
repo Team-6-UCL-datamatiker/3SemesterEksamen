@@ -31,6 +31,7 @@ namespace GotorzProjectMain.Services.API
 			_apiKey = cfg["SerpApi:ApiKey"]!;
 		}
 
+		// Fetches available flights from API using Airport codes
 		public async Task<List<Flight>> SearchAsync(
 			string departureIata,
 			string arrivalIata,
@@ -38,7 +39,7 @@ namespace GotorzProjectMain.Services.API
 			int adults = 1,
 			int children = 0)
 		{
-			// Prepare the query parameters
+			// Build request parameters for API
 			var query = new Dictionary<string, string>
 			{
 				["engine"] = "google_flights",
@@ -49,26 +50,23 @@ namespace GotorzProjectMain.Services.API
 				["adults"] = adults.ToString(), 
 				["children"] = children.ToString(),
 				["currency"] = "DKK",
-				["type"] = "2" // For the api to know it's a oneway (needed)
+				["type"] = "2" // Oneway flight (needed to not give error when not giving a return date)
 			};
 
-			// Add the query string to the URL
+			// Construct request URL with parameters (search?engine=google_flight...)
 			var url = QueryHelpers.AddQueryString("search", query);
-			Console.WriteLine($"Generated URL: {url}"); // Log the URL for debugging
 
-			// Make the GET request to the API
-			var resp = await _http.GetFromJsonAsync<SerpApiFlightsResponse>(url);
+			// Fetch the JSON from API and deserialize it into DTO 
+			var response = await _http.GetFromJsonAsync<SerpApiFlightsResponse>(url); // equivalent to a GET + Deserialize
+			if (response == null) return new();
 
-			if (resp == null) return new();
+			// The API returns a list of flight groups, each containing a list of flights - combine them
+			var groups = (response.BestFlights ?? new())
+					   .Concat(response.OtherFlights ?? new());
 
-			// The API returns a list of flight groups, each containing a list of flights
-			var groups = (resp.BestFlights ?? new())
-					   .Concat(resp.OtherFlights ?? new());
+			// Convert DTO into to Flight Model
+			List<Flight> offers = new List<Flight>();
 
-			// Flatten the list of flight groups into a single list of flights
-			var offers = new List<Flight>();
-
-			// Each group contains a list of flights, we need to extract them
 			foreach (var g in groups)
 				foreach (var s in g.Flights)
 					offers.Add(new Flight
@@ -82,8 +80,7 @@ namespace GotorzProjectMain.Services.API
 						ArrivalTime = DateTime.Parse(s.Arrival.Time, null,
 												  DateTimeStyles.RoundtripKind),
 						Price = g.Price,
-						Airline = s.Airline,
-						BookingLink = s.BookingLink
+						Airline = s.Airline
 					});
 			return offers;
 		}

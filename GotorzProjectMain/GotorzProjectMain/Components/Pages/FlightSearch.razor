@@ -37,14 +37,14 @@ else if (Flights != null)
 			</tr>
 		</thead>
 		<tbody>
-			@foreach (var o in Flights)
+			@foreach (Flight flight in Flights)
 			{
 				<tr>
-					<td>@o.DepartureAirportCode → @o.ArrivalAirportCode</td>
-					<td>@o.DepartureTime</td>
-					<td>@o.ArrivalTime</td>
-					<td>@o.Price DKK</td>
-					<td>@o.Airline</td>
+					<td>@flight.DepartureAirportCode → @flight.ArrivalAirportCode</td>
+					<td>@flight.DepartureTime</td>
+					<td>@flight.ArrivalTime</td>
+					<td>@flight.Price DKK</td>
+					<td>@flight.Airline</td>
 				</tr>
 			}
 		</tbody>
@@ -63,13 +63,14 @@ else if (Flights != null)
 	List<Flight>? Flights;
 	string? ErrorMessage;
 
+	// Performs a flight search using city names
 	async Task Search()
 	{
-		// reset previous state
+		// Reset state before search
 		ErrorMessage = null;
 		Flights = null;
 
-		// 1) resolve cities to airport codes
+		// Look up airport codes based on user input
 		if (!CityAirportMap.Map.TryGetValue(FromCity, out var fromAirports)) //if it gets a match, it saves it to fromAirports else set errormessage
 		{
 			ErrorMessage = $"Origin city “{FromCity}” is not supported.";
@@ -81,9 +82,9 @@ else if (Flights != null)
 			return;
 		}
 
-		// 2) build comma-separated parameters
-		var fromParam = string.Join(",", fromAirports);
-		var toParam = string.Join(",", toAirports);
+		// Pass comma-separated Airport codes to the API
+		string fromParam = string.Join(",", fromAirports);
+		string toParam = string.Join(",", toAirports);
 
 		// 3) call your existing FlightService
 		Flights = await FlightService.SearchAsync(
