@@ -82,7 +82,7 @@ else if (Flights != null)
 		string fromParam = string.Join(",", fromAirports);
 		string toParam = string.Join(",", toAirports);
 
-		// 3) call your existing FlightService
+		// Request flight offers from the external API
 		Flights = await FlightService.SearchAsync(
 			fromParam,
 			toParam,
