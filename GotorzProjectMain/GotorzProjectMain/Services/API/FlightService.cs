@@ -12,12 +12,6 @@ namespace GotorzProjectMain.Services.API
 			DateTime outboundDate,
 			int adults = 1,
 			int children = 0);
-
-		Task<string> GetRawJsonAsync(
-			string departureIata,
-			string arrivalIata,
-			DateTime outboundDate,
-			bool deepSearch = false);
 	}
 
 
@@ -83,27 +77,6 @@ namespace GotorzProjectMain.Services.API
 						Airline = s.Airline
 					});
 			return offers;
-		}
-
-		// Debug helper: returns the raw JSON
-		public async Task<string> GetRawJsonAsync(
-			string departureIata,
-			string arrivalIata,
-			DateTime outboundDate,
-			bool deepSearch = false)
-		{
-			var query = new Dictionary<string, string>
-			{
-				["engine"] = "google_flights",
-				["api_key"] = _apiKey,
-				["departure_id"] = departureIata,
-				["arrival_id"] = arrivalIata,
-				["outbound_date"] = outboundDate.ToString("yyyy-MM-dd"),
-				["deep_search"] = deepSearch.ToString().ToLowerInvariant()
-			};
-
-			var url = QueryHelpers.AddQueryString("search", query);
-			return await _http.GetStringAsync(url);
-		}
+		}		
 	}
 }

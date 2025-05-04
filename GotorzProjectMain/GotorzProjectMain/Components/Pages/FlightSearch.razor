@@ -15,7 +15,6 @@
 <input @bind="ChildCount" type="number" min="0" />
 
 <button @onclick="Search">Search</button>
-<button @onclick="DebugFetch">Search</button>
 
 @if (!string.IsNullOrEmpty(ErrorMessage))
 {
@@ -49,9 +48,6 @@ else if (Flights != null)
 			}
 		</tbody>
 	</table>
-
-	<pre style="white-space:pre-wrap">@RawJson</pre>
-
 }
 
 @code {
@@ -93,12 +89,5 @@ else if (Flights != null)
 			Outbound,
 			AdultCount,
 			ChildCount);
-	}
-
-	string RawJson = "";
-
-	async Task DebugFetch()
-	{
-		RawJson = await FlightService.GetRawJsonAsync(FromCity, ToCity, Outbound);
 	}
 }

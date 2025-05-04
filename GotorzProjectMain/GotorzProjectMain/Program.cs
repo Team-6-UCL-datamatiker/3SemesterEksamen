@@ -66,6 +66,7 @@ else
 	builder.Services.AddScoped<IEmailSender<ApplicationUser>, GmailEmailSender>();
 }
 
+// Service to handle flight API
 builder.Services.AddHttpClient<IFlightService, FlightService>(client =>
 {
 	client.BaseAddress = new Uri("https://serpapi.com/");
