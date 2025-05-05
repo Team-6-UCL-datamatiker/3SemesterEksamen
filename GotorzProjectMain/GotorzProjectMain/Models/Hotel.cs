@@ -2,8 +2,10 @@
 
 public class Hotel
 {
-    public string? IataCode { get; set; }
     public string? Name { get; set; }
+    // Tror jeg kan få City med også, men er først helt sikker, når der er inde.
+    public string? City { get; set; }
+    public string? IataCode { get; set; }
     public int? DuplicateId { get; set; }
     public string? HotelId { get; set; }
     public string? CountryCode { get; set; }
