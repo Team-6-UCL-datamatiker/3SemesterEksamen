@@ -74,7 +74,7 @@ else if (FlightRoutes != null)
 				<option value="@i" @key="i">
 					@(
 								string.Join(" → ",
-								offer.Segments.Select(s => s.DepartureAirportCode) // depatureairport -> last arrivalaiport
+								offer.Segments.Select(s => s.DepartureAirportCode) // depatureairport -> last arrivalairport
 								.Concat(new[] { offer.Segments.Last().ArrivalAirportCode }))
 								+ $" ({offer.Segments.Count} legs) {offer.TotalPrice} DKK"
 								)
@@ -142,26 +142,33 @@ else if (FlightRoutes != null)
 		FlightRoutes = null;
 		SelectedFlightRoutIndex = null; // Reset selection on each new search
 
+		if (Outbound == DateTime.MinValue)
+		{
+			ErrorMessage = "Please select a valid outbound date.";
+			return;
+		}
+
 		// Look up airport codes based on user input
-		if (!CityAirportMap.Map.TryGetValue(FromCity, out var fromAirports)) //if it gets a match, it saves it to fromAirports else set errormessage
+		if (!CityAirportMap.Map.TryGetValue(FromCity, out string[] fromAirports)) //if it gets a match, it saves it to fromAirports else set errormessage
 		{
 			ErrorMessage = $"Origin city “{FromCity}” is not supported.";
 			return;
 		}
-		if (!CityAirportMap.Map.TryGetValue(ToCity, out var toAirports)) //if it gets a match, it saves it to toAirports else set errormessage
+		if (!CityAirportMap.Map.TryGetValue(ToCity, out string[] toAirports)) //if it gets a match, it saves it to toAirports else set errormessage
 		{
 			ErrorMessage = $"Destination city “{ToCity}” is not supported.";
 			return;
 		}
 
+
 		// Pass comma-separated Airport codes to the API
-		string fromParam = string.Join(",", fromAirports);
-		string toParam = string.Join(",", toAirports);
+		string fromAirportsString = string.Join(",", fromAirports);
+		string toAirportsString = string.Join(",", toAirports);
 
 		// Request flight offers from the external API
 		FlightRoutes = await FlightService.SearchAsync(
-			fromParam,
-			toParam,
+			fromAirportsString,
+			toAirportsString,
 			Outbound,
 			AdultCount,
 			ChildCount);
