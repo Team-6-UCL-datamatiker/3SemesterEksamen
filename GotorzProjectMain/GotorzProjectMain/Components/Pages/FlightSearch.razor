@@ -1,6 +1,7 @@
 ﻿@page "/flights/search"
 
 @using GotorzProjectMain.Models
+@using GotorzProjectMain.Models.DTOs
 @using GotorzProjectMain.Services.API
 
 @inject IFlightService FlightService
@@ -9,45 +10,45 @@
 
 
 <div style="display:flex; gap:1rem; align-items:flex-start; margin-bottom:1rem;">
-    <div>
-        <label for="fromCity">Depature City</label><br />
-        <input id="fromCity"
-               @bind="FromCity"
-               placeholder="Copenhagen"
-               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
-    </div>
+	<div>
+		<label for="fromCity">Depature City</label><br />
+		<input id="fromCity"
+			   @bind="FromCity"
+			   placeholder="Copenhagen"
+			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
+	</div>
 
-    <div>
-        <label for="toCity">Arrival City</label><br />
-        <input id="toCity"
-               @bind="ToCity"
-               placeholder="London"
-               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
-    </div>
+	<div>
+		<label for="toCity">Arrival City</label><br />
+		<input id="toCity"
+			   @bind="ToCity"
+			   placeholder="London"
+			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
+	</div>
 
-    <div>
-        <label for="outbound">Outbound Date</label><br />
-        <input id="outbound"
-               type="date"
-               @bind="Outbound"
-               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
-    </div>
+	<div>
+		<label for="outbound">Outbound Date</label><br />
+		<input id="outbound"
+			   type="date"
+			   @bind="Outbound"
+			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
+	</div>
 
-    <div>
-        <label for="adults">Adults</label><br />
-        <input id="adults"
-               type="number" min="1"
-               @bind="AdultCount"
-               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
-    </div>
+	<div>
+		<label for="adults">Adults</label><br />
+		<input id="adults"
+			   type="number" min="1"
+			   @bind="AdultCount"
+			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
+	</div>
 
-    <div>
-        <label for="children">Children</label><br />
-        <input id="children"
-               type="number" min="0"
-               @bind="ChildCount"
-               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
-    </div>
+	<div>
+		<label for="children">Children</label><br />
+		<input id="children"
+			   type="number" min="0"
+			   @bind="ChildCount"
+			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
+	</div>
 </div>
 
 <button @onclick="Search">Search</button>
@@ -61,56 +62,56 @@
 
 else if (FlightOffers != null)
 {
-    <label>
-        Choose flightroute:
-        <select @bind="SelectedOfferIndex">
-            <option value="">-- pick a flightroute --</option>
-            @for (int i = 0; i < FlightOffers.Count; i++)
-            {
-                FlightOffer offer = FlightOffers[i];
-                <option value="@i" @key="i">
-                    @(
-                        string.Join(" → ",
-                            offer.Segments.Select(s => s.DepartureAirportCode) // depatureairport -> last arrivalaiport
-                            .Concat(new[] { offer.Segments.Last().ArrivalAirportCode })) 
-                        + $" ({offer.Segments.Count} legs) {offer.TotalPrice} DKK"
-                    )
-                </option>
-            }
-        </select>
-    </label>
+	<label>
+		Choose flightroute:
+		<select @bind="SelectedOfferIndex">
+			<option value="">-- pick a flightroute --</option>
+			@for (int i = 0; i < FlightOffers.Count; i++)
+			{
+				FlightOffer offer = FlightOffers[i];
+				<option value="@i" @key="i">
+					@(
+								string.Join(" → ",
+								offer.Segments.Select(s => s.DepartureAirportCode) // depatureairport -> last arrivalaiport
+								.Concat(new[] { offer.Segments.Last().ArrivalAirportCode }))
+								+ $" ({offer.Segments.Count} legs) {offer.TotalPrice} DKK"
+								)
+				</option>
+			}
+		</select>
+	</label>
 
-    @if (SelectedOffer != null)
-    {
-        <!-- Header -->
-        <h4>Selected Flight</h4>
+	@if (SelectedOffer != null)
+	{
+		<!-- Header -->
+		<h4>Selected Flight</h4>
 
-        <!-- For each leg -->
-        @for (int i = 0; i < SelectedOffer.Segments.Count; i++)
-        {
-            Flight flightLeg = SelectedOffer.Segments[i];
-            <div class="p-2 border rounded mb-2">
-                <div><strong>Route:</strong> @flightLeg.DepartureAirportCode → @flightLeg.ArrivalAirportCode</div>
-                <div><strong>Departure:</strong> @flightLeg.DepartureTime.ToString("dd/MM/yyyy HH:mm")</div>
-                <div><strong>Arrival:</strong>   @flightLeg.ArrivalTime.ToString("dd/MM/yyyy HH:mm")</div>
-                <div><strong>Airline:</strong>   @flightLeg.Airline</div>
-            </div>
+		<!-- For each leg -->
+		@for (int i = 0; i < SelectedOffer.Segments.Count; i++)
+		{
+			Flight flightLeg = SelectedOffer.Segments[i];
+			<div class="p-2 border rounded mb-2">
+				<div><strong>Route:</strong> @flightLeg.DepartureAirportCode → @flightLeg.ArrivalAirportCode</div>
+				<div><strong>Departure:</strong> @flightLeg.DepartureTime.ToString("dd/MM/yyyy HH:mm")</div>
+				<div><strong>Arrival:</strong>   @flightLeg.ArrivalTime.ToString("dd/MM/yyyy HH:mm")</div>
+				<div><strong>Airline:</strong>   @flightLeg.Airline</div>
+			</div>
 
-            @* If there’s a layover after this leg, show it *@
-            @if (i < SelectedOffer.Layovers.Count)
-            {
-                Layover layover = SelectedOffer.Layovers[i];
-                <div  class="p-2 border rounded mb-2 bg-light">
-                    <strong>Layover at @layover.Name:</strong> @layover.DurationDisplay
-                </div>
-            }
-        }
+			@* If there’s a layover after this leg, show it *@
+			@if (i < SelectedOffer.Layovers.Count)
+			{
+				Layover layover = SelectedOffer.Layovers[i];
+				<div class="p-2 border rounded mb-2 bg-light">
+					<strong>Layover at @layover.Name:</strong> @layover.DurationDisplay
+				</div>
+			}
+		}
 
-        <div class="mt-4 p-3 bg-gray-100 rounded">
-            <div><strong>Total duration:</strong> @SelectedOffer.TotalTravelTimeDisplay</div>
-            <div><strong>Total price:</strong>   @SelectedOffer.TotalPrice DKK</div>
-        </div>
-    }
+		<div class="mt-4 p-3 bg-gray-100 rounded">
+			<div><strong>Total duration:</strong> @SelectedOffer.TotalTravelTimeDisplay</div>
+			<div><strong>Total price:</strong>   @SelectedOffer.TotalPrice DKK</div>
+		</div>
+	}
 }
 
 
@@ -119,7 +120,7 @@ else if (FlightOffers != null)
 	DateTime Outbound = DateTime.Today.AddDays(7);
 	int AdultCount = 1;
 	int ChildCount = 0;
-	
+
 	List<FlightOffer>? FlightOffers;
 	string? ErrorMessage;
 
@@ -136,6 +137,7 @@ else if (FlightOffers != null)
 		// Reset state before search
 		ErrorMessage = null;
 		FlightOffers = null;
+		SelectedOfferIndex = null; // Reset selection on each new search
 
 		// Look up airport codes based on user input
 		if (!CityAirportMap.Map.TryGetValue(FromCity, out var fromAirports)) //if it gets a match, it saves it to fromAirports else set errormessage

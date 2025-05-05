@@ -1,4 +1,5 @@
 ﻿using GotorzProjectMain.Models;
+using GotorzProjectMain.Models.DTOs;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Globalization;
 
@@ -84,7 +85,7 @@ namespace GotorzProjectMain.Services.API
 				var layovers = g.Layovers?.ToList()
 							 ?? new List<Layover>();
 
-				// 3) wrap into FlightOffer
+				// Wrap into FlightOffer
 				offers.Add(new FlightOffer
 				{
 					Segments = legs,
