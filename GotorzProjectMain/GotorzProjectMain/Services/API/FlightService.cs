@@ -6,7 +6,7 @@ namespace GotorzProjectMain.Services.API
 {
 	public interface IFlightService
 	{
-		Task<List<Flight>> SearchAsync(
+		Task<List<FlightOffer>> SearchAsync(
 			string departureIata,
 			string arrivalIata,
 			DateTime outboundDate,
@@ -26,7 +26,7 @@ namespace GotorzProjectMain.Services.API
 		}
 
 		// Fetches available flights from API using Airport codes
-		public async Task<List<Flight>> SearchAsync(
+		public async Task<List<FlightOffer>> SearchAsync(
 			string departureIata,
 			string arrivalIata,
 			DateTime outboundDate,
@@ -41,7 +41,7 @@ namespace GotorzProjectMain.Services.API
 				["departure_id"] = departureIata,
 				["arrival_id"] = arrivalIata,
 				["outbound_date"] = outboundDate.ToString("yyyy-MM-dd"),
-				["adults"] = adults.ToString(), 
+				["adults"] = adults.ToString(),
 				["children"] = children.ToString(),
 				["currency"] = "DKK",
 				["type"] = "2" // Oneway flight (needed to not give error when not giving a return date)
@@ -59,23 +59,40 @@ namespace GotorzProjectMain.Services.API
 					   .Concat(response.OtherFlights ?? new());
 
 			// Convert DTO into to Flight Model
-			List<Flight> offers = new List<Flight>();
+			List<FlightOffer> offers = new List<FlightOffer>();
+
 			foreach (var g in groups)
-				foreach (var s in g.Flights)
-					offers.Add(new Flight
-					{
-						DepartureAirportCode = s.Departure.Id,
-						DepartureAirportName = s.Departure.Name,
-						DepartureTime = DateTime.Parse(s.Departure.Time, null,
-												  DateTimeStyles.RoundtripKind),
-						ArrivalAirportCode = s.Arrival.Id,
-						ArrivalAirportName = s.Arrival.Name,
-						ArrivalTime = DateTime.Parse(s.Arrival.Time, null,
-												  DateTimeStyles.RoundtripKind),
-						Price = g.Price,
-						Airline = s.Airline
-					});
+			{
+				// Map each FlightSegment → Flight
+				var legs = g.Flights
+							.Select(s => new Flight
+							{
+								DepartureAirportCode = s.Departure.Id,
+								DepartureAirportName = s.Departure.Name,
+								DepartureTime = DateTime.Parse(s.Departure.Time, null, DateTimeStyles.RoundtripKind),
+								ArrivalAirportCode = s.Arrival.Id,
+								ArrivalAirportName = s.Arrival.Name,
+								ArrivalTime = DateTime.Parse(s.Arrival.Time, null, DateTimeStyles.RoundtripKind),
+								Price = g.Price,
+								Airline = s.Airline,
+								BookingLink = s.BookingLink
+							})
+							.ToList();
+
+				// Map each layover DTO → Layover
+			
+				var layovers = g.Layovers?.ToList()
+							 ?? new List<Layover>();
+
+				// 3) wrap into FlightOffer
+				offers.Add(new FlightOffer
+				{
+					Segments = legs,
+					Layovers = layovers,
+					TotalPrice = g.Price
+				}); 
+			}
 			return offers;
-		}		
+		}
 	}
 }
