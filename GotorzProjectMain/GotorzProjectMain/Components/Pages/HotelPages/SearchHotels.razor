@@ -1,0 +1,181 @@
+﻿@page "/hotelsearch"
+@rendermode InteractiveAuto
+
+@using GotorzProjectMain.Client.Components.API
+@using GotorzProjectMain.Services.APIs.HotelAPIs
+
+@inject IAmadeusHotelAPIService Service
+
+<PageTitle>Search Hotels</PageTitle>
+
+<div class="row">
+	<div class="col-md-4">
+		<EditForm Model="Input" OnValidSubmit="SubmitSearch" FormName="searchHotels">
+			<DataAnnotationsValidator />
+			<h2>Search for hotels</h2>
+
+			@if (_isClient)
+			{
+				<CityLookup @bind-Input="Input.CityOrAirportCode" />
+			}
+
+			<div class="form-floating mb-3">
+				<InputNumber id="radius" @bind-Value="Input.Radius" class="form-control" placeholder="Radius" />
+				<label for="radius">Search Radius</label>
+				<ValidationMessage For="() => Input.Radius" class="alert alert-danger mt-3" />
+			</div>
+
+			<div>
+				<label for="radius-unit" class="form-label">Unit</label>
+				<select id="radius-unit" @bind="Input.RadiusUnit" class="form-select">
+					<option value="KM">KM</option>
+					<option value="MILE">MILE</option>
+				</select>
+			</div>
+
+			@* Har ikke tilføjet Chaincodes endnu - Hvis man vil søge på hotelkæder, skal det tilføjes *@
+
+			<div class="mb-3">
+				<label for="amenities" class="form-label">Add Amenities</label>
+				<input id="amenities" @bind="AmenityInput" @onkeydown="HandleAmenityKeyPress"
+				class="form-control"
+				placeholder="Type amenity and hit Enter" />
+
+				@if (!string.IsNullOrWhiteSpace(_amenitiesMessage))
+				{
+					<div class="alert alert-danger mt-3" role="alert">
+						@_amenitiesMessage
+					</div>
+				}
+
+				@if (FilteredSuggestions.Any() && AmenityInput != "")
+				{
+					<ul class="list-group position-absolute w-100" style="z-index: 10;">
+						@foreach (string suggestion in FilteredSuggestions)
+						{
+							<li class="list-group-item list-group-item-action"
+							@onclick="() => SelectAmenity(suggestion)">
+								@suggestion
+							</li>
+						}
+					</ul>
+				}
+			</div>
+			<div>
+				<ul class="list-unstyled">
+					@foreach (var amenity in Input.Amenities)
+					{
+						<li>@amenity</li>
+					}
+				</ul>
+			</div>
+
+			<div class="mb-3">
+				<label class="form-label">Hotel Stars</label>
+				@for (int star = 1; star <= 5; star++)
+				{
+					string starValue = star.ToString();
+
+					<div class="form-check">
+						<input class="form-check-input"
+						type="checkbox"
+						value="@starValue"
+						@onchange="e => ToggleRating(starValue, e.Value)" />
+						<label class="form-check-label">@star Star</label>
+					</div>
+				}
+			</div>
+
+			@* Man kan bestemme hvilken kilde man vil søge i - har ikke taget det med endnu.
+			   Ved ikke helt hvad det er for noget, men hvis man vil det, skal det tilføjes *@
+
+			<button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
+		</EditForm>
+	</div>
+</div>
+
+@code {
+	private bool _isClient;
+	private string? _amenitiesMessage;
+	private AmadeusHotelListParameters Input { get; set; } = new();
+	private string AmenityInput = "";
+	private List<string> AllAmenities = new()
+	{ "SWIMMING_POOL","SPA","FITNESS_CENTER","AIR_CONDITIONING","RESTAURANT","PARKING","PETS_ALLOWED",
+	  "AIRPORT_SHUTTLE","BUSINESS_CENTER","DISABLED_FACILITIES","WIFI","MEETING_ROOMS","NO_KID_ALLOWED",
+	  "TENNIS","GOLF","KITCHEN","ANIMAL_WATCHING","BABY-SITTING","BEACH","CASINO","JACUZZI","SAUNA","SOLARIUM",
+	  "MASSAGE","VALET_PARKING","BAR or LOUNGE","KIDS_WELCOME","NO_PORN_FILMS","MINIBAR","TELEVISION",
+	  "WI-FI_IN_ROOM","ROOM_SERVICE","GUARDED_PARKG","SERV_SPEC_MENU"
+	};
+	private List<string> FilteredSuggestions => string.IsNullOrWhiteSpace(AmenityInput) ? new List<string>() : AllAmenities
+		.Where(a => a.StartsWith(AmenityInput.Trim(), StringComparison.OrdinalIgnoreCase))
+		.Take(5)
+		.ToList();
+
+	private async Task SubmitSearch()
+	{
+		await Service.SearchHotelsAsync(Input);
+	}
+
+	private void SelectAmenity(string amenity)
+	{
+		if (Input.Amenities.Contains(amenity))
+		{
+			Input.Amenities.Remove(amenity);
+		}
+		else
+		{
+			Input.Amenities.Add(amenity);
+		}
+
+		AmenityInput = "";
+	}
+
+	private void HandleAmenityKeyPress(KeyboardEventArgs e)
+	{
+		if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(AmenityInput))
+		{
+			string trimmed = AmenityInput.Trim();
+			string match = AllAmenities.FirstOrDefault(a => string.Equals(a, trimmed, StringComparison.OrdinalIgnoreCase));
+
+			if (match != null)
+			{
+				if (Input.Amenities.Contains(match))
+				{
+					Input.Amenities.Remove(match);
+				}
+				else
+				{
+					Input.Amenities.Add(match);
+				}
+
+				AmenityInput = "";
+			}
+			else
+			{
+				_amenitiesMessage = "No such amenity";
+			}
+		}
+	}
+
+	private void ToggleRating(string starValue, object? isChecked)
+	{
+
+		if ((bool)isChecked!)
+		{
+			Input.Ratings.Add(starValue);
+		}
+		else
+		{
+			Input.Ratings.Remove(starValue);
+		}
+	}
+
+	protected override void OnAfterRender(bool firstRender)
+	{
+		if (firstRender)
+		{
+			_isClient = true;
+			StateHasChanged();
+		}
+	}
+}

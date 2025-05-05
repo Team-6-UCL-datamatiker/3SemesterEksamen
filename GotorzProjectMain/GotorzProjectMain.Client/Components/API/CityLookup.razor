@@ -1,0 +1,126 @@
+﻿@using System.Timers
+@using GotorzProjectMain.Client.Services
+@using System.ComponentModel.DataAnnotations
+
+@inject ICityLookupService CityLookupService
+
+<div class="form-check mb-3">
+	<InputCheckbox id="isAirport" @bind-Value="_airport" class="form-check-input" />
+	<label for="isAirport" class="form-check-label">Airport code</label>
+</div>
+
+<div class="mb-3">
+	<label for="destination" class="form-label">Destination:</label>
+	<InputText id="destination" placeholder="City" autocomplete="off" class="form-control" @bind-Value="Input" oninput="@(async (ChangeEventArgs e) => await OnInput(e))" @onkeydown="HandleKeyPress" />
+	<ValidationMessage For="() => Input" class="alert alert-danger mt-3" />
+
+	@if (!string.IsNullOrWhiteSpace(_selectedLocation))
+	{
+		<div class="alert alert-danger mt-3" role="alert">
+			@_selectedLocation
+		</div>
+	}
+
+	@if (!string.IsNullOrWhiteSpace(_matchMessage))
+	{
+		<div class="alert alert-danger mt-3" role="alert">
+			@_matchMessage
+		</div>
+	}
+
+	@if (Suggestions.Any() && Input != "")
+	{
+		<ul class="list-group position-absolute mt-1 w-100" style="z-index:1000;">
+			@foreach (string suggestion in Suggestions)
+			{
+				<li class="list-group-item list-group-item-action" @onclick="() => Select(suggestion)">
+					@suggestion
+				</li>
+			}
+		</ul>
+	}
+</div>
+
+@code {
+	[Parameter]
+	public string Input { get; set; } = string.Empty;
+	[Parameter] 
+	public EventCallback<string> OnSelected { get; set; }
+	private List<string> Suggestions { get; set; } = new();
+	private bool _airport = false;
+	private string? _matchMessage;
+	private string _code = "";
+	private string? _selectedLocation;
+
+	private async Task OnInput(ChangeEventArgs e)
+	{
+		Suggestions = CityLookupService.Search(e.Value.ToString()).ToList();
+	}
+
+	private async Task HandleKeyPress(KeyboardEventArgs e)
+	{
+		if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(Input))
+		{
+			string trimmed = Input.Trim();
+			string? match = null;
+
+			if (Suggestions.Any())
+			{
+				match = Suggestions.FirstOrDefault(a => a.Contains(trimmed, StringComparison.OrdinalIgnoreCase));
+			}
+
+			if (match != null)
+			{
+				(string CityCode, string AirportCode)? codes = CityLookupService.GetCodes(match);
+
+				if (!_airport)
+				{
+					_code = codes.Value.CityCode;
+				}
+				else
+				{
+					_code = codes.Value.AirportCode;
+				}
+
+				_selectedLocation = $"{match}, Code: {_code}";
+
+				if (!string.IsNullOrWhiteSpace(_code))
+				{
+					await OnSelected.InvokeAsync(_code);
+				}
+
+				Input = "";
+				Suggestions.Clear();
+			}
+			else
+			{
+				_matchMessage = "No such match";
+			}
+		}
+	}
+
+	private async Task Select(string suggestion)
+	{
+		Input = suggestion;
+		Suggestions.Clear();
+		(string CityCode, string AirportCode)? codes = CityLookupService.GetCodes(suggestion);
+
+		if (!_airport)
+		{
+			_code = codes.Value.CityCode;
+		}
+		else
+		{
+			_code = codes.Value.AirportCode;
+		}
+
+		_selectedLocation = $"{suggestion}, Code: {_code}";
+
+		Input = "";
+
+		if (!string.IsNullOrWhiteSpace(_code))
+		{
+			await OnSelected.InvokeAsync(_code);
+		}
+	}
+}

@@ -10,6 +10,7 @@ using GotorzProjectMain.Services;
 using GotorzProjectMain.Models;
 using AutoMapper;
 using GotorzProjectMain.Services.Mapping;
+using GotorzProjectMain.Services.APIs.HotelAPIs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +28,11 @@ builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnC
 
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 
+builder.Services.AddHttpClient<IAmadeusHotelAPIService, AmadeusHotelAPIService>(client =>
+{
+	client.BaseAddress = new Uri("https://test.api.amadeus.com/v1/");
+});
+
 //Used for getting the user data everytime an employee or customer is loaded
 builder.Services.AddScoped<IExtendedUserService, ExtendedUserService>();
 
@@ -36,6 +42,7 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
+
 
 builder.Services.AddScoped<VacationRequestSignalRService>();
 
