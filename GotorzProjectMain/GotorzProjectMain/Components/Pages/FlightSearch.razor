@@ -66,7 +66,7 @@ else if (FlightRoutes != null)
 {
 	<label>
 		Choose flightroute:
-		<select @bind="SelectedFlightRoutIndex">
+		<select @bind="SelectedFlightRouteIndex">
 			<option value="">-- pick a flightroute --</option>
 			@for (int i = 0; i < FlightRoutes.Count; i++)
 			{
@@ -127,10 +127,10 @@ else if (FlightRoutes != null)
 	List<FlightRoute>? FlightRoutes;
 	string? ErrorMessage;
 
-	int? SelectedFlightRoutIndex;
+	int? SelectedFlightRouteIndex;
 	FlightRoute? SelectedFlightRoute =>
-		SelectedFlightRoutIndex.HasValue
-				? FlightRoutes[SelectedFlightRoutIndex.Value]
+		SelectedFlightRouteIndex.HasValue
+				? FlightRoutes[SelectedFlightRouteIndex.Value]
 				: null;
 
 
@@ -140,7 +140,7 @@ else if (FlightRoutes != null)
 		// Reset state before search
 		ErrorMessage = null;
 		FlightRoutes = null;
-		SelectedFlightRoutIndex = null; // Reset selection on each new search
+		SelectedFlightRouteIndex = null; // Reset selection on each new search
 
 		if (Outbound == DateTime.MinValue)
 		{
