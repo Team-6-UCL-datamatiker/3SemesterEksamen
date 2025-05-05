@@ -52,14 +52,14 @@ namespace GotorzProjectMain.Services.API
 			string url = QueryHelpers.AddQueryString("search", query);
 
 			// Fetch the JSON from API and deserialize it into DTO 
-			var response = await _http.GetFromJsonAsync<SerpApiFlightsResponse>(url); // equivalent to a GET + Deserialize
+			FlightResponseDTO response = await _http.GetFromJsonAsync<FlightResponseDTO>(url); // equivalent to a GET + Deserialize
 			if (response == null) return new();
 
 			// The API returns a list of flight groups, each containing a list of flights - combine them
 			IEnumerable<FlightGroup> groups = (response.BestFlights ?? new())
 					   .Concat(response.OtherFlights ?? new());
 
-			List<FlightRoute> routes = new List<FlightRoute>();
+			List<FlightRoute> routes = new();
 
 			// Convert DTO into to Flight Model
 			foreach (FlightGroup group in groups)
@@ -83,7 +83,7 @@ namespace GotorzProjectMain.Services.API
 				// Map each layover DTO → Layover
 			
 				List<Layover> layovers = group.Layovers?.ToList()
-							 ?? new List<Layover>();
+							 ?? new();
 
 				// Wrap into FlightRoute
 				routes.Add(new FlightRoute

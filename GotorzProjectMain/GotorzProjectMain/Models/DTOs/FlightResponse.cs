@@ -2,7 +2,7 @@
 
 namespace GotorzProjectMain.Models.DTOs
 {
-	public class SerpApiFlightsResponse
+	public class FlightResponseDTO
 	{
 		[JsonPropertyName("best_flights")]
 		public List<FlightGroup> BestFlights { get; set; }
