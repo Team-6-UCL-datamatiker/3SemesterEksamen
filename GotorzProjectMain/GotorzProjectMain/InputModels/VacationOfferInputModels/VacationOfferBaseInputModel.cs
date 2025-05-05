@@ -5,12 +5,6 @@ namespace GotorzProjectMain.InputModels.VacationOfferInputModels
     public class VacationOfferBaseInputModel
     {
         [Required]
-        [Display(Name = "VacationOfferId")]
-        public int VacationOfferId { get; set; }
-        [Required]
-        [Display(Name = "VacationRequestId")]
-        public int VacationRequestId { get; set; }
-        [Required]
         [Display(Name = "EmployeeEmail")]
         public string EmployeeEmail { get; set; } = string.Empty;
         [Required]

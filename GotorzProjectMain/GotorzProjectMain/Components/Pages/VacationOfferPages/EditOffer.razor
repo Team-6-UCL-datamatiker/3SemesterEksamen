@@ -8,7 +8,9 @@
 @inject NavigationManager NavigationManager
 @inject IExtendedUserService ExtendedUserService
 @inject IMapper Mapper
+@inject ILogger<EditOffer> Logger
 @rendermode InteractiveServer
+
 
 <PageTitle>Edit</PageTitle>
 
@@ -16,7 +18,7 @@
 
 <h2>VacationOffer</h2>
 <hr />
-@if (VacationOffer is null)
+@if (VacationOfferInput is null)
 {
     <p><em>Loading...</em></p>
 }
@@ -24,61 +26,59 @@ else
 {
     <div class="row">
         <div class="col-md-4">
-            <EditForm Model="EditVacationOfferInput" OnValidSubmit="UpdateVacationOffer" FormName="edit" Enhance>
+            <EditForm Model="VacationOfferInput" OnValidSubmit="UpdateVacationOffer" FormName="edit" Enhance>
                 <DataAnnotationsValidator />
                 <ValidationSummary role="alert" />
-                <input type="hidden" name="EditVacationOfferInput.VacationOfferId" @bind-value="EditVacationOfferInput.VacationOfferId" />
-
-                <div class="mb-3">
-                    <label for="vacationrequestid" class="form-label">VacationRequestId:</label>
-                    <InputNumber id="vacationrequestid" @bind-Value="EditVacationOfferInput.VacationRequestId" class="form-control" />
-                    <ValidationMessage For="() => EditVacationOfferInput.VacationRequestId" class="text-danger" />
-                </div>
-
                 <div class="mb-3">
                     <label for="employeeemail" class="form-label">EmployeeEmail:</label>
-                    <InputText id="employeeemail" @bind-Value="EditVacationOfferInput.EmployeeEmail" class="form-control" />
-                    <ValidationMessage For="() => EditVacationOfferInput.EmployeeEmail" class="text-danger" />
+                    <InputText id="employeeemail" @bind-Value="VacationOfferInput.EmployeeEmail" class="form-control" />
+                    <ValidationMessage For="() => VacationOfferInput.EmployeeEmail" class="text-danger" />
                 </div>
 
                 <div class="mb-3">
                     <label for="totalprice" class="form-label">TotalPrice:</label>
-                    <InputNumber id="totalprice" @bind-Value="EditVacationOfferInput.TotalPrice" class="form-control" />
-                    <ValidationMessage For="() => EditVacationOfferInput.TotalPrice" class="text-danger" />
+                    <InputNumber id="totalprice" @bind-Value="VacationOfferInput.TotalPrice" class="form-control" />
+                    <ValidationMessage For="() => VacationOfferInput.TotalPrice" class="text-danger" />
                 </div>
 
                 <div class="mb-3">
                     <label for="country" class="form-label">Country:</label>
-                    <InputText id="country" @bind-Value="EditVacationOfferInput.Country" class="form-control" />
-                    <ValidationMessage For="() => EditVacationOfferInput.Country" class="text-danger" />
+                    <InputText id="country" @bind-Value="VacationOfferInput.Country" class="form-control" />
+                    <ValidationMessage For="() => VacationOfferInput.Country" class="text-danger" />
                 </div>
 
                 <div class="mb-3">
                     <label for="startdate" class="form-label">StartDate:</label>
-                    <InputDate id="startdate" @bind-Value="EditVacationOfferInput.StartDate" class="form-control" />
-                    <ValidationMessage For="() => EditVacationOfferInput.StartDate" class="text-danger" />
+                    <InputDate id="startdate" @bind-Value="VacationOfferInput.StartDate" class="form-control" />
+                    <ValidationMessage For="() => VacationOfferInput.StartDate" class="text-danger" />
                 </div>
 
                 <div class="mb-3">
                     <label for="enddate" class="form-label">EndDate:</label>
-                    <InputDate id="enddate" @bind-Value="EditVacationOfferInput.EndDate" class="form-control" />
-                    <ValidationMessage For="() => EditVacationOfferInput.EndDate" class="text-danger" />
+                    <InputDate id="enddate" @bind-Value="VacationOfferInput.EndDate" class="form-control" />
+                    <ValidationMessage For="() => VacationOfferInput.EndDate" class="text-danger" />
                 </div>
 
                 <div class="mb-3">
                     <label for="misc" class="form-label">Misc:</label>
-                    <InputText id="misc" @bind-Value="EditVacationOfferInput.Misc" class="form-control" />
-                    <ValidationMessage For="() => EditVacationOfferInput.Misc" class="text-danger" />
+                    <InputText id="misc" @bind-Value="VacationOfferInput.Misc" class="form-control" />
+                    <ValidationMessage For="() => VacationOfferInput.Misc" class="text-danger" />
                 </div>
 
                 <div class="mb-3">
                     <label for="expirationdate" class="form-label">ExpirationDate:</label>
-                    <InputDate id="expirationdate" @bind-Value="EditVacationOfferInput.ExpirationDate" class="form-control" />
-                    <ValidationMessage For="() => EditVacationOfferInput.ExpirationDate" class="text-danger" />
+                    <InputDate id="expirationdate" @bind-Value="VacationOfferInput.ExpirationDate" class="form-control" />
+                    <ValidationMessage For="() => VacationOfferInput.ExpirationDate" class="text-danger" />
                 </div>
 
                 <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>
+            @if (!string.IsNullOrWhiteSpace(_errorMessage))
+            {
+                <div class="alert alert-danger mt-3" role="alert">
+                    @_errorMessage
+                </div>
+            }
         </div>
     </div>
 }
@@ -91,18 +91,21 @@ else
     [SupplyParameterFromQuery]
     private int VacationOfferId { get; set; }
 
+    private VacationOffer VacationOffer { get; set; }
 
-    private InputModels.VacationOfferInputModels.EditVacationOfferInputModel EditVacationOfferInput { get; set; } = new();
+    private string? _errorMessage;
+
+    private VacationOfferBaseInputModel VacationOfferInput { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
-        var entity = await Context.VacationOffers.FirstOrDefaultAsync(m => m.VacationOfferId == VacationOfferId);
-        if (entity is null)
+        VacationOffer = await Context.VacationOffers.FirstOrDefaultAsync(m => m.VacationOfferId == VacationOfferId);
+        if (VacationOffer is null)
         {
             NavigationManager.NavigateTo("notfound");
             return;
         }
-        EditVacationOfferInput = Mapper.Map<InputModels.VacationOfferInputModels.EditVacationOfferInputModel>(entity);
+        Mapper.Map(VacationOffer, VacationOfferInput);
 
     }
 
@@ -110,17 +113,12 @@ else
     // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task UpdateVacationOffer()
     {
-        var entity = await Context.VacationOffers.FirstOrDefaultAsync(e => e.VacationOfferId == VacationOfferId);
-        if (entity is null)
-        {
-            NavigationManager.NavigateTo("notfound");
-            return;
-        }
 
-        Mapper.Map(EditVacationOfferInput, entity); // apply updated values
+        
 
         try
         {
+            Mapper.Map(VacationOfferInput, VacationOffer); // apply updated values
             await Context.SaveChangesAsync();
         }
         catch (DbUpdateConcurrencyException)
@@ -133,6 +131,16 @@ else
             {
                 throw;
             }
+        }
+        // catch (DbUpdateConcurrencyException ex)
+        // {
+        //     _errorMessage = "Another user has modified this data since you started editing. Your changes were not saved. Please reload and try again.";
+        //     Logger.LogWarning(ex, _errorMessage);
+        // }
+        catch (Exception ex)
+        {
+            _errorMessage = "An unexpected error occurred. Please try again.";
+            Logger.LogError(ex, _errorMessage);
         }
 
         NavigationManager.NavigateTo("/vacationoffers");
