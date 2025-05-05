@@ -56,44 +56,44 @@ namespace GotorzProjectMain.Services.API
 			if (response == null) return new();
 
 			// The API returns a list of flight groups, each containing a list of flights - combine them
-			var groups = (response.BestFlights ?? new())
+			IEnumerable<FlightGroup> groups = (response.BestFlights ?? new())
 					   .Concat(response.OtherFlights ?? new());
 
 			// Convert DTO into to Flight Model
-			List<FlightRoute> offers = new List<FlightRoute>();
+			List<FlightRoute> routes = new List<FlightRoute>();
 
-			foreach (var g in groups)
+			foreach (FlightGroup group in groups)
 			{
 				// Map each FlightSegment → Flight
-				var legs = g.Flights
-							.Select(s => new Flight
+				List<Flight> legs = group.Flights
+							.Select(leg => new Flight
 							{
-								DepartureAirportCode = s.Departure.Id,
-								DepartureAirportName = s.Departure.Name,
-								DepartureTime = DateTime.Parse(s.Departure.Time, null, DateTimeStyles.RoundtripKind),
-								ArrivalAirportCode = s.Arrival.Id,
-								ArrivalAirportName = s.Arrival.Name,
-								ArrivalTime = DateTime.Parse(s.Arrival.Time, null, DateTimeStyles.RoundtripKind),
-								Price = g.Price,
-								Airline = s.Airline,
-								BookingLink = s.BookingLink
+								DepartureAirportCode = leg.Departure.Id,
+								DepartureAirportName = leg.Departure.Name,
+								DepartureTime = DateTime.Parse(leg.Departure.Time, null, DateTimeStyles.RoundtripKind),
+								ArrivalAirportCode = leg.Arrival.Id,
+								ArrivalAirportName = leg.Arrival.Name,
+								ArrivalTime = DateTime.Parse(leg.Arrival.Time, null, DateTimeStyles.RoundtripKind),
+								Price = group.Price,
+								Airline = leg.Airline,
+								BookingLink = leg.BookingLink
 							})
 							.ToList();
 
 				// Map each layover DTO → Layover
 			
-				var layovers = g.Layovers?.ToList()
+				List<Layover> layovers = group.Layovers?.ToList()
 							 ?? new List<Layover>();
 
 				// Wrap into FlightRoute
-				offers.Add(new FlightRoute
+				routes.Add(new FlightRoute
 				{
 					Segments = legs,
 					Layovers = layovers,
-					TotalPrice = g.Price
+					TotalPrice = group.Price
 				}); 
 			}
-			return offers;
+			return routes;
 		}
 	}
 }
