@@ -299,10 +299,22 @@ namespace GotorzProjectMain.Migrations
                     b.Property<int>("AdultsAmount")
                         .HasColumnType("int");
 
+                    b.Property<string>("ArrivalCity")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ArrivalCountry")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("ChildrenAmount")
                         .HasColumnType("int");
 
-                    b.Property<string>("Country")
+                    b.Property<string>("DepartureCity")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DepartureCountry")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

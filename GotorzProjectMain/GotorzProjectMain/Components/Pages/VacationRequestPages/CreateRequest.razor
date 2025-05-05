@@ -46,9 +46,24 @@
 			}
 
 			<div class="mb-3">
-				<label for="country" class="form-label">Country:</label>
-				<InputText id="country" @bind-Value="InputModel.Country" class="form-control" />
-				<ValidationMessage For="() => InputModel.Country" class="text-danger" />
+				<label for="departureCity" class="form-label">Departure City:</label>
+				<InputText id="departureCity" @bind-Value="InputModel.DepartureCity" class="form-control" />
+				<ValidationMessage For="() => InputModel.DepartureCity" class="text-danger" />
+			</div>
+			<div class="mb-3">
+				<label for="departureCountry" class="form-label">Departure Country:</label>
+				<InputText id="departureCountry" @bind-Value="InputModel.DepartureCountry" class="form-control" />
+				<ValidationMessage For="() => InputModel.DepartureCountry" class="text-danger" />
+			</div>
+			<div class="mb-3">
+				<label for="arrivalCity" class="form-label">Arrival City:</label>
+				<InputText id="arrivalCity" @bind-Value="InputModel.ArrivalCity" class="form-control" />
+				<ValidationMessage For="() => InputModel.ArrivalCity" class="text-danger" />
+			</div>
+			<div class="mb-3">
+				<label for="arrivalCountry" class="form-label">Arrival Country:</label>
+				<InputText id="arrivalCountry" @bind-Value="InputModel.ArrivalCountry" class="form-control" />
+				<ValidationMessage For="() => InputModel.ArrivalCountry" class="text-danger" />
 			</div>
 			<div class="mb-3">
 				<label for="startdate" class="form-label">StartDate:</label>
@@ -101,7 +116,7 @@
 
 @code {
 	[SupplyParameterFromForm]
-	private CreateVacationRequestInputModel InputModel { get; set; }= new();
+	private CreateVacationRequestInputModel InputModel { get; set; } = new();
 
 	private bool IsEmployee { get; set; }
 	private string? FormErrorMessage { get; set; }
