@@ -8,7 +8,7 @@
 
 @rendermode InteractiveServer
 
-
+@* Inputs *@
 <div style="display:flex; gap:1rem; align-items:flex-start; margin-bottom:1rem;">
 	<div>
 		<label for="fromCity">Depature City</label><br />
@@ -60,15 +60,16 @@
 	</div>
 }
 
-else if (FlightOffers != null)
+@* Flightroute Dropdown *@
+else if (FlightRoutes != null)
 {
 	<label>
 		Choose flightroute:
-		<select @bind="SelectedOfferIndex">
+		<select @bind="SelectedFlightRoutIndex">
 			<option value="">-- pick a flightroute --</option>
-			@for (int i = 0; i < FlightOffers.Count; i++)
+			@for (int i = 0; i < FlightRoutes.Count; i++)
 			{
-				FlightOffer offer = FlightOffers[i];
+				FlightRoute offer = FlightRoutes[i];
 				<option value="@i" @key="i">
 					@(
 								string.Join(" → ",
@@ -81,15 +82,16 @@ else if (FlightOffers != null)
 		</select>
 	</label>
 
-	@if (SelectedOffer != null)
+@* 	Selected flightroute details *@
+	@if (SelectedFlightRoute != null)
 	{
 		<!-- Header -->
 		<h4>Selected Flight</h4>
 
 		<!-- For each leg -->
-		@for (int i = 0; i < SelectedOffer.Segments.Count; i++)
+		@for (int i = 0; i < SelectedFlightRoute.Segments.Count; i++)
 		{
-			Flight flightLeg = SelectedOffer.Segments[i];
+			Flight flightLeg = SelectedFlightRoute.Segments[i];
 			<div class="p-2 border rounded mb-2">
 				<div><strong>Route:</strong> @flightLeg.DepartureAirportCode → @flightLeg.ArrivalAirportCode</div>
 				<div><strong>Departure:</strong> @flightLeg.DepartureTime.ToString("dd/MM/yyyy HH:mm")</div>
@@ -98,9 +100,9 @@ else if (FlightOffers != null)
 			</div>
 
 			@* If there’s a layover after this leg, show it *@
-			@if (i < SelectedOffer.Layovers.Count)
+			@if (i < SelectedFlightRoute.Layovers.Count)
 			{
-				Layover layover = SelectedOffer.Layovers[i];
+				Layover layover = SelectedFlightRoute.Layovers[i];
 				<div class="p-2 border rounded mb-2 bg-light">
 					<strong>Layover at @layover.Name:</strong> @layover.DurationDisplay
 				</div>
@@ -108,8 +110,8 @@ else if (FlightOffers != null)
 		}
 
 		<div class="mt-4 p-3 bg-gray-100 rounded">
-			<div><strong>Total duration:</strong> @SelectedOffer.TotalTravelTimeDisplay</div>
-			<div><strong>Total price:</strong>   @SelectedOffer.TotalPrice DKK</div>
+			<div><strong>Total duration:</strong> @SelectedFlightRoute.TotalTravelTimeDisplay</div>
+			<div><strong>Total price:</strong>   @SelectedFlightRoute.TotalPrice DKK</div>
 		</div>
 	}
 }
@@ -121,13 +123,13 @@ else if (FlightOffers != null)
 	int AdultCount = 1;
 	int ChildCount = 0;
 
-	List<FlightOffer>? FlightOffers;
+	List<FlightRoute>? FlightRoutes;
 	string? ErrorMessage;
 
-	int? SelectedOfferIndex;
-	FlightOffer? SelectedOffer =>
-		SelectedOfferIndex.HasValue
-				? FlightOffers[SelectedOfferIndex.Value]
+	int? SelectedFlightRoutIndex;
+	FlightRoute? SelectedFlightRoute =>
+		SelectedFlightRoutIndex.HasValue
+				? FlightRoutes[SelectedFlightRoutIndex.Value]
 				: null;
 
 
@@ -136,8 +138,8 @@ else if (FlightOffers != null)
 	{
 		// Reset state before search
 		ErrorMessage = null;
-		FlightOffers = null;
-		SelectedOfferIndex = null; // Reset selection on each new search
+		FlightRoutes = null;
+		SelectedFlightRoutIndex = null; // Reset selection on each new search
 
 		// Look up airport codes based on user input
 		if (!CityAirportMap.Map.TryGetValue(FromCity, out var fromAirports)) //if it gets a match, it saves it to fromAirports else set errormessage
@@ -156,7 +158,7 @@ else if (FlightOffers != null)
 		string toParam = string.Join(",", toAirports);
 
 		// Request flight offers from the external API
-		FlightOffers = await FlightService.SearchAsync(
+		FlightRoutes = await FlightService.SearchAsync(
 			fromParam,
 			toParam,
 			Outbound,

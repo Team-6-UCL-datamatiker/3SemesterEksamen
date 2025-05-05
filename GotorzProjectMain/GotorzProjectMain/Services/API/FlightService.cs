@@ -7,7 +7,7 @@ namespace GotorzProjectMain.Services.API
 {
 	public interface IFlightService
 	{
-		Task<List<FlightOffer>> SearchAsync(
+		Task<List<FlightRoute>> SearchAsync(
 			string departureIata,
 			string arrivalIata,
 			DateTime outboundDate,
@@ -27,7 +27,7 @@ namespace GotorzProjectMain.Services.API
 		}
 
 		// Fetches available flights from API using Airport codes
-		public async Task<List<FlightOffer>> SearchAsync(
+		public async Task<List<FlightRoute>> SearchAsync(
 			string departureIata,
 			string arrivalIata,
 			DateTime outboundDate,
@@ -60,7 +60,7 @@ namespace GotorzProjectMain.Services.API
 					   .Concat(response.OtherFlights ?? new());
 
 			// Convert DTO into to Flight Model
-			List<FlightOffer> offers = new List<FlightOffer>();
+			List<FlightRoute> offers = new List<FlightRoute>();
 
 			foreach (var g in groups)
 			{
@@ -85,8 +85,8 @@ namespace GotorzProjectMain.Services.API
 				var layovers = g.Layovers?.ToList()
 							 ?? new List<Layover>();
 
-				// Wrap into FlightOffer
-				offers.Add(new FlightOffer
+				// Wrap into FlightRoute
+				offers.Add(new FlightRoute
 				{
 					Segments = legs,
 					Layovers = layovers,

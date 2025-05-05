@@ -2,7 +2,7 @@
 
 namespace GotorzProjectMain.Models
 {
-	public class FlightOffer
+	public class FlightRoute
 	{
 		// All legs in this itinerary, in order
 		public List<Flight> Segments { get; set; }
