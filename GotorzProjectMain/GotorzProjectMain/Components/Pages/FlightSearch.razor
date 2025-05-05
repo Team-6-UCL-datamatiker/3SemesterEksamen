@@ -25,39 +25,56 @@
 
 else if (Flights != null)
 {
-	<table>
-		<thead>
-			<tr>
-				<th>Route</th>
-				<th>Depart</th>
-				<th>Arrive</th>
-				<th>Price</th>
-				<th>Airline</th>
-			</tr>
-		</thead>
-		<tbody>
-			@foreach (Flight flight in Flights)
-			{
-				<tr>
-					<td>@flight.DepartureAirportCode → @flight.ArrivalAirportCode</td>
-					<td>@flight.DepartureTime</td>
-					<td>@flight.ArrivalTime</td>
-					<td>@flight.Price DKK</td>
-					<td>@flight.Airline</td>
-				</tr>
-			}
-		</tbody>
-	</table>
+<label>
+  Choose your flight:
+  <select @bind="SelectedFlightIndex">
+    <option value="">-- select one --</option>
+    @for (int i = 0; i < Flights.Count; i++)
+    {
+      var f = Flights[i];
+      <option value="@i" 
+              @key="i">
+        @($"{f.DepartureAirportCode}→{f.ArrivalAirportCode} | " +
+          $"{f.DepartureTime:HH:mm}–{f.ArrivalTime:HH:mm} | {f.Price} DKK")
+      </option>
+    }
+  </select>
+</label>
+
+	@if (SelectedFlight != null)
+	{
+		<div class="mt-3 p-2 border">
+			<h4>Selected Flight</h4>
+			<p>
+				@SelectedFlight.DepartureAirportCode →
+				@SelectedFlight.ArrivalAirportCode<br />
+				Departure: @SelectedFlight.DepartureTime<br />
+				Arrival: @SelectedFlight.ArrivalTime<br />
+				Price: @SelectedFlight.Price DKK<br />
+				Airline: @SelectedFlight.Airline
+			</p>
+			<a href="@SelectedFlight.BookingLink" target="_blank">Booking link her?</a>
+		</div>
+	}
+
 }
+
 
 @code {
 	string FromCity = "Copenhagen", ToCity = "London";
 	DateTime Outbound = DateTime.Today.AddDays(7);
 	int AdultCount = 1;
 	int ChildCount = 0;
-
+	
 	List<Flight>? Flights;
 	string? ErrorMessage;
+
+	int? SelectedFlightIndex;          // holds the array index of the chosen flight
+	Flight? SelectedFlight =>          // read‐only property to get the actual object
+		(SelectedFlightIndex.HasValue && Flights != null)
+				? Flights[SelectedFlightIndex.Value]
+				: null;
+
 
 	// Performs a flight search using city names
 	async Task Search()

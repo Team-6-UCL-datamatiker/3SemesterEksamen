@@ -60,7 +60,6 @@ namespace GotorzProjectMain.Services.API
 
 			// Convert DTO into to Flight Model
 			List<Flight> offers = new List<Flight>();
-
 			foreach (var g in groups)
 				foreach (var s in g.Flights)
 					offers.Add(new Flight
