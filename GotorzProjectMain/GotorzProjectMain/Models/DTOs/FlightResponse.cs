@@ -5,29 +5,29 @@ namespace GotorzProjectMain.Models.DTOs
 	public class FlightResponseDTO
 	{
 		[JsonPropertyName("best_flights")]
-		public List<FlightGroup> BestFlights { get; set; }
+		public List<FlightGroupDTO> BestFlights { get; set; }
 		[JsonPropertyName("other_flights")]
-		public List<FlightGroup> OtherFlights { get; set; }
+		public List<FlightGroupDTO> OtherFlights { get; set; }
 	}
-	public class FlightGroup
+	public class FlightGroupDTO
 	{
-		public List<FlightSegment> Flights { get; set; }
+		public List<FlightLegDTO> Flights { get; set; }
 
 		[JsonPropertyName("layovers")]
-		public List<Layover> Layovers { get; set; }
+		public List<LayoverDTO> Layovers { get; set; }
 
 		[JsonPropertyName("price")]
 		public decimal Price { get; set; }
 	}
-	public class FlightSegment
+	public class FlightLegDTO
 	{
 		[JsonPropertyName("departure_airport")]
-		public AirportInfo Departure { get; set; }
+		public AirportInfoDTO Departure { get; set; }
 		[JsonPropertyName("arrival_airport")]
-		public AirportInfo Arrival { get; set; }
+		public AirportInfoDTO Arrival { get; set; }
 		public string Airline { get; set; }
 	}
-	public class AirportInfo
+	public class AirportInfoDTO
 	{
 		public string Name { get; set; }
 		public string Id { get; set; }   // IATA code
@@ -35,7 +35,7 @@ namespace GotorzProjectMain.Models.DTOs
 	}
 
 		
-	public class Layover
+	public class LayoverDTO
 	{
 		public string Id { get; set; }  // airport code
 		public string Name { get; set; }

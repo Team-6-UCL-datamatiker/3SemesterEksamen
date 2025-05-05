@@ -8,7 +8,7 @@ namespace GotorzProjectMain.Models
 		public List<Flight> Segments { get; set; }
 
 		// Layover info between legs
-		public List<Layover> Layovers { get; set; }
+		public List<LayoverDTO> Layovers { get; set; }
 
 		// Total price across all legs
 		public decimal TotalPrice { get; set; }
