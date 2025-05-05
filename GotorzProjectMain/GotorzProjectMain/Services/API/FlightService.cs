@@ -49,7 +49,7 @@ namespace GotorzProjectMain.Services.API
 			};
 
 			// Construct request URL with parameters (search?engine=google_flight...)
-			var url = QueryHelpers.AddQueryString("search", query);
+			string url = QueryHelpers.AddQueryString("search", query);
 
 			// Fetch the JSON from API and deserialize it into DTO 
 			var response = await _http.GetFromJsonAsync<SerpApiFlightsResponse>(url); // equivalent to a GET + Deserialize
