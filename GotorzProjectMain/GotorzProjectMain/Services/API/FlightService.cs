@@ -80,9 +80,14 @@ namespace GotorzProjectMain.Services.API
 							.ToList();
 
 				// Map each layover DTO → Layover
-			
-				List<LayoverDTO> layovers = group.Layovers?.ToList()
-							 ?? new();
+				List<Layover> layovers = (group.Layovers ?? new List<LayoverDTO>())
+					  .Select(dto => new Layover
+					   {
+						   Id = dto.Id,
+						   Name = dto.Name,
+						   Duration = dto.Duration
+					   })
+					   .ToList();
 
 				// Wrap into FlightRoute
 				routes.Add(new FlightRoute
@@ -90,7 +95,7 @@ namespace GotorzProjectMain.Services.API
 					Segments = legs,
 					Layovers = layovers,
 					TotalPrice = group.Price
-				}); 
+				});
 			}
 			return routes;
 		}

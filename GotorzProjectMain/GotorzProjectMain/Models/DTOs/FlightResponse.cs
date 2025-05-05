@@ -40,10 +40,6 @@ namespace GotorzProjectMain.Models.DTOs
 		public string Id { get; set; }  // airport code
 		public string Name { get; set; }
 		public int Duration { get; set; }  // minutes
-
-		[JsonIgnore]
-		public string DurationDisplay
-		=> $"{Duration / 60}h {Duration % 60}m"; // hours and minutes
 	}
 
 }

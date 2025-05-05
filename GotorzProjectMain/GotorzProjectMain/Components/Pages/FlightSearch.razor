@@ -103,7 +103,7 @@ else if (FlightRoutes != null)
 			@* If there’s a layover after this leg, show it *@
 			@if (i < SelectedFlightRoute.Layovers.Count)
 			{
-				LayoverDTO layover = SelectedFlightRoute.Layovers[i];
+				Layover layover = SelectedFlightRoute.Layovers[i];
 				<div class="p-2 border rounded mb-2 bg-light">
 					<strong>Layover at @layover.Name:</strong> @layover.DurationDisplay
 				</div>
