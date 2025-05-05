@@ -26,8 +26,6 @@ namespace GotorzProjectMain.Models.DTOs
 		[JsonPropertyName("arrival_airport")]
 		public AirportInfo Arrival { get; set; }
 		public string Airline { get; set; }
-		[JsonPropertyName("booking_link")]
-		public string BookingLink { get; set; }
 	}
 	public class AirportInfo
 	{

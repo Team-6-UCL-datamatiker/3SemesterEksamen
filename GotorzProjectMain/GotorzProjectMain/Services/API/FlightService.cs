@@ -75,8 +75,7 @@ namespace GotorzProjectMain.Services.API
 								ArrivalAirportName = leg.Arrival.Name,
 								ArrivalTime = DateTime.Parse(leg.Arrival.Time, null, DateTimeStyles.RoundtripKind),
 								Price = group.Price,
-								Airline = leg.Airline,
-								BookingLink = leg.BookingLink
+								Airline = leg.Airline
 							})
 							.ToList();
 

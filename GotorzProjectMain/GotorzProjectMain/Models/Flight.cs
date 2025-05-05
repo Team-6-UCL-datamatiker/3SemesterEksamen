@@ -10,6 +10,5 @@
 		public DateTime ArrivalTime { get; set; }
 		public decimal Price { get; set; }
 		public string Airline { get; set; }
-		public string BookingLink { get; set; }
 	}
 }
