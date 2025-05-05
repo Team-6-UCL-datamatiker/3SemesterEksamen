@@ -35,7 +35,7 @@ namespace GotorzProjectMain.Services.API
 			int children = 0)
 		{
 			// Build request parameters for API
-			var query = new Dictionary<string, string>
+			Dictionary<string, string> query = new()
 			{
 				["engine"] = "google_flights",
 				["api_key"] = _apiKey,
@@ -59,9 +59,9 @@ namespace GotorzProjectMain.Services.API
 			IEnumerable<FlightGroup> groups = (response.BestFlights ?? new())
 					   .Concat(response.OtherFlights ?? new());
 
-			// Convert DTO into to Flight Model
 			List<FlightRoute> routes = new List<FlightRoute>();
 
+			// Convert DTO into to Flight Model
 			foreach (FlightGroup group in groups)
 			{
 				// Map each FlightSegment → Flight

@@ -70,13 +70,13 @@ else if (FlightRoutes != null)
 			<option value="">-- pick a flightroute --</option>
 			@for (int i = 0; i < FlightRoutes.Count; i++)
 			{
-				FlightRoute offer = FlightRoutes[i];
+				FlightRoute route = FlightRoutes[i];
 				<option value="@i" @key="i">
 					@(
 								string.Join(" → ",
-								offer.Segments.Select(s => s.DepartureAirportCode) // depatureairport -> last arrivalairport
-								.Concat(new[] { offer.Segments.Last().ArrivalAirportCode }))
-								+ $" ({offer.Segments.Count} legs) {offer.TotalPrice} DKK"
+								route.Segments.Select(s => s.DepartureAirportCode) // depatureairport -> last arrivalairport
+								.Concat(new[] { route.Segments.Last().ArrivalAirportCode }))
+								+ $" ({route.Segments.Count} legs) {route.TotalPrice} DKK"
 								)
 				</option>
 			}
