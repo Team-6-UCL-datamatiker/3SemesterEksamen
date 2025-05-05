@@ -31,6 +31,7 @@
 		<input id="outbound"
 			   type="date"
 			   @bind="Outbound"
+			   min="@DateTime.Today.ToString("yyyy-MM-dd")"
 			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
 	</div>
 
