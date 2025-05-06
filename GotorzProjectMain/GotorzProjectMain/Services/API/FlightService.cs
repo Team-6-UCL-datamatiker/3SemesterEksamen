@@ -52,7 +52,7 @@ namespace GotorzProjectMain.Services.API
 			string url = QueryHelpers.AddQueryString("search", query);
 
 			// Fetch the JSON from API and deserialize it into DTO 
-			FlightResponseDTO response = await _http.GetFromJsonAsync<FlightResponseDTO>(url); // equivalent to a GET + Deserialize
+			FlightResponseDTO? response = await _http.GetFromJsonAsync<FlightResponseDTO>(url); // equivalent to a GET + Deserialize
 			if (response == null) return new();
 
 			// The API returns a list of flight groups, each containing a list of flights - combine them
