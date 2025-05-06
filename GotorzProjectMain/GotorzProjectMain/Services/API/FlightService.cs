@@ -92,7 +92,7 @@ namespace GotorzProjectMain.Services.API
 				// Wrap into FlightRoute
 				routes.Add(new FlightRoute
 				{
-					Segments = legs,
+					Legs = legs,
 					Layovers = layovers,
 					TotalPrice = group.Price
 				});

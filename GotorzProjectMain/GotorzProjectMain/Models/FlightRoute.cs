@@ -4,8 +4,8 @@ namespace GotorzProjectMain.Models
 {
 	public class FlightRoute
 	{
-		// All legs in this itinerary, in order
-		public List<Flight> Segments { get; set; }
+		// All legs in this route, in order
+		public List<Flight> Legs { get; set; }
 
 		// Layover info between legs
 		public List<Layover> Layovers { get; set; }
@@ -19,7 +19,7 @@ namespace GotorzProjectMain.Models
 			get
 			{
 				// Sum each flight’s duration from departure→arrival
-				var flightMinutes = Segments
+				var flightMinutes = Legs
 					.Sum(s => (s.ArrivalTime - s.DepartureTime).TotalMinutes);
 
 				// Sum each layover’s duration in minutes
