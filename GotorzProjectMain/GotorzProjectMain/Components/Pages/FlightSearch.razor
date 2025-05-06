@@ -86,10 +86,9 @@ else if (FlightRoutes != null)
 	@* 	Selected flightroute details *@
 	@if (SelectedFlightRoute != null)
 	{
-		<!-- Header -->
 		<h4>Selected Flight</h4>
 
-		<!-- For each leg -->
+		@* For each leg *@
 		@for (int i = 0; i < SelectedFlightRoute.Legs.Count; i++)
 		{
 			Flight flightLeg = SelectedFlightRoute.Legs[i];
