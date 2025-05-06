@@ -23,7 +23,6 @@ internal sealed class PersistingRevalidatingAuthenticationStateProvider : Revali
 	private readonly IdentityOptions options;
 
 	private readonly PersistingComponentStateSubscription subscription;
-	private readonly UserManager<ApplicationUser> _userManager;
 	private readonly ApplicationDbContext _context;
 
 	private Task<AuthenticationState>? authenticationStateTask;
@@ -33,7 +32,6 @@ internal sealed class PersistingRevalidatingAuthenticationStateProvider : Revali
 		IServiceScopeFactory serviceScopeFactory,
 		PersistentComponentState persistentComponentState,
 		IOptions<IdentityOptions> optionsAccessor,
-		UserManager<ApplicationUser> userManager,
 		ApplicationDbContext context
 		)
 		: base(loggerFactory)
@@ -43,7 +41,6 @@ internal sealed class PersistingRevalidatingAuthenticationStateProvider : Revali
 		options = optionsAccessor.Value;
 		AuthenticationStateChanged += OnAuthenticationStateChanged;
 		subscription = state.RegisterOnPersisting(OnPersistingAsync, RenderMode.InteractiveWebAssembly);
-		_userManager = userManager;
 		_context = context;
 	}
 
@@ -96,7 +93,7 @@ internal sealed class PersistingRevalidatingAuthenticationStateProvider : Revali
 		{
 			var userId = principal.FindFirst(options.ClaimsIdentity.UserIdClaimType)?.Value;
 			var email = principal.FindFirst(options.ClaimsIdentity.EmailClaimType)?.Value;
-			ApplicationUser? appUser = await _userManager.FindByIdAsync(userId);
+
 			bool IsEmployee = principal.IsInRole("Employee") || principal.IsInRole("Admin");
 			
 			BaseUser? user;

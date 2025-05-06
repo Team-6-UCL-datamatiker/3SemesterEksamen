@@ -55,10 +55,6 @@ else {
 		// Get the current user
 		var user = (await AuthenticationStateTask).User;
 
-		// Sets userid to the current user's ID if the user is authenticated
-		// userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
-		// 				?? throw new InvalidOperationException("User not authenticated");
-
 		 username = user.FindFirst(ClaimTypes.GivenName)?.Value
 					?? "‹unknown›";
 
