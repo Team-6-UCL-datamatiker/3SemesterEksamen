@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using GotorzProjectMain.Models;
-using GotorzProjectMain.Services.APIs.HotelAPIs.DTOs;
 
 namespace GotorzProjectMain.Services.APIs.HotelAPIs;
 

@@ -12,6 +12,7 @@ using AutoMapper;
 using GotorzProjectMain.Services.Mapping;
 using GotorzProjectMain.Services.APIs.HotelAPIs;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -19,7 +20,7 @@ builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents()
 	.AddInteractiveWebAssemblyComponents();
 
-builder.Services.AddAutoMapper(typeof(UserMappingProfiles), typeof(VacationRequestMappingProfiles));
+builder.Services.AddAutoMapper(typeof(UserMappingProfiles), typeof(VacationRequestMappingProfiles), typeof(AmadeusMappingProfiles));
 
 // Ensure the configuration file is being read correctly
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -42,7 +43,7 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
-
+builder.Services.AddSingleton<ICityLookupService, CityLookupService>();
 
 builder.Services.AddScoped<VacationRequestSignalRService>();
 

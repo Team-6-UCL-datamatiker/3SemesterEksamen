@@ -4,7 +4,6 @@ using AutoMapper;
 using System.Text.Json;
 using System.Web;
 using GotorzProjectMain.Models;
-using GotorzProjectMain.Services.APIs.HotelAPIs.DTOs;
 using System.Net.Http.Headers;
 
 namespace GotorzProjectMain.Services.APIs.HotelAPIs;

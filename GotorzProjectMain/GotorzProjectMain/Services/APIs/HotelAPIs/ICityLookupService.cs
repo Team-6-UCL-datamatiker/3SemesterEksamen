@@ -1,4 +1,4 @@
-﻿namespace GotorzProjectMain.Client.Services;
+﻿namespace GotorzProjectMain.Services.APIs.HotelAPIs;
 
 public interface ICityLookupService
 {

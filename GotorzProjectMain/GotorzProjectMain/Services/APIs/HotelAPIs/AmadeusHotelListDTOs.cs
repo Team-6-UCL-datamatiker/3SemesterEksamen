@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace GotorzProjectMain.Services.APIs.HotelAPIs.DTOs;
+namespace GotorzProjectMain.Services.APIs.HotelAPIs;
 
 // top-level DTO matching the whole payload
 public sealed record HotelSearchResultDto(
@@ -14,13 +14,16 @@ public sealed record HotelSearchResultDto(
 // Hotel
 public sealed record HotelDto(
     [property: JsonPropertyName("chainCode")] string? ChainCode,
+    [property: JsonPropertyName("lastUpdate")] DateTime? LastUpdate,
     [property: JsonPropertyName("iataCode")] string? IataCode,
     [property: JsonPropertyName("dupeId")] long? DupeId,
     [property: JsonPropertyName("name")] string? Name,
     [property: JsonPropertyName("hotelId")] string? HotelId,
     [property: JsonPropertyName("geoCode")] GeoCodeDto? GeoCode,
     [property: JsonPropertyName("address")] AddressDto? Address,
-    [property: JsonPropertyName("distance")] DistanceDto? Distance
+    [property: JsonPropertyName("distance")] DistanceDto? Distance,
+    [property: JsonPropertyName("amenities")] IReadOnlyList<string>? Amenities,
+    [property: JsonPropertyName("rating")] int? Rating
 );
 
 public sealed record GeoCodeDto(
