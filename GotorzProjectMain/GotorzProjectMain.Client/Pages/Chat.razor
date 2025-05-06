@@ -1,5 +1,6 @@
 ﻿@page "/chat"
 @rendermode InteractiveWebAssembly
+@using GotorzProjectMain.Models
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.SignalR.Client
 @using System.Security.Claims
@@ -10,42 +11,37 @@
 
 <PageTitle>Chat</PageTitle>
 
-@* <div class="form-group">
-    <label>
-        User:
-        <input @bind="userId" />
-    </label>
-</div> *@
-@if (username == null)
+@if (!_isReady)
 {
 	<div>Loading...</div>
 }
 
 else {
-<div class="form-group">
-	<label>
-		Message:
-		<input @bind="messageInput" size="50" />
-	</label>
-</div>
-<button @onclick="Send" disabled="@(!IsConnected)">Send</button>
+	<div class="form-group">
+		<label>
+			Message:
+			<input @bind="messageInput" size="50" />
+		</label>
+	</div>
+	<button @onclick="Send" disabled="@(!IsConnected)">Send</button>
 
-<hr>
+	<hr>
 
-<ul id="messagesList">
-	@foreach (var message in messages)
-	{
-		<li>@message</li>
-	}
-</ul>
+	<ul id="messagesList">
+		@foreach (var message in messages)
+		{
+			<li>@message</li>
+		}
+	</ul>
 }
 
 @code {
 	private HubConnection? hubConnection;
-	private List<string> messages = [];
-	private string? userInput;
+	private readonly List<string> messages = [];
 	private string? username;
 	private string? messageInput;
+	private string? userId;
+	private bool _isReady = false;
 	[CascadingParameter]
 	private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
@@ -57,26 +53,44 @@ else {
 
 		 username = user.FindFirst(ClaimTypes.GivenName)?.Value
 					?? "‹unknown›";
+		 userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+					?? throw new InvalidOperationException("User not authenticated");
 
 		hubConnection = new HubConnectionBuilder()
 			.WithUrl(Navigation.ToAbsoluteUri("/chathub"))
 			.Build();
 
-		hubConnection.On<string, string>("ReceiveMessage", (userId, message) =>
+		hubConnection.On<string, string, DateTime>("ReceiveMessage", (username, message, timestamp) =>
 		{
-			var encodedMsg = $"{userId}: {message}";
+			var encodedMsg = $"{username} [{timestamp:HH:mm}]: {message}";
 			messages.Add(encodedMsg);
 			InvokeAsync(StateHasChanged);
 		});
 			
 		await hubConnection.StartAsync();
+
+		// Load history
+		var history = await hubConnection.InvokeAsync<List<ChatMessage>>("GetRecentMessages", 50);
+		foreach (var msg in history)
+		{
+			messages.Add($"{msg.Username} [{msg.Timestamp:HH:mm}]: {msg.Message}");
+		}
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			_isReady = true;
+			StateHasChanged(); // force re-render
+		}
 	}
 
 	private async Task Send()
 	{
 		if (hubConnection is not null)
 		{
-			await hubConnection.SendAsync("SendMessage", username, messageInput);
+			await hubConnection.SendAsync("SendMessage", messageInput, userId, username);
 		}
 	}
 
