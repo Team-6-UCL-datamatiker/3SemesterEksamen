@@ -128,6 +128,7 @@ app.UseAntiforgery();
 
 
 app.MapHub<VacationRequestHub>("/vacationrequesthub");
+app.MapHub<ChatHub>("/chathub");
 
 app.MapRazorComponents<App>()
 	.AddInteractiveServerRenderMode()

@@ -124,6 +124,10 @@ namespace GotorzProjectMain.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<string>("CustomUserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsAdmin")
                         .HasColumnType("bit");
 

@@ -1,0 +1,97 @@
+﻿@page "/chat"
+@rendermode InteractiveWebAssembly
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Security.Claims
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+@attribute [Authorize]
+
+<PageTitle>Chat</PageTitle>
+
+@* <div class="form-group">
+    <label>
+        User:
+        <input @bind="userId" />
+    </label>
+</div> *@
+@if (username == null)
+{
+	<div>Loading...</div>
+}
+
+else {
+<div class="form-group">
+	<label>
+		Message:
+		<input @bind="messageInput" size="50" />
+	</label>
+</div>
+<button @onclick="Send" disabled="@(!IsConnected)">Send</button>
+
+<hr>
+
+<ul id="messagesList">
+	@foreach (var message in messages)
+	{
+		<li>@message</li>
+	}
+</ul>
+}
+
+@code {
+	private HubConnection? hubConnection;
+	private List<string> messages = [];
+	private string? userInput;
+	private string? username;
+	private string? messageInput;
+	[CascadingParameter]
+	private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		// Get the current user
+		var user = (await AuthenticationStateTask).User;
+
+		// Sets userid to the current user's ID if the user is authenticated
+		// userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+		// 				?? throw new InvalidOperationException("User not authenticated");
+
+		 username = user.FindFirst(ClaimTypes.GivenName)?.Value
+					?? "‹unknown›";
+
+		hubConnection = new HubConnectionBuilder()
+			.WithUrl(Navigation.ToAbsoluteUri("/chathub"))
+			.Build();
+
+		hubConnection.On<string, string>("ReceiveMessage", (userId, message) =>
+		{
+			var encodedMsg = $"{userId}: {message}";
+			messages.Add(encodedMsg);
+			InvokeAsync(StateHasChanged);
+		});
+			
+		await hubConnection.StartAsync();
+	}
+
+	private async Task Send()
+	{
+		if (hubConnection is not null)
+		{
+			await hubConnection.SendAsync("SendMessage", username, messageInput);
+		}
+	}
+
+	public bool IsConnected =>
+		hubConnection?.State == HubConnectionState.Connected;
+
+	public async ValueTask DisposeAsync()
+	{
+		if (hubConnection is not null)
+		{
+			await hubConnection.DisposeAsync();
+		}
+	}
+}
