@@ -1,8 +1,8 @@
 ﻿@page "/vacationoffers/delete"
 @using Microsoft.EntityFrameworkCore
 @using GotorzProjectMain.Models
-@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject GotorzProjectMain.Data.ApplicationDbContext Context
 
 <PageTitle>Delete</PageTitle>
 
@@ -68,8 +68,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        vacationoffer = await context.VacationOffers.FirstOrDefaultAsync(m => m.VacationOfferId == VacationOfferId);
+        vacationoffer = await Context.VacationOffers
+            .FirstOrDefaultAsync(m => m.VacationOfferId == VacationOfferId);
 
         if (vacationoffer is null)
         {
@@ -79,9 +79,8 @@
 
     private async Task DeleteVacationOffer()
     {
-        using var context = DbFactory.CreateDbContext();
-        context.VacationOffers.Remove(vacationoffer!);
-        await context.SaveChangesAsync();
+        Context.VacationOffers.Remove(vacationoffer!);
+        await Context.SaveChangesAsync();
         NavigationManager.NavigateTo("/vacationoffers");
     }
 }

@@ -22,55 +22,98 @@ public class VacationRequestModelValidationTests
 	public void ChildrenAmount_Negative_IsInvalid()
 	{
 		// Arrange
-		var request = new CreateVacationRequestInputModel { ChildrenAmount = -1, AdultsAmount = 1, RoomsAmount = 1, Country = "Denmark", StartDate = DateTime.Today, EndDate = DateTime.Today.AddDays(7) };
-
+		var request = new CreateVacationRequestInputModel
+		{
+			DepartureCity = "Copenhagen",
+			ArrivalCity = "Paris",
+			DepartureCountry = "Denmark",
+			ArrivalCountry = "France",
+			ChildrenAmount = -1,
+			AdultsAmount = 1,
+			RoomsAmount = 1,
+			StartDate = DateTime.Today,
+			EndDate = DateTime.Today.AddDays(7)
+		};
 
 		// Act
 		var results = Validate(request);
 
 		// Assert
 		Assert.IsTrue(results.Any(r => r.MemberNames.Contains(nameof(request.ChildrenAmount))),
-					  "ChildrenAmount skal fejle validering ved -1"); // This passes if the ChildrenAmount property failed validation
+					  "ChildrenAmount should fail validation when negative");
 	}
 
 	[TestMethod]
 	public void AdultsAmount_Negative_IsInvalid()
 	{
 		// Arrange
-		var request = new CreateVacationRequestInputModel { ChildrenAmount = 0, AdultsAmount = -5, RoomsAmount = 1, Country = "Denmark", StartDate = DateTime.Today, EndDate = DateTime.Today.AddDays(7) };
+		var request = new CreateVacationRequestInputModel
+		{
+			DepartureCity = "Copenhagen",
+			ArrivalCity = "Paris",
+			DepartureCountry = "Denmark",
+			ArrivalCountry = "France",
+			ChildrenAmount = 0,
+			AdultsAmount = -5,
+			RoomsAmount = 1,
+			StartDate = DateTime.Today,
+			EndDate = DateTime.Today.AddDays(7)
+		};
 
 		// Act
 		var results = Validate(request);
 
 		// Assert
 		Assert.IsTrue(results.Any(r => r.MemberNames.Contains(nameof(request.AdultsAmount))),
-					  "AdultsAmount skal fejle validering ved -5"); // This passes if the AdultsAmount property failed validation
+					  "AdultsAmount should fail validation when negative");
 	}
 
 	[TestMethod]
 	public void RoomsAmount_Negative_IsInvalid()
 	{
 		// Arrange
-		var request = new CreateVacationRequestInputModel { ChildrenAmount = 0, AdultsAmount = 1, RoomsAmount = -2, Country = "Denmark", StartDate = DateTime.Today, EndDate = DateTime.Today.AddDays(7) };
+		var request = new CreateVacationRequestInputModel
+		{
+			DepartureCity = "Copenhagen",
+			ArrivalCity = "Paris",
+			DepartureCountry = "Denmark",
+			ArrivalCountry = "France",
+			ChildrenAmount = 0,
+			AdultsAmount = 1,
+			RoomsAmount = -2,
+			StartDate = DateTime.Today,
+			EndDate = DateTime.Today.AddDays(7)
+		};
 
 		// Act
 		var results = Validate(request);
 
 		// Assert
 		Assert.IsTrue(results.Any(r => r.MemberNames.Contains(nameof(request.RoomsAmount))),
-					  "RoomsAmount skal fejle validering ved -2"); // This passes if the RoomsAmount property failed validation
+					  "RoomsAmount should fail validation when negative");
 	}
 
 	[TestMethod]
 	public void AllAmounts_NonNegative_IsValid()
 	{
 		// Arrange
-		var request = new CreateVacationRequestInputModel { ChildrenAmount = 1, AdultsAmount = 2, RoomsAmount = 3, Country = "Denmark", StartDate = DateTime.Today, EndDate = DateTime.Today.AddDays(7) };
+		var request = new CreateVacationRequestInputModel
+		{
+			DepartureCity = "Copenhagen",
+			ArrivalCity = "Paris",
+			DepartureCountry = "Denmark",
+			ArrivalCountry = "France",
+			ChildrenAmount = 1,
+			AdultsAmount = 2,
+			RoomsAmount = 3,
+			StartDate = DateTime.Today,
+			EndDate = DateTime.Today.AddDays(7)
+		};
 
 		// Act
 		var results = Validate(request);
 
 		// Assert
-		Assert.AreEqual(0, results.Count, "Ingen valideringsfejl forventes når alle ≥ 0");
+		Assert.AreEqual(0, results.Count, "No validation errors expected when all counts are non-negative");
 	}
 }
