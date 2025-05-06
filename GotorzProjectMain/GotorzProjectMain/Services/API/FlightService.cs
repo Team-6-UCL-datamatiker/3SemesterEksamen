@@ -61,7 +61,7 @@ namespace GotorzProjectMain.Services.API
 
 			List<FlightRoute> routes = new();
 
-			// Convert DTO into to Flight Model
+			// Map DTOs into to Models
 			foreach (FlightGroupDTO group in groups)
 			{
 				// Map each FlightSegment → Flight
