@@ -99,6 +99,34 @@ namespace GotorzProjectMain.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("GotorzProjectMain.Models.ChatMessage", b =>
+                {
+                    b.Property<int>("MessageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MessageId"));
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("MessageId");
+
+                    b.ToTable("ChatMessages", (string)null);
+                });
+
             modelBuilder.Entity("GotorzProjectMain.Models.Customer", b =>
                 {
                     b.Property<string>("Id")
@@ -123,6 +151,10 @@ namespace GotorzProjectMain.Migrations
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("CustomUserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsAdmin")
                         .HasColumnType("bit");

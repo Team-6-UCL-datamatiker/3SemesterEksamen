@@ -9,7 +9,9 @@ public abstract class BaseUser
     [ForeignKey("User")]
     public string Id { get; set; }
 
-    public ApplicationUser User { get; set; }
+	public string CustomUserName { get; set; }
+
+	public ApplicationUser User { get; set; }
 
     [Timestamp]
     public byte[] RowVersion { get; set; } = new byte[8];

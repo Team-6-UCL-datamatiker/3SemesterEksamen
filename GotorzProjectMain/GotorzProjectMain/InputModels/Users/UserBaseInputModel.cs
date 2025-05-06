@@ -16,6 +16,10 @@ public abstract class UserBaseInputModel
     [EmailAddress]
     public string Email { get; set; } = "";
 
-    [Phone]
+	[Required]
+	[Display(Name = "Username")]
+	public string CustomUsername { get; set; } = "";
+
+	[Phone]
     public string? Phone { get; set; }
 }
