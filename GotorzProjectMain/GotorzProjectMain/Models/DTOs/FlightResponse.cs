@@ -5,11 +5,11 @@ namespace GotorzProjectMain.Models.DTOs
 	public class FlightResponseDTO
 	{
 		[JsonPropertyName("best_flights")]
-		public List<FlightGroupDTO> BestFlights { get; set; }
+		public List<FlightRouteDTO> BestFlights { get; set; }
 		[JsonPropertyName("other_flights")]
-		public List<FlightGroupDTO> OtherFlights { get; set; }
+		public List<FlightRouteDTO> OtherFlights { get; set; }
 	}
-	public class FlightGroupDTO
+	public class FlightRouteDTO
 	{
 		public List<FlightLegDTO> Flights { get; set; }
 

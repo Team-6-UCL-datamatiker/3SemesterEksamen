@@ -56,13 +56,13 @@ namespace GotorzProjectMain.Services.API
 			if (response == null) return new();
 
 			// The API returns a list of flight groups, each containing a list of flights - combine them
-			IEnumerable<FlightGroupDTO> groups = (response.BestFlights ?? new())
+			IEnumerable<FlightRouteDTO> groups = (response.BestFlights ?? new())
 					   .Concat(response.OtherFlights ?? new());
 
 			List<FlightRoute> routes = new();
 
 			// Map DTOs into to Models
-			foreach (FlightGroupDTO group in groups)
+			foreach (FlightRouteDTO group in groups)
 			{
 				// Map each FlightSegment → Flight
 				List<Flight> legs = group.Flights
