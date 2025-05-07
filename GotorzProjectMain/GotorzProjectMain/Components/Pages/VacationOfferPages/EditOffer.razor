@@ -42,9 +42,27 @@ else
                 </div>
 
                 <div class="mb-3">
-                    <label for="country" class="form-label">Country:</label>
-                    <InputText id="country" @bind-Value="VacationOfferInput.Country" class="form-control" />
-                    <ValidationMessage For="() => VacationOfferInput.Country" class="text-danger" />
+                    <label for="departurecountry" class="form-label">DepartureCountry:</label>
+                    <InputText id="departurecountry" @bind-Value="VacationOfferInput.DepartureCountry" class="form-control" />
+                    <ValidationMessage For="() => VacationOfferInput.DepartureCountry" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="departurecity" class="form-label">DepartureCity:</label>
+                    <InputText id="departurecity" @bind-Value="VacationOfferInput.DepartureCity" class="form-control" />
+                    <ValidationMessage For="() => VacationOfferInput.DepartureCity" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="arrivalcountry" class="form-label">ArrivalCountry:</label>
+                    <InputText id="arrivalcountry" @bind-Value="VacationOfferInput.ArrivalCountry" class="form-control" />
+                    <ValidationMessage For="() => VacationOfferInput.ArrivalCountry" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="arrivalcity" class="form-label">ArrivalCity:</label>
+                    <InputText id="arrivalcity" @bind-Value="VacationOfferInput.ArrivalCity" class="form-control" />
+                    <ValidationMessage For="() => VacationOfferInput.ArrivalCity" class="text-danger" />
                 </div>
 
                 <div class="mb-3">
