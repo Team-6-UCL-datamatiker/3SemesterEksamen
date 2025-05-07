@@ -1,7 +1,8 @@
 ﻿@page "/vacationoffers/create"
 @using Microsoft.EntityFrameworkCore
 @using GotorzProjectMain.Models
-@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+@using GotorzProjectMain.Data
+@inject ApplicationDbContext Context
 @inject NavigationManager NavigationManager
 
 <PageTitle>Create</PageTitle>
@@ -91,9 +92,9 @@
     // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddVacationOffer()
     {
-        using var context = DbFactory.CreateDbContext();
-        context.VacationOffers.Add(VacationOffer);
-        await context.SaveChangesAsync();
+        
+        Context.VacationOffers.Add(VacationOffer);
+        await Context.SaveChangesAsync();
         NavigationManager.NavigateTo("/vacationoffers");
     }
 }

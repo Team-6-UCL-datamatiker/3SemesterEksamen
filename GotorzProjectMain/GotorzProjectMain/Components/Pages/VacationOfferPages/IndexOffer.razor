@@ -4,7 +4,7 @@
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Data
 @implements IAsyncDisposable
-@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+@inject ApplicationDbContext Context
 
 <PageTitle>Index</PageTitle>
 
@@ -14,7 +14,7 @@
     <a href="vacationoffers/create">Create New</a>
 </p>
 
-<QuickGrid Class="table" Items="context.VacationOffers">
+<QuickGrid Class="table" Items="Context.VacationOffers">
     <PropertyColumn Property="vacationoffer => vacationoffer.VacationRequestId" />
     <PropertyColumn Property="vacationoffer => vacationoffer.EmployeeEmail" />
     <PropertyColumn Property="vacationoffer => vacationoffer.TotalPrice" />
@@ -35,13 +35,14 @@
     </TemplateColumn>
 </QuickGrid>
 
-@code {
-    private ApplicationDbContext context = default!;
+ @code {
+
+
 
     protected override void OnInitialized()
     {
-        context = DbFactory.CreateDbContext();
+        // Context.CreateDbContext();
     }
 
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+    public async ValueTask DisposeAsync() => await Context.DisposeAsync();
 }
