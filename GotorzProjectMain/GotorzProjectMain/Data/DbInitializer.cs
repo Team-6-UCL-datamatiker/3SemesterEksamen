@@ -66,10 +66,11 @@ public static class DbInitializer
 				throw new Exception("Failed to assign Admin role: " + string.Join(", ", roleResult.Errors.Select(e => e.Description)));
 			}
 
-			var employee = new Employee
+            var employee = new Employee
             {
                 IsAdmin = true,
-                User = user
+                User = user,
+                CustomUserName = "admin"
             };
 
             context.Employees.Add(employee);

@@ -1,0 +1,179 @@
+﻿@page "/flights/search"
+
+@using GotorzProjectMain.Models
+@using GotorzProjectMain.Models.DTOs
+@using GotorzProjectMain.Services.API
+
+@inject IFlightService FlightService
+
+@rendermode InteractiveServer
+
+@* Inputs *@
+<div style="display:flex; gap:1rem; align-items:flex-start; margin-bottom:1rem;">
+	<div>
+		<label for="fromCity">Depature City</label><br />
+		<input id="fromCity"
+			   @bind="fromCity"
+			   placeholder="Type a city"
+			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
+	</div>
+
+	<div>
+		<label for="toCity">Arrival City</label><br />
+		<input id="toCity"
+			   @bind="toCity"
+			   placeholder="Type a city"
+			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
+	</div>
+
+	<div>
+		<label for="outbound">Outbound Date</label><br />
+		<input id="outbound"
+			   type="date"
+			   @bind="outbound"
+			   min="@DateTime.Today.ToString("yyyy-MM-dd")"
+			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
+	</div>
+
+	<div>
+		<label for="adults">Adults</label><br />
+		<input id="adults"
+			   type="number" min="1"
+			   @bind="adultCount"
+			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
+	</div>
+
+	<div>
+		<label for="children">Children</label><br />
+		<input id="children"
+			   type="number" min="0"
+			   @bind="childCount"
+			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
+	</div>
+</div>
+
+<button @onclick="Search">Search</button>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+	<div class="alert alert-warning">
+		@ErrorMessage
+	</div>
+}
+
+@* Flightroute Dropdown *@
+else if (FlightRoutes != null)
+{
+	<label>
+		Choose flightroute:
+		<select @bind="selectedFlightRouteIndex">
+			<option value="">-- pick a flightroute --</option>
+			@for (int i = 0; i < FlightRoutes.Count; i++)
+			{
+				FlightRoute route = FlightRoutes[i];
+				<option value="@i" @key="i">
+					@(
+								string.Join(" → ",
+								route.Legs.Select(s => s.DepartureAirportCode) // depatureairport -> last arrivalairport
+								.Concat(new[] { route.Legs.Last().ArrivalAirportCode }))
+								+ $" ({route.Legs.Count} legs) {route.TotalPrice} DKK"
+								)
+				</option>
+			}
+		</select>
+	</label>
+
+	@* 	Selected flightroute details *@
+	@if (SelectedFlightRoute != null)
+	{
+		<h4>Selected Flight</h4>
+
+		@* For each leg *@
+		@for (int i = 0; i < SelectedFlightRoute.Legs.Count; i++)
+		{
+			Flight flightLeg = SelectedFlightRoute.Legs[i];
+			<div class="p-2 border rounded mb-2">
+				<div><strong>Route:</strong> @flightLeg.DepartureAirportCode → @flightLeg.ArrivalAirportCode</div>
+				<div><strong>Departure:</strong> @flightLeg.DepartureTime.ToString("dd/MM/yyyy HH:mm")</div>
+				<div><strong>Arrival:</strong>   @flightLeg.ArrivalTime.ToString("dd/MM/yyyy HH:mm")</div>
+				<div><strong>Airline:</strong>   @flightLeg.Airline</div>
+			</div>
+
+			@* If there’s a layover after this leg, show it *@
+			@if (i < SelectedFlightRoute.Layovers.Count)
+			{
+				Layover layover = SelectedFlightRoute.Layovers[i];
+				<div class="p-2 border rounded mb-2 bg-light">
+					<strong>Layover at @layover.Name:</strong> @layover.DurationDisplay
+				</div>
+			}
+		}
+
+		<div class="mt-4 p-3 bg-gray-100 rounded">
+			<div><strong>Total duration:</strong> @SelectedFlightRoute.TotalTravelTimeDisplay</div>
+			<div><strong>Total price:</strong>   @SelectedFlightRoute.TotalPrice DKK</div>
+		</div>
+	}
+}
+
+
+@code {
+	private string fromCity = "Copenhagen";
+	private string toCity = "London";
+	private DateTime outbound = DateTime.Today.AddDays(7);
+	private int adultCount = 1;
+	private int childCount = 0;
+
+	private List<FlightRoute>? FlightRoutes;
+	private string? ErrorMessage;
+
+	// cant bind <select> to object, so we use an index
+	private int? selectedFlightRouteIndex;
+
+	// Selected flight route based on the index
+	public FlightRoute? SelectedFlightRoute =>
+		selectedFlightRouteIndex.HasValue
+				? FlightRoutes[selectedFlightRouteIndex.Value]
+				: null;
+
+
+	// Performs a flight search using city names
+	async Task Search()
+	{
+		// Reset state before search
+		ErrorMessage = null;
+		FlightRoutes = null;
+		selectedFlightRouteIndex = null; // Reset selection on each new search
+
+		if (outbound == DateTime.MinValue)
+		{
+			ErrorMessage = "Please select a valid outbound date.";
+			return;
+		}
+
+		// Look up airport codes based on user input
+		if (!CityAirportMap.Map.TryGetValue(fromCity, out string[] fromAirports)) //if it gets a match, it saves it to fromAirports else set errormessage
+		{
+			ErrorMessage = $"Origin city “{fromCity}” is not supported.";
+			return;
+		}
+		if (!CityAirportMap.Map.TryGetValue(toCity, out string[] toAirports)) //if it gets a match, it saves it to toAirports else set errormessage
+		{
+			ErrorMessage = $"Destination city “{toCity}” is not supported.";
+			return;
+		}
+
+
+		// Pass comma-separated Airport codes to the API
+		string fromAirportsString = string.Join(",", fromAirports);
+		string toAirportsString = string.Join(",", toAirports);
+
+		// Request flight offers from the external API
+		FlightRoutes = await FlightService.SearchAsync(
+			fromAirportsString,
+			toAirportsString,
+			outbound,
+			adultCount,
+			childCount);
+	}
+}

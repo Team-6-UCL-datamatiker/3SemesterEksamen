@@ -15,7 +15,7 @@ namespace TestProject.UnitTests
         {
             mockUserService = new Mock<IExtendedUserService>();
 
-            List<Customer>mockCustomers = new List<Customer>
+            List<Customer> mockCustomers = new List<Customer>
             {
                 new Customer
                 {

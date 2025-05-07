@@ -7,7 +7,12 @@ namespace GotorzProjectMain.Models
 	{
 		[Key]
 		public int VacationRequestId { get; set; }
-		public string Country { get; set; }
+
+		public string DepartureCity { get; set; }
+		public string ArrivalCity { get; set; }
+		public string DepartureCountry { get; set; }
+		public string ArrivalCountry { get; set; }
+
 		public DateTime StartDate { get; set; } = DateTime.Now;
         public DateTime EndDate { get; set; } = DateTime.Now;
 

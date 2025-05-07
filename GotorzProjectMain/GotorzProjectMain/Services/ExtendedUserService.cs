@@ -46,6 +46,22 @@ namespace GotorzProjectMain.Services
                                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 
+        public async Task<BaseUser?> GetCustomerOrEmployeeAsync(string id)
+        {
+            switch (_context.Employees.Any(c => c.Id == id))
+            {
+                case true:
+                    return await _context.Employees
+                                    .Include(c => c.User)
+                                    .FirstOrDefaultAsync(c => c.Id == id);
+
+                case false:
+                    return await _context.Customers
+                                    .Include(c => c.User)
+                                    .FirstOrDefaultAsync(c => c.Id == id);
+            }
+        }
+
         // (Optional) You could add more helper methods here, like:
         // public async Task<User> GetUserByIdAsync(string userId) { ... }
     }

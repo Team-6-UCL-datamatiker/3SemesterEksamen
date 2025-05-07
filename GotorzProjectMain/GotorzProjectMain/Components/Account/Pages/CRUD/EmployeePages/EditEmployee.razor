@@ -50,6 +50,12 @@ else
 				</div>
 
 				<div class="mb-3">
+					<label for="username" class="form-label">Username:</label>
+					<InputText id="username" @bind-Value="Input.CustomUsername" class="form-control" />
+					<ValidationMessage For="() => Input.CustomUsername" class="text-danger" />
+				</div>
+
+				<div class="mb-3">
 					<label for="email" class="form-label">Email:</label>
 					<InputText id="email" @bind-Value="Input.Email" class="form-control" />
 					<ValidationMessage For="() => Input.Email" class="text-danger" />

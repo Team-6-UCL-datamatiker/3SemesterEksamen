@@ -1,4 +1,4 @@
-﻿@page "/vacationrequests/details"
+@page "/vacationrequests/details"
 @using GotorzProjectMain.Data
 @using Microsoft.EntityFrameworkCore
 @using GotorzProjectMain.Models
@@ -33,9 +33,20 @@
                 <dd class="col-sm-10">Customer not found</dd>
             }
             <dd class="col-sm-10" style="display:none">@vacationrequest.UserId</dd>
-            <dt class="col-sm-2">Country</dt>
-            <dd class="col-sm-10">@vacationrequest.Country</dd>
-            <dt class="col-sm-2">Start Date</dt>
+          
+            <dt class="col-sm-2">Departure City</dt>
+            <dd class="col-sm-10">@vacationrequest.DepartureCity</dd>
+
+            <dt class="col-sm-2">Departure Country</dt>
+            <dd class="col-sm-10">@vacationrequest.DepartureCountry</dd>
+
+            <dt class="col-sm-2">Arrival City</dt>
+            <dd class="col-sm-10">@vacationrequest.ArrivalCity</dd>
+
+            <dt class="col-sm-2">Arrival Country</dt>
+            <dd class="col-sm-10">@vacationrequest.ArrivalCountry</dd>
+
+            <dt class="col-sm-2">StartDate</dt>
             <dd class="col-sm-10">@vacationrequest.StartDate.ToShortDateString()</dd>
             <dt class="col-sm-2">End Date</dt>
             <dd class="col-sm-10">@vacationrequest.EndDate.ToShortDateString()</dd>

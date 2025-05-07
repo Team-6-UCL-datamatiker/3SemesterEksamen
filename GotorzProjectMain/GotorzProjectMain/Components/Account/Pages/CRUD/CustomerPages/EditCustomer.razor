@@ -39,8 +39,8 @@ else
 
 				<div class="mb-3">
 					<label for="username" class="form-label">CustomUserName:</label>
-					<InputText id="username" @bind-Value="Input.CustomUserName" class="form-control" autocomplete="username" aria-required="true" oninput="@(async (ChangeEventArgs e) => await DebounceUsernameCheck(e))" />
-					<ValidationMessage For="() => Input.CustomUserName" class="alert alert-danger mt-3" />
+					<InputText id="username" @bind-Value="Input.CustomUsername" class="form-control" autocomplete="username" aria-required="true" oninput="@(async (ChangeEventArgs e) => await DebounceUsernameCheck(e))" />
+					<ValidationMessage For="() => Input.CustomUsername" class="alert alert-danger mt-3" />
 				</div>
 
 				<div class="mb-3">
@@ -102,7 +102,7 @@ else
 	{
 		_ec = new EditContext(Input);
 		_messageStore = new ValidationMessageStore(_ec);
-		_inputUserNameField = new FieldIdentifier(Input, nameof(Input.CustomUserName));
+		_inputUserNameField = new FieldIdentifier(Input, nameof(Input.CustomUsername));
 
 		Customer = await UserService.GetCustomerByIdAsync(Id);
 
@@ -115,7 +115,7 @@ else
 			Mapper.Map(Customer, Input);
 		}
 
-		_currentUserName = Input.CustomUserName.ToLower();
+		_currentUserName = Input.CustomUsername.ToLower();
 	}
 
 	private async Task DebounceUsernameCheck(ChangeEventArgs e)

@@ -33,6 +33,10 @@
 			<dd class="col-sm-10">@employee.User.Email</dd>
 		</dl>
 		<dl class="row">
+			<dt class="col-sm-2">Username</dt>
+			<dd class="col-sm-10">@employee.CustomUserName</dd>
+		</dl>
+		<dl class="row">
 			<dt class="col-sm-2">Phone</dt>
 			<dd class="col-sm-10">@employee.User.PhoneNumber</dd>
 		</dl>
@@ -73,11 +77,11 @@
 		{
 			employee = await UserService.GetEmployeeByIdAsync(Id);
 		}
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error fetching employee details: {ex.Message}");
-        }
-	
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error fetching employee details: {ex.Message}");
+		}
+
 
 		if (employee is null)
 		{

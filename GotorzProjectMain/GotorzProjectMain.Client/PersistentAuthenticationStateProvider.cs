@@ -14,27 +14,28 @@ namespace GotorzProjectMain.Client;
 // cookie that will be included on HttpClient requests to the server.
 internal class PersistentAuthenticationStateProvider : AuthenticationStateProvider
 {
-    private static readonly Task<AuthenticationState> defaultUnauthenticatedTask =
-        Task.FromResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())));
+	private static readonly Task<AuthenticationState> defaultUnauthenticatedTask =
+		Task.FromResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())));
 
-    private readonly Task<AuthenticationState> authenticationStateTask = defaultUnauthenticatedTask;
+	private readonly Task<AuthenticationState> authenticationStateTask = defaultUnauthenticatedTask;
 
-    public PersistentAuthenticationStateProvider(PersistentComponentState state)
-    {
-        if (!state.TryTakeFromJson<UserInfo>(nameof(UserInfo), out var userInfo) || userInfo is null)
-        {
-            return;
-        }
+	public PersistentAuthenticationStateProvider(PersistentComponentState state)
+	{
+		if (!state.TryTakeFromJson<UserInfo>(nameof(UserInfo), out var userInfo) || userInfo is null)
+		{
+			return;
+		}
 
-        Claim[] claims = [
-            new Claim(ClaimTypes.NameIdentifier, userInfo.UserId),
-            new Claim(ClaimTypes.Name, userInfo.Email),
-            new Claim(ClaimTypes.Email, userInfo.Email) ];
+		Claim[] claims = [
+			new Claim(ClaimTypes.NameIdentifier, userInfo.UserId),
+			new Claim(ClaimTypes.Name, userInfo.Email),
+			new Claim(ClaimTypes.Email, userInfo.Email),
+			new Claim(ClaimTypes.GivenName, userInfo.Username)];
 
-        authenticationStateTask = Task.FromResult(
-            new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(claims,
-                authenticationType: nameof(PersistentAuthenticationStateProvider)))));
-    }
+		authenticationStateTask = Task.FromResult(
+			new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(claims,
+				authenticationType: nameof(PersistentAuthenticationStateProvider)))));
+	}
 
-    public override Task<AuthenticationState> GetAuthenticationStateAsync() => authenticationStateTask;
+	public override Task<AuthenticationState> GetAuthenticationStateAsync() => authenticationStateTask;
 }
