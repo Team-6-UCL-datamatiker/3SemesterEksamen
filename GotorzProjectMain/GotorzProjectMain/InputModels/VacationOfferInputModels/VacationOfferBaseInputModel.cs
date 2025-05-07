@@ -11,8 +11,17 @@ namespace GotorzProjectMain.InputModels.VacationOfferInputModels
         [Display(Name = "TotalPrice")]
         public decimal TotalPrice { get; set; }
         [Required]
-        [Display(Name = "Country")]
-        public string Country { get; set; } = string.Empty;
+        [Display(Name = "DepartureCountry")]
+        public string DepartureCountry { get; set; } = string.Empty;
+        [Required]
+        [Display(Name = "DepartureCity")]
+        public string DepartureCity { get; set; } = string.Empty;
+        [Required]
+        [Display(Name = "ArrivalCountry")]
+        public string ArrivalCountry { get; set; } = string.Empty;
+        [Required]
+        [Display(Name = "ArrivalCity")]
+        public string ArrivalCity { get; set; } = string.Empty;
         [Required]
         [Display(Name = "StartDate")]
         public DateTime StartDate { get; set; }

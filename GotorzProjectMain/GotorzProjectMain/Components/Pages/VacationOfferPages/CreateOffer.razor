@@ -31,10 +31,25 @@
                 <ValidationMessage For="() => VacationOffer.TotalPrice" class="text-danger" /> 
             </div>        
             <div class="mb-3">
-                <label for="country" class="form-label">Country:</label> 
-                <InputText id="country" @bind-Value="VacationOffer.Country" class="form-control" /> 
-                <ValidationMessage For="() => VacationOffer.Country" class="text-danger" /> 
-            </div>        
+                <label for="departurecountry" class="form-label">DepartureCountry:</label> 
+                <InputText id="departurecountry" @bind-Value="VacationOffer.DepartureCountry" class="form-control" /> 
+                <ValidationMessage For="() => VacationOffer.DepartureCountry" class="text-danger" /> 
+            </div>    
+            <div class="mb-3">
+                <label for="departurecity" class="form-label">DepartureCity:</label>
+                <InputText id="departurecity" @bind-Value="VacationOffer.DepartureCity" class="form-control" />
+                <ValidationMessage For="() => VacationOffer.DepartureCity" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="arrivalcountry" class="form-label">ArrivalCountry:</label>
+                <InputText id="arrivalcountry" @bind-Value="VacationOffer.ArrivalCountry" class="form-control" />
+                <ValidationMessage For="() => VacationOffer.ArrivalCountry" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="arrivalcity" class="form-label">Arrivalcity:</label>
+                <InputText id="arrivalcity" @bind-Value="VacationOffer.ArrivalCity" class="form-control" />
+                <ValidationMessage For="() => VacationOffer.ArrivalCountry" class="text-danger" />
+            </div>
             <div class="mb-3">
                 <label for="startdate" class="form-label">StartDate:</label> 
                 <InputDate id="startdate" @bind-Value="VacationOffer.StartDate" class="form-control" /> 

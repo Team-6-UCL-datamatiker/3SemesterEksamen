@@ -17,7 +17,10 @@ namespace GotorzProjectMain.Models
 
         public float TotalPrice { get; set; }
 
-        public string Country { get; set; }
+        public string DepartureCountry { get; set; }
+        public string DepartureCity { get; set; }
+        public string ArrivalCountry { get; set; }
+        public string ArrivalCity { get; set; }
 
         public DateTime StartDate { get; set; }
 
