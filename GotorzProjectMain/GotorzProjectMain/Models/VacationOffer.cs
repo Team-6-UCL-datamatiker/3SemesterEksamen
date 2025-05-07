@@ -22,15 +22,15 @@ namespace GotorzProjectMain.Models
         public string ArrivalCountry { get; set; }
         public string ArrivalCity { get; set; }
 
-        public DateTime StartDate { get; set; }
+        public DateTime StartDate { get; set; } = DateTime.Now;
 
-        public DateTime EndDate { get; set; }
+        public DateTime EndDate { get; set; } = DateTime.Now;
 
         public string Misc { get; set; }
         
         public OfferStatus OfferStatus { get; set; } = OfferStatus.Waiting;
-        
-        public DateTime ExpirationDate { get; set; }
+
+        public DateTime ExpirationDate { get; set; } = DateTime.Now;
     }
 
     public enum OfferStatus

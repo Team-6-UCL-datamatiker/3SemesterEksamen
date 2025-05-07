@@ -1,10 +1,11 @@
-﻿@page "/vacationoffers/details"
+﻿@page "/vacationoffers/details/{VacationOfferId:int}"
 @using Microsoft.EntityFrameworkCore
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Data
-
-@inject ApplicationDbContext Context
+@using GotorzProjectMain.Services
 @inject NavigationManager NavigationManager
+@inject IExtendedUserService UserService
+@inject ApplicationDbContext Context
 
 <PageTitle>Details</PageTitle>
 
@@ -17,13 +18,23 @@
     {
         <p><em>Loading...</em></p>
     }
-    else {
+    else
+    {
         <dl class="row">
-            <dt class="col-sm-2">VacationRequestId</dt>
-            <dd class="col-sm-10">@vacationoffer.VacationRequestId</dd>
-            <dt class="col-sm-2">EmployeeEmail</dt>
+            @if (Customer?.User is not null)
+            {
+                <dt class="col-sm-2">Full name</dt>
+                <dd class="col-sm-10">@Customer?.User.FirstName @Customer?.User.LastName</dd>
+            }
+            else
+            {
+                <dt class="col-sm-2">Full name</dt>
+                <dd class="col-sm-10">Customer not found</dd>
+            }
+            <dd class="col-sm-10" style="display:none">@vacationoffer.VacationRequestId</dd>
+            <dt class="col-sm-2">Employee Email</dt>
             <dd class="col-sm-10">@vacationoffer.EmployeeEmail</dd>
-            <dt class="col-sm-2">TotalPrice</dt>
+            <dt class="col-sm-2">Total Price</dt>
             <dd class="col-sm-10">@vacationoffer.TotalPrice</dd>
             <dt class="col-sm-2">DepartureCountry</dt>
             <dd class="col-sm-10">@vacationoffer.DepartureCountry</dd>
@@ -37,12 +48,16 @@
             <dd class="col-sm-10">@vacationoffer.StartDate</dd>
             <dt class="col-sm-2">EndDate</dt>
             <dd class="col-sm-10">@vacationoffer.EndDate</dd>
+            <dt class="col-sm-2">Start Date</dt>
+            <dd class="col-sm-10">@vacationoffer.StartDate.ToShortDateString()</dd>
+            <dt class="col-sm-2">End Date</dt>
+            <dd class="col-sm-10">@vacationoffer.EndDate.ToShortDateString()</dd>
             <dt class="col-sm-2">Misc</dt>
             <dd class="col-sm-10">@vacationoffer.Misc</dd>
-            <dt class="col-sm-2">OfferStatus</dt>
+            <dt class="col-sm-2">Offer Status</dt>
             <dd class="col-sm-10">@vacationoffer.OfferStatus</dd>
-            <dt class="col-sm-2">ExpirationDate</dt>
-            <dd class="col-sm-10">@vacationoffer.ExpirationDate</dd>
+            <dt class="col-sm-2">Expiration Date</dt>
+            <dd class="col-sm-10">@vacationoffer.ExpirationDate.ToShortDateString()</dd>
         </dl>
         <div>
             <a href="@($"/vacationoffers/edit?vacationofferid={vacationoffer.VacationOfferId}")">Edit</a> |
@@ -52,19 +67,39 @@
 </div>
 
 @code {
+    [Parameter]
+    public int VacationOfferId { get; set; }
     private VacationOffer? vacationoffer;
-
-    [SupplyParameterFromQuery]
-    private int VacationOfferId { get; set; }
+    private Customer? Customer;
 
     protected override async Task OnInitializedAsync()
     {
-        
-        vacationoffer = await Context.VacationOffers.FirstOrDefaultAsync(m => m.VacationOfferId == VacationOfferId);
+        try
+        {
+            vacationoffer = await Context.VacationOffers
+            .Include(o => o.VacationRequest)
+            .FirstOrDefaultAsync(o => o.VacationOfferId == VacationOfferId);
+        }
+        catch (Exception ex)
+        {
+            // Show error on UI instead of just logging to the console
+            Console.WriteLine($"Error fetching vacation offer: {ex.Message}");
+        }
 
-        if (vacationoffer is null)
+        if (vacationoffer?.VacationRequest is null)
         {
             NavigationManager.NavigateTo("notfound");
+            return;
+        }
+
+        try
+        {
+            Customer = await UserService.GetCustomerByIdAsync(vacationoffer.VacationRequest.UserId);
+        }
+        catch (Exception ex)
+        {
+            // Handle error when fetching customer
+            Console.WriteLine($"Error fetching customer: {ex.Message}");
         }
     }
 }
