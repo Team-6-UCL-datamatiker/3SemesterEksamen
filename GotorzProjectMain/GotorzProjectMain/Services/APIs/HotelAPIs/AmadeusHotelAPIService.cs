@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
+using System.Net;
 
 namespace GotorzProjectMain.Services.APIs.HotelAPIs;
 
@@ -20,6 +21,7 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
 
     private string? _accessToken;
     private DateTime _expiresAt;
+    private string? _message = "";
 
     public AmadeusHotelAPIService(HttpClient client, IMapper mapper, AmadeusSettings settings)
     {
@@ -28,7 +30,6 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
         _settings = settings;
     }
 
-    // Ville man nok cache irl, men.. nej.
     public async Task<string> GetAccessTokenAsync()
     {
         if (_accessToken != null && DateTime.UtcNow < _expiresAt)
@@ -56,7 +57,7 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
         return _accessToken;
     }
 
-    public async Task<IEnumerable<Hotel>> SearchHotelsAsync(AmadeusHotelListParameters listParameters, AmadeusHotelSearchParameters searchParameters)
+    public async Task<(IEnumerable<Hotel>, string)> SearchHotelsAsync(AmadeusHotelListParameters listParameters, AmadeusHotelSearchParameters searchParameters)
     {
         var query = BuildListQuery(listParameters);
 
@@ -81,7 +82,7 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
 
         if (!hotels.Any())
         {
-            return hotels;
+            return (hotels, _message!);
         }
 
         List<string> hotelIds = [];
@@ -93,6 +94,13 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
             }
         }
 
+        // MIDLERTIDIGT FIX:
+        if (hotels.Count() > 10)
+        {
+            hotelIds = hotelIds.Take(10).ToList();
+        }
+        // --------------------------------------------------------------------------------------------------------
+
         query = BuildSearchQuery(searchParameters, hotelIds);
 
         var searchRequest = new HttpRequestMessage(HttpMethod.Get, $"v3/shopping/hotel-offers?{query}");
@@ -101,24 +109,41 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
 
         response = await _client.SendAsync(searchRequest);
 
-        response.EnsureSuccessStatusCode();
-        json = await response.Content.ReadAsStringAsync();
-
-        var searchDto = JsonSerializer.Deserialize<HotelOffersResponseDto>(json, new JsonSerializerOptions
+        if (response.StatusCode == HttpStatusCode.BadRequest)
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        });
+            var badJson = await response.Content.ReadAsStringAsync();
+            var doc = JsonDocument.Parse(badJson);
+            var errorCode = doc.RootElement
+                .GetProperty("errors")[0]
+                .GetProperty("code")
+                .GetInt32();
 
-        HotelOfferDataDto? hotelOffers;
-
-        foreach (Hotel hotel in hotels)
+            if (errorCode == 3664)
+            {
+                _message = "No offers available for the selected hotels";
+            }
+        }
+        else
         {
-            hotelOffers = searchDto?.Data?.FirstOrDefault(h => h?.Hotel?.HotelId == hotel.HotelId);
-            hotel.Offers = hotelOffers?.Offers != null ? _mapper.Map<IReadOnlyList<HotelOffer>>(hotelOffers.Offers) : Array.Empty<HotelOffer>();
+            response.EnsureSuccessStatusCode();
+            json = await response.Content.ReadAsStringAsync();
+
+            var searchDto = JsonSerializer.Deserialize<HotelOffersResponseDto>(json, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                PropertyNameCaseInsensitive = true
+            });
+
+            HotelOfferDataDto? hotelOffers;
+
+            foreach (Hotel hotel in hotels)
+            {
+                hotelOffers = searchDto?.Data?.FirstOrDefault(h => h?.Hotel?.HotelId == hotel.HotelId);
+                hotel.Offers = hotelOffers?.Offers != null ? _mapper.Map<IReadOnlyList<HotelOffer>>(hotelOffers.Offers) : Array.Empty<HotelOffer>();
+            }
         }
 
-        return hotels;
+        return (hotels, _message!);
     }
 
     public string BuildListQuery(AmadeusHotelListParameters p)
@@ -199,7 +224,7 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
             throw;
         }
     }
-    
+
     public sealed record AmadeusTokenResponse(
     [property: JsonPropertyName("access_token")] string AccessToken,
     [property: JsonPropertyName("expires_in")] int ExpiresIn);

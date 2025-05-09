@@ -51,7 +51,7 @@ public class AmadeusHotelSearchParameters
     /// ISO‑4217 currency code (e.g. "USD").  If unsupported by a property, that
     /// hotel’s local currency will be returned instead.
     [JsonPropertyName("currency")]
-    public string Currency { get; set; } = "EUR";
+    public string? Currency { get; set; }
 
     /// Payment‑policy filter. "NONE" (default) shows all.  Other possible API
     /// values include "DEPOSIT", "FULL_PREPAY" etc.

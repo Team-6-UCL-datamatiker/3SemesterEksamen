@@ -18,7 +18,7 @@ public class Hotel
 public sealed record GeoCode(double? Latitude, double? Longitude);
 public sealed record Distance(double? Value, string? Unit);
 
-// Represents essential information about a hotel offer
+// Essential information about a hotel offer
 public sealed record HotelOffer( 
     string? OfferId,
     string? CheckInDate, // Or DateTime, if you parse it

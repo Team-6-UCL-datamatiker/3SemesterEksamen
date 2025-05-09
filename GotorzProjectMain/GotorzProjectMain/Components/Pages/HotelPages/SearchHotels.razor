@@ -193,7 +193,6 @@
 </div>
 
 <div class="row">
-	
 </div>
 
 @if (_hotelsList.Any())
@@ -202,37 +201,107 @@
 	<div>
 		<h2>Hotels</h2>
 		<hr />
-		<dl class="row">
-			@foreach (Hotel hotel in _hotelsList)
+
+		@if (!string.IsNullOrWhiteSpace(_returnMessage))
+		{
+			<div class="alert alert-danger mt-3">
+				@_returnMessage
+			</div>
+		}
+
+		@foreach (Hotel hotel in _hotelsList)
+		{
+			<details style="margin-bottom: 1em;">
+				<summary class="fw-bold fs-5">@hotel.Name</summary>
+				<dl class="row">
+					@if (hotel.Rating is not null)
+					{
+						<dt class="col-sm-2">Rating</dt>
+						<dd class="col-sm-10">@hotel.Rating</dd>
+					}
+					@if (hotel.Distance is not null)
+					{
+						<dt class="col-sm-2">Distance</dt>
+						<dd class="col-sm-10">@hotel.Distance.Value @hotel.Distance.Unit</dd>
+					}
+					@if (hotel.Amenities?.Any() == true)
+					{
+						<dt class="col-sm-2">Amenities</dt>
+						<dd class="col-sm-10">
+							<ul>
+								@foreach (string a in hotel.Amenities)
+								{
+									<li>@a</li>
+								}
+							</ul>
+						</dd>
+					}
+				</dl>
+			</details>
+
+			@foreach (HotelOffer offer in hotel.Offers)
 			{
-				<dt class="col-sm-2">Name</dt>
-				<dd class="col-sm-10">@hotel.Name</dd>
-				@if (hotel.Rating is not null)
-				{
-					<dt class="col-sm-2">Rating</dt>
-					<dd class="col-sm-10">@hotel.Rating</dd>
-				}
-				@if (hotel.Distance is not null)
-				{
-					<dt class="col-sm-2">Distance</dt>
-					<dd class="col-sm-10">@hotel.Distance.Value @hotel.Distance.Unit</dd>
-				}
-				@if (hotel.Amenities?.Any() == true)
-				{
-					<dt class="col-sm-2">Amenities</dt>
-					<dd class="col-sm-10">
-						<ul>
-							@foreach (string a in hotel.Amenities)
+				<details style="margin-bottom: 1em;">
+					<summary class="p-2 rounded" style="background-color: rgba(0, 123, 255, 0.08);">
+						@($"{offer.Price.TotalAmount} {offer.Price.Currency}")
+					</summary>
+					<dl class="row">
+
+						<dt class="col-sm-2">Dates</dt>
+						<dd class="col-sm-10">@($"{offer.CheckInDate} - {offer.CheckOutDate}")</dd>
+
+						@if (offer.Price.AverageNightlyAmount is not null)
+						{
+							<dt class="col-sm-2">Average price per night</dt>
+							<dd class="col-sm-10">@($"{offer.Price.AverageNightlyAmount} {offer.Price.Currency}")</dd>
+						}
+
+						@if (offer.Guests is not null)
+						{
+							<dt class="col-sm-2">People</dt>
+							<dd class="col-sm-10">@($"{offer.Guests.Adults} adults")</dd>
+						}
+
+						@if (offer.Room is not null)
+						{
+							@if (offer.Room.Type is not null)
 							{
-								<li>@a</li>
+								<dt class="col-sm-2">Room</dt>
+								<dd class="col-sm-10">@offer.Room.Type</dd>
 							}
-						</ul>
-					</dd>
-				}
-				<dt class="col-sm-2">Last Updated</dt>
-				<dd class="col-sm-10">@hotel.LastUpdated</dd>
+							@if (offer.Room.Category is not null)
+							{
+								<dt class="col-sm-2">Category</dt>
+								<dd class="col-sm-10">@offer.Room.Category</dd>
+							}
+							@if (offer.Room.Beds is not null)
+							{
+								<dt class="col-sm-2">Beds</dt>
+								<dd class="col-sm-10">@offer.Room.Beds</dd>
+							}
+							@if (offer.Room.BedType is not null)
+							{
+								<dt class="col-sm-2">Bed Type</dt>
+								<dd class="col-sm-10">@offer.Room.BedType</dd>
+							}
+							@if (offer.Room.DescriptionText is not null)
+							{
+								<dt class="col-sm-2">Description</dt>
+								<dd class="col-sm-10">@offer.Room.DescriptionText</dd>
+							}
+						}
+
+						@if (offer.BoardType is not null)
+						{
+							<dt class="col-sm-2">Rating</dt>
+							<dd class="col-sm-10">@offer.BoardType</dd>
+						}
+
+
+					</dl>
+				</details>
 			}
-		</dl>
+		}
 	</div>
 }
 
@@ -257,6 +326,7 @@
 	private string? _amenitiesMessage;
 
 	private string? _amenityInput;
+	private string? _returnMessage;
 
 	// BAR or LOUNGE virker vist ikke................
 	private List<string> AllAmenities = new()
@@ -278,7 +348,7 @@
 	{
 		if (_ecList!.Validate() && _ecSearch!.Validate())
 		{
-			_hotelsList = await Service.SearchHotelsAsync(_inputList, _inputSearch);
+			(_hotelsList, _returnMessage) = await Service.SearchHotelsAsync(_inputList, _inputSearch);
 		}
 	}
 

@@ -23,7 +23,7 @@ public class AmadeusMappingProfiles : Profile
             .ForMember(dest => dest.Rating, opt => opt.MapFrom(src => src.Rating))
             .ForMember(dest => dest.LastUpdated, opt => opt.MapFrom(src => src.LastUpdate));
 
-        // Mapping from RoomDto (source API DTO) to RoomInfo (model record)
+        // Mapping from RoomDto to RoomInfo
         CreateMap<RoomDto, RoomInfo>()
             .ConstructUsing(src => new RoomInfo(
                 src.Type,
@@ -33,13 +33,13 @@ public class AmadeusMappingProfiles : Profile
                 src.Description != null ? src.Description.Text : null
             ));
 
-        // Mapping from GuestsDto (source API DTO) to GuestInfo (model record)
+        // Mapping from GuestsDto to GuestInfo
         CreateMap<GuestsDto, GuestInfo>()
             .ConstructUsing(src => new GuestInfo(
                 src.Adults
             ));
 
-        // Mapping from PriceDto (source API DTO) to PriceInfo (model record)
+        // Mapping from PriceDto to PriceInfo
         CreateMap<PriceDto, PriceInfo>()
             .ConstructUsing(src => new PriceInfo(
                 src.Currency,
@@ -47,7 +47,7 @@ public class AmadeusMappingProfiles : Profile
                 (src.Variations != null && src.Variations.Average != null) ? src.Variations.Average.Total : null
             ));
 
-        // Mapping from PoliciesDto (source API DTO) to PolicySummary (model record)
+        // Mapping from PoliciesDto to PolicySummary
         CreateMap<PoliciesDto, PolicySummary>()
             .ConstructUsing(src => new PolicySummary(
                 src.PaymentType,
@@ -55,7 +55,7 @@ public class AmadeusMappingProfiles : Profile
                 (src.Cancellations != null && src.Cancellations.Any()) ? src.Cancellations.First().Deadline : null
             ));
         
-        // Mapping from OfferDto (source API DTO) to HotelOfferDetails (model record)
+        // Mapping from OfferDto to HotelOfferDetails
         CreateMap<OfferDto, HotelOffer>()
             .ConstructUsing((src, context) => new HotelOffer(
                 src.Id,
