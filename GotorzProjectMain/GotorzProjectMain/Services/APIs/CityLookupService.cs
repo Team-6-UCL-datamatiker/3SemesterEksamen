@@ -1,4 +1,4 @@
-﻿namespace GotorzProjectMain.Services.APIs.HotelAPIs;
+﻿namespace GotorzProjectMain.Services.APIs;
 public class CityLookupService : ICityLookupService
 {
     // List of unique "City Name (Airport Code)" strings.

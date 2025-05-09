@@ -11,9 +11,19 @@ using GotorzProjectMain.Models;
 using AutoMapper;
 using GotorzProjectMain.Services.Mapping;
 using GotorzProjectMain.Services.APIs.HotelAPIs;
+using GotorzProjectMain.Services.APIs;
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Get API-info from Environment
+var apiKey = Environment.GetEnvironmentVariable("AMADEUS_API_KEY");
+var apiSecret = Environment.GetEnvironmentVariable("AMADEUS_API_SECRET");
+builder.Services.AddSingleton(new AmadeusSettings
+{
+    ApiKey = apiKey,
+    ApiSecret = apiSecret
+});
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -31,7 +41,7 @@ builder.Services.AddQuickGridEntityFrameworkAdapter();
 
 builder.Services.AddHttpClient<IAmadeusHotelAPIService, AmadeusHotelAPIService>(client =>
 {
-	client.BaseAddress = new Uri("https://test.api.amadeus.com/v1/");
+	client.BaseAddress = new Uri("https://api.amadeus.com/");
 });
 
 //Used for getting the user data everytime an employee or customer is loaded

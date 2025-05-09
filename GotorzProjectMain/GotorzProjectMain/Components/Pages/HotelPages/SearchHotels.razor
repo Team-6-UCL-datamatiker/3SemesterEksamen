@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 
 @using GotorzProjectMain.Models
+@using GotorzProjectMain.Services.APIs
 @using GotorzProjectMain.Services.APIs.HotelAPIs
 
 @inject IAmadeusHotelAPIService Service
@@ -12,16 +13,16 @@
 <div class="row">
 	<div class="col-md-4">
 		@* fjernet valid *@
-		<EditForm Model="Input" OnSubmit="SubmitSearch" FormName="searchHotels">
+		<EditForm EditContext="_ecList" FormName="listHotels">
 			<DataAnnotationsValidator />
 			<h2>Search for hotels</h2>
 
-			<div class="form-check mb-3">
+			<div data-role="Airport" class="form-check mb-3">
 				<InputCheckbox id="isAirport" @bind-Value="_airport" class="form-check-input" />
 				<label for="isAirport" class="form-check-label">Airport code</label>
 			</div>
 
-			<div class="mb-3 form-floating position-relative">
+			<div data-role="Destination" class="mb-3 form-floating position-relative">
 				<InputText id="destination" placeholder="City" autocomplete="off" class="form-control" @bind-Value="_destination" oninput="@(async (ChangeEventArgs e) => await OnDestinationInput(e))" @onkeydown="HandleDestinationKeyPress" />
 				<label for="destination">Destination:</label>
 				@* 				<ValidationMessage For="() => Input." class="alert alert-danger mt-3" /> *@
@@ -53,14 +54,14 @@
 				}
 			</div>
 
-			<div class="form-floating mb-3">
-				<InputNumber id="radius" @bind-Value="Input.Radius" class="form-control" placeholder="Radius" />
+			<div data-role="Radius" class="form-floating mb-3">
+				<InputNumber id="radius" @bind-Value="_inputList.Radius" class="form-control" placeholder="Radius" />
 				<label for="radius">Search Radius</label>
-@* 				<ValidationMessage For="() => Input.Radius" class="alert alert-danger mt-3" /> *@
+				@* 				<ValidationMessage For="() => Input.Radius" class="alert alert-danger mt-3" /> *@
 			</div>
 
-			<div class=" mb-3">
-				<select id="radius-unit" @bind="Input.RadiusUnit" class="form-select">
+			<div data-role="Radius Unit" class=" mb-3">
+				<select id="radius-unit" @bind="_inputList.RadiusUnit" class="form-select">
 					<option value="KM">KM</option>
 					<option value="MILE">MILE</option>
 				</select>
@@ -68,10 +69,10 @@
 
 			@* Har ikke tilføjet Chaincodes endnu - Hvis man vil søge på hotelkæder, skal det tilføjes *@
 
-			<div class="form-floating mb-3 position-relative">
+			<div data-role="Amenities" class="form-floating mb-3 position-relative">
 				<InputText id="amenities" @bind-Value="_amenityInput" oninput="@(async (ChangeEventArgs e) => await OnAmenitiesInput(e))" @onkeydown="HandleAmenityKeyPress" class="form-control" autocomplete="off" placeholder="Amenities" />
 				<label for="amenities">Add Amenities</label>
-@* 				<ValidationMessage For="() => Input.Amenities" class="alert alert-danger mt-3" /> *@
+				@* 				<ValidationMessage For="() => Input.Amenities" class="alert alert-danger mt-3" /> *@
 
 				@if (!string.IsNullOrWhiteSpace(_amenitiesMessage))
 				{
@@ -92,21 +93,20 @@
 					</ul>
 				}
 
+				@if (_inputList.Amenities.Any())
+				{
+					<div>
+						<ul class="alert alert-success mt-3">
+							@foreach (var amenity in _inputList.Amenities)
+							{
+								<li>@amenity</li>
+							}
+						</ul>
+					</div>
+				}
 			</div>
-			@if (Input.Amenities.Any())
-			{
-				<div>
-					<ul class="alert alert-success mt-3">
-						@foreach (var amenity in Input.Amenities)
-						{
-							<li>@amenity</li>
-						}
-					</ul>
-				</div>
-			}
 
-
-			<div class="mb-3">
+			<div data-role="Hotel Stars" class="mb-3">
 				<label class="form-label">Hotel Stars</label>
 				<div class="d-flex gap-3">
 					@for (int star = 1; star <= 5; star++)
@@ -115,9 +115,9 @@
 
 						<div class="form-check">
 							<input class="form-check-input"
-							type="checkbox"
-							value="@starValue"
-							@onchange="e => ToggleRating(starValue, e.Value)" />
+								   type="checkbox"
+								   value="@starValue"
+								   @onchange="e => ToggleRating(starValue, e.Value)" />
 							<label class="form-check-label">@star</label>
 						</div>
 					}
@@ -126,10 +126,74 @@
 
 			@* Man kan bestemme hvilken kilde man vil søge i - har ikke taget det med endnu.
 			   Ved ikke helt hvad det er for noget, men hvis man vil det, skal det tilføjes *@
-
-			<button type="submit" class="w-100 btn btn-lg btn-primary">Search</button>
 		</EditForm>
 	</div>
+	<div class="col-md-4">
+		<EditForm EditContext="_ecSearch" FormName="searchHotels">
+			<DataAnnotationsValidator />
+			<div class="mt-5"></div>
+
+			<div data-role="Adults" class="form-check mb-3">
+				<label for="adults">Adults</label>
+				<InputNumber id="adults" @bind-Value="_inputSearch.Adults" class="form-control" placeholder="Adults" />
+				<ValidationMessage For="() => _inputSearch.Adults" class="alert alert-danger mt-3" />
+			</div>
+
+			<div data-role="CheckIn" class="form-check mb-3">
+				<label for="checkInDate">Checkin Date:</label>
+				<InputDate id="checkInDate" @bind-Value="_inputSearch.CheckInDate" class="form-control" />
+				<ValidationMessage For="() => _inputSearch.CheckInDate" class="text-danger" />
+			</div>
+
+			<div data-role="CheckOut" class="form-check mb-3">
+				<label for="checOutDate">Checkout Date:</label>
+				<InputDate id="checkOutDate" @bind-Value="_inputSearch.CheckOutDate" class="form-control" />
+				<ValidationMessage For="() => _inputSearch.CheckOutDate" class="text-danger" />
+			</div>
+
+			@* Skipped country of residence *@
+
+			<div data-role="Rooms" class="form-check mb-3">
+				<label for="rooms">Rooms</label>
+				<InputNumber id="rooms" @bind-Value="_inputSearch.RoomQuantity" class="form-control" placeholder="Rooms" />
+				<ValidationMessage For="() => _inputSearch.RoomQuantity" class="alert alert-danger mt-3" />
+			</div>
+
+			<div data-role="Price" class="form-check mb-3">
+				<label for="price">Price</label>
+				<InputText id="price" @bind-Value="_inputSearch.PriceRange" placeholder="Price" autocomplete="off" class="form-control" />
+				<ValidationMessage For="() => _inputSearch.PriceRange" class="alert alert-danger mt-3" />
+			</div>
+
+			<div data-role="Currency" class="form-check mb-3">
+				<label for="currency">Currency</label>
+				<InputText id="currency" @bind-Value="_inputSearch.Currency" placeholder="EUR" autocomplete="off" class="form-control" />
+				<ValidationMessage For="() => _inputSearch.Currency" class="alert alert-danger mt-3" />
+			</div>
+
+			@* Skipped paymentPolicy *@
+
+			<div data-role="Food" class=" mb-3">
+				<select id="food" @bind="_inputSearch.BoardType" class="form-select">
+					<option value=""></option>
+					<option value="ROOM_ONLY">Room only</option>
+					<option value="BREAKFAST">Breakfast</option>
+					<option value="HALF_BOARD">Half board</option>
+					<option value="FULL_BOARD">Full board</option>
+					<option value="ALL_INCLUSIVE">All inclusive</option>
+				</select>
+			</div>
+
+			@* Skipped 'include sold out, cheapest offer only, language of api descriptions' *@
+
+		</EditForm>
+	</div>
+	<div class="mt-3"></div>
+	<button @onclick="SubmitAll" class="w-100 btn btn-lg btn-primary">Search</button>
+</div>
+
+<div class="row">
+	
 </div>
 
 @if (_hotelsList.Any())
@@ -174,6 +238,14 @@
 
 
 @code {
+	// Search API
+	private EditContext? _ecSearch;
+	private AmadeusHotelSearchParameters _inputSearch = new();
+
+	// List API
+	private EditContext? _ecList;
+	private AmadeusHotelListParameters _inputList = new();
+
 	private IEnumerable<Hotel> _hotelsList = Enumerable.Empty<Hotel>();
 	private string? _destination;
 	private List<string> DestinationSuggestions { get; set; } = new();
@@ -183,7 +255,7 @@
 
 	private List<string> AmenitiesSuggestions { get; set; } = new();
 	private string? _amenitiesMessage;
-	private AmadeusHotelListParameters Input { get; set; } = new();
+
 	private string? _amenityInput;
 
 	// BAR or LOUNGE virker vist ikke................
@@ -195,6 +267,20 @@
 	  "WI-FI_IN_ROOM","ROOM_SERVICE","GUARDED_PARKG","SERV_SPEC_MENU"
 	};
 	private CancellationTokenSource? _debounceCts;
+
+	protected override void OnInitialized()
+	{
+		_ecList = new EditContext(_inputList);
+		_ecSearch = new EditContext(_inputSearch);
+	}
+
+	private async Task SubmitAll()
+	{
+		if (_ecList!.Validate() && _ecSearch!.Validate())
+		{
+			_hotelsList = await Service.SearchHotelsAsync(_inputList, _inputSearch);
+		}
+	}
 
 	private async Task OnDestinationInput(ChangeEventArgs e)
 	{
@@ -248,14 +334,14 @@
 
 				if (!_airport)
 				{
-					Input.CityOrAirportCode = codes.Value.CityCode;
+					_inputList.CityOrAirportCode = codes.Value.CityCode;
 				}
 				else
 				{
-					Input.CityOrAirportCode = codes.Value.AirportCode;
+					_inputList.CityOrAirportCode = codes.Value.AirportCode;
 				}
 
-				_selectedDestination = $"{match}, Code: {Input.CityOrAirportCode}";
+				_selectedDestination = $"{match}, Code: {_inputList.CityOrAirportCode}";
 
 				_destination = match;
 			}
@@ -274,32 +360,27 @@
 
 		if (!_airport)
 		{
-			Input.CityOrAirportCode = codes.Value.CityCode;
+			_inputList.CityOrAirportCode = codes.Value.CityCode;
 		}
 		else
 		{
-			Input.CityOrAirportCode = codes.Value.AirportCode;
+			_inputList.CityOrAirportCode = codes.Value.AirportCode;
 		}
 
-		_selectedDestination = $"{suggestion}, Code: {Input.CityOrAirportCode}";
+		_selectedDestination = $"{suggestion}, Code: {_inputList.CityOrAirportCode}";
 		DestinationSuggestions.Clear();
-	}
-
-	private async Task SubmitSearch()
-	{
-		_hotelsList = await Service.SearchHotelsAsync(Input);
 	}
 
 	private void SelectAmenity(string suggestion)
 	{
 		_amenityInput = suggestion;
-		if (Input.Amenities.Contains(_amenityInput))
+		if (_inputList.Amenities.Contains(_amenityInput))
 		{
-			Input.Amenities.Remove(_amenityInput);
+			_inputList.Amenities.Remove(_amenityInput);
 		}
 		else
 		{
-			Input.Amenities.Add(_amenityInput);
+			_inputList.Amenities.Add(_amenityInput);
 		}
 
 		AmenitiesSuggestions.Clear();
@@ -319,13 +400,13 @@
 
 			if (match != null)
 			{
-				if (Input.Amenities.Contains(match))
+				if (_inputList.Amenities.Contains(match))
 				{
-					Input.Amenities.Remove(match);
+					_inputList.Amenities.Remove(match);
 				}
 				else
 				{
-					Input.Amenities.Add(match);
+					_inputList.Amenities.Add(match);
 				}
 
 				_amenityInput = match;
@@ -343,11 +424,11 @@
 
 		if ((bool)isChecked!)
 		{
-			Input.Ratings.Add(starValue);
+			_inputList.Ratings.Add(starValue);
 		}
 		else
 		{
-			Input.Ratings.Remove(starValue);
+			_inputList.Ratings.Remove(starValue);
 		}
 	}
 }

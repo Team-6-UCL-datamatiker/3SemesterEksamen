@@ -1,7 +1,8 @@
 ﻿using AutoMapper;
 using GotorzProjectMain.Models;
+using GotorzProjectMain.Services.APIs.HotelAPIs;
 
-namespace GotorzProjectMain.Services.APIs.HotelAPIs;
+namespace GotorzProjectMain.Services.Mapping;
 
 public class AmadeusMapperAddressResolver : IValueResolver<HotelDto, Hotel, string?>
 {

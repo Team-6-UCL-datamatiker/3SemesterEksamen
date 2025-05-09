@@ -5,6 +5,10 @@ using System.Text.Json;
 using System.Web;
 using GotorzProjectMain.Models;
 using System.Net.Http.Headers;
+using Microsoft.EntityFrameworkCore;
+using System.Reflection;
+using System.Text.Json.Serialization;
+using System.Collections.Generic;
 
 namespace GotorzProjectMain.Services.APIs.HotelAPIs;
 
@@ -12,90 +16,191 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
 {
     private readonly HttpClient _client;
     private readonly IMapper _mapper;
-    private readonly IConfiguration _config;
-    private string _key;
-    private string _secret;
+    private readonly AmadeusSettings _settings;
 
-    public AmadeusHotelAPIService(HttpClient client, IConfiguration config ,IMapper mapper)
+    private string? _accessToken;
+    private DateTime _expiresAt;
+
+    public AmadeusHotelAPIService(HttpClient client, IMapper mapper, AmadeusSettings settings)
     {
         _client = client;
         _mapper = mapper;
-        _config = config;
-        _key = _config["AmadeusApi:ApiKey"];
-        _secret = _config["AmadeusApi:ClientSecret"];
+        _settings = settings;
     }
 
+    // Ville man nok cache irl, men.. nej.
     public async Task<string> GetAccessTokenAsync()
     {
-        var request = new HttpRequestMessage(HttpMethod.Post, "https://test.api.amadeus.com/v1/security/oauth2/token");
+        if (_accessToken != null && DateTime.UtcNow < _expiresAt)
+        {
+            return _accessToken;
+        }
+
+        var request = new HttpRequestMessage(HttpMethod.Post, "https://api.amadeus.com/v1/security/oauth2/token");
         request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
     {
         { "grant_type", "client_credentials" },
-        { "client_id", _key },
-        { "client_secret", _secret }
+        { "client_id", _settings.ApiKey! },
+        { "client_secret", _settings.ApiSecret! }
     });
 
         var response = await _client.SendAsync(request);
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync();
-        var doc = JsonDocument.Parse(json);
-        return doc.RootElement.GetProperty("access_token").GetString();
+        var token = JsonSerializer.Deserialize<AmadeusTokenResponse>(json)!;
+
+        _accessToken = token.AccessToken;
+        _expiresAt = DateTime.UtcNow.AddSeconds(token.ExpiresIn - 60); // subtract 60s buffer
+
+        return _accessToken;
     }
 
-    public async Task<IEnumerable<Hotel>> SearchHotelsAsync(AmadeusHotelListParameters parameters)
+    public async Task<IEnumerable<Hotel>> SearchHotelsAsync(AmadeusHotelListParameters listParameters, AmadeusHotelSearchParameters searchParameters)
     {
-        var query = BuildQuery(parameters);
+        var query = BuildListQuery(listParameters);
 
         var token = await GetAccessTokenAsync();
 
-        var request = new HttpRequestMessage(HttpMethod.Get, $"reference-data/locations/hotels/by-city?{query}");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.amadeus+json"));
+        var listRequest = new HttpRequestMessage(HttpMethod.Get, $"v1/reference-data/locations/hotels/by-city?{query}");
+        listRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        listRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.amadeus+json"));
 
-        var response = await _client.SendAsync(request);
+        var response = await _client.SendAsync(listRequest);
 
         response.EnsureSuccessStatusCode();
         var json = await response.Content.ReadAsStringAsync();
 
-        var dto = JsonSerializer.Deserialize<HotelSearchResultDto>(json, new JsonSerializerOptions
+        var listDto = JsonSerializer.Deserialize<HotelSearchResultDto>(json, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             PropertyNameCaseInsensitive = true
         });
 
-        return dto?.Data != null ? _mapper.Map<IEnumerable<Hotel>>(dto.Data) : Enumerable.Empty<Hotel>();
+        var hotels = listDto?.Data != null ? _mapper.Map<IEnumerable<Hotel>>(listDto.Data) : Enumerable.Empty<Hotel>();
+
+        if (!hotels.Any())
+        {
+            return hotels;
+        }
+
+        List<string> hotelIds = [];
+        foreach (Hotel hotel in hotels)
+        {
+            if (hotel.HotelId != null)
+            {
+                hotelIds.Add(hotel.HotelId);
+            }
+        }
+
+        query = BuildSearchQuery(searchParameters, hotelIds);
+
+        var searchRequest = new HttpRequestMessage(HttpMethod.Get, $"v3/shopping/hotel-offers?{query}");
+        searchRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        //request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.amadeus+json"));
+
+        response = await _client.SendAsync(searchRequest);
+
+        response.EnsureSuccessStatusCode();
+        json = await response.Content.ReadAsStringAsync();
+
+        var searchDto = JsonSerializer.Deserialize<HotelOffersResponseDto>(json, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
+        });
+
+        HotelOfferDataDto? hotelOffers;
+
+        foreach (Hotel hotel in hotels)
+        {
+            hotelOffers = searchDto?.Data?.FirstOrDefault(h => h?.Hotel?.HotelId == hotel.HotelId);
+            hotel.Offers = hotelOffers?.Offers != null ? _mapper.Map<IReadOnlyList<HotelOffer>>(hotelOffers.Offers) : Array.Empty<HotelOffer>();
+        }
+
+        return hotels;
     }
 
-    public string BuildQuery(AmadeusHotelListParameters p)
+    public string BuildListQuery(AmadeusHotelListParameters p)
     {
         var query = HttpUtility.ParseQueryString(string.Empty);
-        query["cityCode"] = p.CityOrAirportCode;
 
-        if (p.Radius != 5)
+        foreach (var prop in typeof(AmadeusHotelListParameters).GetProperties())
         {
-            query["radius"] = p.Radius.ToString();
+            var attr = prop.GetCustomAttribute<JsonPropertyNameAttribute>();
+            if (attr == null) continue;
+
+            var name = attr.Name;
+            var value = prop.GetValue(p);
+
+            if (value is null) continue;
+
+            switch (value)
+            {
+                case string s when !string.IsNullOrWhiteSpace(s):
+                    query[name] = s;
+                    break;
+                case int i when !(prop.Name == nameof(p.Radius) && i == 5):
+                    query[name] = i.ToString();
+                    break;
+                case List<string> list when list.Any():
+                    query[name] = string.Join(",", list);
+                    break;
+            }
         }
-        if (p.RadiusUnit != "KM")
-        {
-            query["radiusUnit"] = p.RadiusUnit;
-        }
-        if (p.ChainCodes?.Any() == true)
-        {
-            query["chainCodes"] = string.Join(",", p.ChainCodes);
-        }
-        if (p.Amenities?.Any() == true)
-        {
-            query["amenities"] = string.Join(",", p.Amenities);
-        }
-        if (p.Ratings?.Any() == true)
-        {
-            query["ratings"] = string.Join(",", p.Ratings);
-        }
-        if (!string.IsNullOrWhiteSpace(p.HotelSource))
-        {
-            query["hotelSource"] = p.HotelSource;
-        }
+
         return query.ToString();
     }
+
+    public string BuildSearchQuery(AmadeusHotelSearchParameters p, List<string> hotelIds)
+    {
+        try
+        {
+            var q = HttpUtility.ParseQueryString(string.Empty);
+            q["hotelIds"] = string.Join(",", hotelIds);
+
+            foreach (var prop in typeof(AmadeusHotelSearchParameters).GetProperties())
+            {
+                var attr = prop.GetCustomAttribute<JsonPropertyNameAttribute>();
+                if (attr == null || attr.Name == "hotelIds") continue; // already handled
+
+                var v = prop.GetValue(p);
+                if (v == null) continue;
+
+                switch (v)
+                {
+                    case string s when !string.IsNullOrWhiteSpace(s):
+                        q[attr.Name] = s;
+                        break;
+
+                    case int i:
+                        q[attr.Name] = i.ToString();
+                        break;
+
+                    //case bool b when b:
+                    //    q[attr.Name] = "true";
+                    //    break;
+
+                    case DateOnly d:
+                        q[attr.Name] = d.ToString("yyyy-MM-dd");
+                        break;
+
+                    case List<string> list when list.Any():
+                        q[attr.Name] = string.Join(",", list);
+                        break;
+                }
+            }
+
+            return q.ToString()!;
+        }
+        catch
+        {
+            // Do something here.
+            throw;
+        }
+    }
+    
+    public sealed record AmadeusTokenResponse(
+    [property: JsonPropertyName("access_token")] string AccessToken,
+    [property: JsonPropertyName("expires_in")] int ExpiresIn);
 }
