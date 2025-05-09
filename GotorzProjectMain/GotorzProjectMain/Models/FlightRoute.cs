@@ -1,11 +1,22 @@
 ﻿using GotorzProjectMain.Models.DTOs;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GotorzProjectMain.Models
 {
 	public class FlightRoute
 	{
-		// All legs in this route, in order
-		public List<Flight> Legs { get; set; }
+		// Unique identifier for this route
+		[Key]
+        public int RouteId { get; set; }
+
+		// The flight booking associated with this route
+		[ForeignKey("FlightBooking")]
+        public int FlightBookingId { get; set; }
+
+
+        // All legs in this route, in order
+        public List<Flight> Legs { get; set; }
 
 		// Layover info between legs
 		public List<Layover> Layovers { get; set; }

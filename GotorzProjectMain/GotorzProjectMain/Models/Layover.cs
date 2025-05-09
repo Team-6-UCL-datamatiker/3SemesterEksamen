@@ -1,8 +1,17 @@
-﻿namespace GotorzProjectMain.Models
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace GotorzProjectMain.Models
 {
 	public class Layover
 	{
-		public string Id { get; set; }
+		[Key]
+        public int LayoverId { get; set; }
+
+        [ForeignKey("FlightRoute")]
+        public int FlightRouteId { get; set; }
+
+        //public string Id { get; set; }
 		public string Name { get; set; }
 		public int Duration { get; set; }  // minutes
 
