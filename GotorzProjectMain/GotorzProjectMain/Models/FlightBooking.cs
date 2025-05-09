@@ -8,6 +8,8 @@ namespace GotorzProjectMain.Models
         [Key]
         public int FlightBookingId { get; set; }
 
+        public FlightRoute FlightRoute { get; set; }
+
         public string Airline { get; set; }
 
         public int SeatNumber { get; set; }

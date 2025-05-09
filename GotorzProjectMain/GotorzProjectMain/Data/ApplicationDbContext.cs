@@ -16,8 +16,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<FlightBooking> FlightBookings { get; set; }
     public DbSet<HotelBooking> HotelBookings { get; set; }
 	public DbSet<ChatMessage> ChatMessages { get; set; }
+    public DbSet<FlightRoute> FlightRoutes { get; set; }
+    public DbSet<Flight> Flights { get; set; }
+    public DbSet<Layover> Layovers { get; set; }
 
-	protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		base.OnModelCreating(modelBuilder);
 
@@ -30,9 +33,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 		modelBuilder.Entity<FlightBooking>().ToTable("FlightBookings");
         modelBuilder.Entity<HotelBooking>().ToTable("HotelBookings");
 		modelBuilder.Entity<ChatMessage>().ToTable("ChatMessages");
+		modelBuilder.Entity<FlightRoute>().ToTable("FlightRoutes");
+        modelBuilder.Entity<Flight>().ToTable("Flights");
+        modelBuilder.Entity<Layover>().ToTable("Layovers");
 
-		// By default, EF Core stores enums as integers. To store them as strings:
-		modelBuilder.Entity<VacationRequest>()
+        // By default, EF Core stores enums as integers. To store them as strings:
+        modelBuilder.Entity<VacationRequest>()
 			.Property(v => v.Status)
 			.HasConversion<string>();
 

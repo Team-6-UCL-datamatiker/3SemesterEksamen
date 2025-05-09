@@ -37,7 +37,8 @@ namespace GotorzProjectMain.Models.DTOs
 		
 	public class LayoverDTO
 	{
-		public string Id { get; set; }  // airport code
+        public int LayoverId { get; set; }
+        //public string Id { get; set; }  // airport code
 		public string Name { get; set; }
 		public int Duration { get; set; }  // minutes
 	}
