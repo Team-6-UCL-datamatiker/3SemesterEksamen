@@ -16,8 +16,7 @@ namespace GotorzProjectMain.Services.Mapping
                 .ForMember(dest => dest.ArrivalAirportCode, opt => opt.MapFrom(src => src.Arrival.Id))
                 .ForMember(dest => dest.ArrivalAirportName, opt => opt.MapFrom(src => src.Arrival.Name))
                 .ForMember(dest => dest.ArrivalTime, opt => opt.MapFrom(src => ParseDate(src.Arrival.Time)))
-                .ForMember(dest => dest.Airline, opt => opt.MapFrom(src => src.Airline))
-                .ForMember(dest => dest.Price, opt => opt.Ignore()); // price is not in FlightLegDTO
+                .ForMember(dest => dest.Airline, opt => opt.MapFrom(src => src.Airline));
 
             // Map FlightRouteDTO → FlightRoute
             CreateMap<FlightRouteDTO, FlightRoute>()

@@ -67,12 +67,6 @@ namespace GotorzProjectMain.Services.API
             .Select(routeDTO =>
             {
                 var route = _mapper.Map<FlightRoute>(routeDTO);
-
-                // Inject price into each leg, since it's not part of FlightLegDTO
-                foreach (var leg in route.Legs)
-                {
-                    leg.Price = routeDTO.Price;
-                }
                 return route;
             })
             .ToList();

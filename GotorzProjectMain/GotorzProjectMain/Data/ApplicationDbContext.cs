@@ -46,5 +46,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .Property(v => v.OfferStatus)
             .HasConversion<string>();
 
-    }
+		// Specifies amount of digits in TotalPrice
+		modelBuilder.Entity<FlightRoute>()
+		.Property(r => r.TotalPrice)
+		.HasPrecision(18, 2);
+
+	}
 }
