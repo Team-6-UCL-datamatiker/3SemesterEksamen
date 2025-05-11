@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.ResponseCompression;
 using GotorzProjectMain.Hubs;
 using GotorzProjectMain.Services;
 using GotorzProjectMain.Models;
-using AutoMapper;
 using GotorzProjectMain.Services.Mapping;
 using GotorzProjectMain.Services.APIs.HotelAPIs;
 using GotorzProjectMain.Services.APIs;
@@ -19,11 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Get API-info from Environment
 var apiKey = Environment.GetEnvironmentVariable("AMADEUS_API_KEY");
 var apiSecret = Environment.GetEnvironmentVariable("AMADEUS_API_SECRET");
-builder.Services.AddSingleton(new AmadeusSettings
-{
-    ApiKey = apiKey,
-    ApiSecret = apiSecret
-});
+builder.Services.AddSingleton(new AmadeusSettings(apiKey, apiSecret));
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -39,6 +34,8 @@ builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnC
 
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 
+builder.Services.AddScoped<IRateLimiter, RateLimiter>();
+builder.Services.AddSingleton<ICityLookupService, CityLookupService>();
 builder.Services.AddHttpClient<IAmadeusHotelAPIService, AmadeusHotelAPIService>(client =>
 {
 	client.BaseAddress = new Uri("https://api.amadeus.com/");
@@ -53,7 +50,7 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
-builder.Services.AddSingleton<ICityLookupService, CityLookupService>();
+
 
 builder.Services.AddScoped<VacationRequestSignalRService>();
 

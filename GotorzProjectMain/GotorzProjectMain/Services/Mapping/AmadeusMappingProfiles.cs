@@ -12,18 +12,23 @@ public class AmadeusMappingProfiles : Profile
         CreateMap<DistanceDto, Distance>();
 
         CreateMap<HotelDto, Hotel>()
-            .ForMember(dest => dest.IataCode, opt => opt.MapFrom(src => src.IataCode))
-            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
-            .ForMember(dest => dest.DuplicateId, opt => opt.MapFrom(src => (int?)src.DupeId))
-            .ForMember(dest => dest.HotelId, opt => opt.MapFrom(src => src.HotelId))
-            .ForMember(dest => dest.CountryCode, opt => opt.MapFrom<AmadeusMapperAddressResolver>())
-            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.GeoCode))
-            .ForMember(dest => dest.Distance, opt => opt.MapFrom(src => src.Distance))
-            .ForMember(dest => dest.Amenities, opt => opt.MapFrom(src => src.Amenities))
-            .ForMember(dest => dest.Rating, opt => opt.MapFrom(src => src.Rating))
-            .ForMember(dest => dest.LastUpdated, opt => opt.MapFrom(src => src.LastUpdate));
+            .ConstructUsing((src, context) => new Hotel(
+                src.Name,
+                src.IataCode,
+                (int?)src.DupeId,
+                src.HotelId,
+                src.Address?.CountryCode,
+                src.Amenities,
+                src.Rating,
+                src.LastUpdate,
+                context.Mapper.Map<GeoCode?>(src.GeoCode),
+                context.Mapper.Map<Distance?>(src.Distance)
+            ));
 
-        // Mapping from RoomDto to RoomInfo
+        // Skal sættes op på en anden form når man arbejder med records frem for klasser fordi deres
+        // properties er immutable når de først er sat - Så alle værdier her skal sættes gennem constructor.
+        // (Medfører også at de kun kan bruges til at lave nye objekter.)
+
         CreateMap<RoomDto, RoomInfo>()
             .ConstructUsing(src => new RoomInfo(
                 src.Type,
@@ -33,13 +38,11 @@ public class AmadeusMappingProfiles : Profile
                 src.Description != null ? src.Description.Text : null
             ));
 
-        // Mapping from GuestsDto to GuestInfo
         CreateMap<GuestsDto, GuestInfo>()
             .ConstructUsing(src => new GuestInfo(
                 src.Adults
             ));
 
-        // Mapping from PriceDto to PriceInfo
         CreateMap<PriceDto, PriceInfo>()
             .ConstructUsing(src => new PriceInfo(
                 src.Currency,
@@ -47,15 +50,13 @@ public class AmadeusMappingProfiles : Profile
                 (src.Variations != null && src.Variations.Average != null) ? src.Variations.Average.Total : null
             ));
 
-        // Mapping from PoliciesDto to PolicySummary
         CreateMap<PoliciesDto, PolicySummary>()
             .ConstructUsing(src => new PolicySummary(
                 src.PaymentType,
-                (src.Refundable != null) ? src.Refundable.CancellationRefund : null,
+                src.Refundable != null ? src.Refundable.CancellationRefund : null,
                 (src.Cancellations != null && src.Cancellations.Any()) ? src.Cancellations.First().Deadline : null
             ));
-        
-        // Mapping from OfferDto to HotelOfferDetails
+
         CreateMap<OfferDto, HotelOffer>()
             .ConstructUsing((src, context) => new HotelOffer(
                 src.Id,

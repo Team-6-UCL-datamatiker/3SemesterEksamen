@@ -2,8 +2,8 @@
 public class CityLookupService : ICityLookupService
 {
     // List of unique "City Name (Airport Code)" strings.
-    // These keys correspond to the entries in the previously generated CityAirportData dictionary.
-    private readonly List<string> _cities = new()
+    // These keys correspond to the entries in the _cityToIata dictionary.
+    public List<string> Cities { get; init; } = new()
     {
         "Aalborg (AAL)",
         "Aarhus (AAR)",
@@ -2532,13 +2532,15 @@ public class CityLookupService : ICityLookupService
         { "Zurich (ZRH)", ("ZRH", "ZRH") }
     };
 
+    // Search method for autocomplete: returns a collection of up to {max} results where input matches the beginning of a list item.
     public IEnumerable<string> Search(string input, int max = 10)
     {
         if (string.IsNullOrWhiteSpace(input)) return Enumerable.Empty<string>();
-        return _cities.Where(l => l.StartsWith(input, StringComparison.OrdinalIgnoreCase))
+        return Cities.Where(l => l.StartsWith(input, StringComparison.OrdinalIgnoreCase))
                       .Take(max);
     }
 
-    public (string, string)? GetCodes(string label)
-        => _cityToIata.TryGetValue(label, out var codes) ? codes : null;
+    // Returns both airport and city codes of a specific match - used after a match is found via Search()
+    public (string, string)? GetCodes(string input)
+        => _cityToIata.TryGetValue(input, out var codes) ? codes : null;
 }

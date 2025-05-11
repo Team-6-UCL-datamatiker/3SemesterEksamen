@@ -9,7 +9,7 @@ using System.Text.Json.Serialization;
 /// /shopping/hotel-offers (getMultiHotelOffers) endpoint so the UI can bind
 /// directly to this object. Every field is optional except "HotelIds"/>; 
 
-public class AmadeusHotelSearchParameters
+public class AmadeusHotelOffersParameters
 {
     /// **Required.** List of 8‑character Amadeus property codes that identify the
     /// hotels to search (e.g. "TILONCHR").
@@ -26,13 +26,13 @@ public class AmadeusHotelSearchParameters
     /// today if omitted.
     [JsonPropertyName("checkInDate")]
     [Required]
-    public DateOnly CheckInDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+    public DateOnly CheckInDate { get; set; } = DateOnly.FromDateTime(DateTime.Now.AddDays(1));
 
     /// Check‑out date (hotel local) in **YYYY‑MM‑DD**. Must be ≥ <see cref="CheckInDate"/> + 1.
     /// Defaults to *checkInDate + 1* if omitted.
     [JsonPropertyName("checkOutDate")]
     [Required]
-    public DateOnly CheckOutDate { get; set; } = DateOnly.FromDateTime(DateTime.Now.AddDays(7));
+    public DateOnly CheckOutDate { get; set; } = DateOnly.FromDateTime(DateTime.Now.AddDays(8));
 
     /// ISO‑3166‑1 country code representing the traveller’s country of residence.
     [JsonPropertyName("countryOfResidence")]
@@ -40,15 +40,15 @@ public class AmadeusHotelSearchParameters
 
     /// Number of rooms requested (1‑9).
     [JsonPropertyName("roomQuantity")]
-    [Range(1, 9, ErrorMessage = "Must be between 1 and 50")]
-    public int? RoomQuantity { get; set; }
+    [Range(1, 9, ErrorMessage = "Must be between 1 and 9")]
+    public int? RoomQuantity { get; set; } = 1;
 
     /// Price‑per‑night filter (e.g. "200-300", "-300", "100-").  Requires that
     /// Currency is also supplied.
     [JsonPropertyName("priceRange")]
     public string? PriceRange { get; set; }
 
-    /// ISO‑4217 currency code (e.g. "USD").  If unsupported by a property, that
+    /// ISO‑4217 currency code (e.g. "USD, GBP, EUR").  If unsupported by a property, that
     /// hotel’s local currency will be returned instead.
     [JsonPropertyName("currency")]
     public string? Currency { get; set; }
@@ -67,9 +67,9 @@ public class AmadeusHotelSearchParameters
     [JsonPropertyName("includeClosed")]
     public bool? IncludeClosed { get; set; }
 
-    /// When true, return only the cheapest offer per hotel.  Default: false.
+    /// When true, return only the cheapest offer per hotel.  Default: true.
     [JsonPropertyName("bestRateOnly")]
-    public bool? BestRateOnly { get; set; }
+    public bool BestRateOnly { get; set; } = true;
 
     /// Two‑letter or BCP‑47 language code for descriptive texts (e.g. "fr",
     /// "fr-FR").  Falls back to English if unavailable.

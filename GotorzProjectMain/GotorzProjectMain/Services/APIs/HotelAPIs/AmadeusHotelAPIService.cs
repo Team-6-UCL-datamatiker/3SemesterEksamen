@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-using System.Net.Http;
-using AutoMapper;
+﻿using AutoMapper;
 using System.Text.Json;
 using System.Web;
 using GotorzProjectMain.Models;
@@ -8,35 +6,54 @@ using System.Net.Http.Headers;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using System.Text.Json.Serialization;
-using System.Collections.Generic;
 using System.Net;
+using Azure.Core;
+using Azure;
 
 namespace GotorzProjectMain.Services.APIs.HotelAPIs;
 
 public class AmadeusHotelAPIService : IAmadeusHotelAPIService
 {
+    public string? ApiResponseInfoMessage { get; set; }
+    public string? ErrorMessage { get; set; }
+    public IEnumerable<Hotel> Hotels { get; set; } = Enumerable.Empty<Hotel>();
+    public List<string> HotelIds { get; set; } = [];
+
+    // Singleton som indeholder hemmelig API-info
+    private readonly AmadeusSettings _settings;
     private readonly HttpClient _client;
     private readonly IMapper _mapper;
-    private readonly AmadeusSettings _settings;
-
+    private readonly ILogger<AmadeusHotelAPIService> _logger;
+    private readonly IRateLimiter _rateLimiter;
+    private int _batch;
     private string? _accessToken;
-    private DateTime _expiresAt;
-    private string? _message = "";
+    private DateTime? _tokenExpiresAt;
 
-    public AmadeusHotelAPIService(HttpClient client, IMapper mapper, AmadeusSettings settings)
+    // Nested record hvor navnene passer med incoming json, så det kan deserialiseres. 
+    private sealed record AmadeusTokenResponse(
+    [property: JsonPropertyName("access_token")] string AccessToken,
+    [property: JsonPropertyName("expires_in")] int ExpiresIn
+        );
+
+    public AmadeusHotelAPIService(HttpClient client, IMapper mapper, AmadeusSettings settings, ILogger<AmadeusHotelAPIService> logger, IRateLimiter rateLimiter)
     {
         _client = client;
         _mapper = mapper;
         _settings = settings;
+        _logger = logger;
+        _rateLimiter = rateLimiter;
     }
 
     public async Task<string> GetAccessTokenAsync()
     {
-        if (_accessToken != null && DateTime.UtcNow < _expiresAt)
+        // Hvis tidligere token stadig er gyldig, så brug den.
+        if (_accessToken != null && DateTime.UtcNow < _tokenExpiresAt)
         {
             return _accessToken;
         }
 
+        // Ellers:
+        // Byg HTTP request
         var request = new HttpRequestMessage(HttpMethod.Post, "https://api.amadeus.com/v1/security/oauth2/token");
         request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
     {
@@ -48,184 +65,279 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
         var response = await _client.SendAsync(request);
         response.EnsureSuccessStatusCode();
 
+        // Deserialisering
         var json = await response.Content.ReadAsStringAsync();
         var token = JsonSerializer.Deserialize<AmadeusTokenResponse>(json)!;
 
+        // Sæt værdier til feltvariabler
         _accessToken = token.AccessToken;
-        _expiresAt = DateTime.UtcNow.AddSeconds(token.ExpiresIn - 60); // subtract 60s buffer
+        _tokenExpiresAt = DateTime.UtcNow.AddSeconds(token.ExpiresIn - 60); // 60s buffer
 
         return _accessToken;
     }
 
-    public async Task<(IEnumerable<Hotel>, string)> SearchHotelsAsync(AmadeusHotelListParameters listParameters, AmadeusHotelSearchParameters searchParameters)
+    public async Task SearchHotelsAsync(AmadeusHotelListParameters listParameters, AmadeusHotelOffersParameters offerParameters)
     {
-        var query = BuildListQuery(listParameters);
-
-        var token = await GetAccessTokenAsync();
-
-        var listRequest = new HttpRequestMessage(HttpMethod.Get, $"v1/reference-data/locations/hotels/by-city?{query}");
-        listRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        listRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.amadeus+json"));
-
-        var response = await _client.SendAsync(listRequest);
-
-        response.EnsureSuccessStatusCode();
-        var json = await response.Content.ReadAsStringAsync();
-
-        var listDto = JsonSerializer.Deserialize<HotelSearchResultDto>(json, new JsonSerializerOptions
+        try
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        });
+            ErrorMessage = null;
+            ApiResponseInfoMessage = null;
 
-        var hotels = listDto?.Data != null ? _mapper.Map<IEnumerable<Hotel>>(listDto.Data) : Enumerable.Empty<Hotel>();
-
-        if (!hotels.Any())
-        {
-            return (hotels, _message!);
-        }
-
-        List<string> hotelIds = [];
-        foreach (Hotel hotel in hotels)
-        {
-            if (hotel.HotelId != null)
+            if (!_rateLimiter.TryRequest())
             {
-                hotelIds.Add(hotel.HotelId);
+                throw new InvalidOperationException("Rate limit exceeded");
             }
-        }
 
-        // MIDLERTIDIGT FIX:
-        if (hotels.Count() > 10)
-        {
-            hotelIds = hotelIds.Take(10).ToList();
-        }
-        // --------------------------------------------------------------------------------------------------------
+            var token = await GetAccessTokenAsync();
 
-        query = BuildSearchQuery(searchParameters, hotelIds);
-
-        var searchRequest = new HttpRequestMessage(HttpMethod.Get, $"v3/shopping/hotel-offers?{query}");
-        searchRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        //request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.amadeus+json"));
-
-        response = await _client.SendAsync(searchRequest);
-
-        if (response.StatusCode == HttpStatusCode.BadRequest)
-        {
-            var badJson = await response.Content.ReadAsStringAsync();
-            var doc = JsonDocument.Parse(badJson);
-            var errorCode = doc.RootElement
-                .GetProperty("errors")[0]
-                .GetProperty("code")
-                .GetInt32();
-
-            if (errorCode == 3664)
+            // Tjekker om det er et nyt kald eller kald efter flere offers på sidste kald
+            if (!HotelIds.Any())
             {
-                _message = "No offers available for the selected hotels";
-            }
-        }
-        else
-        {
-            response.EnsureSuccessStatusCode();
-            json = await response.Content.ReadAsStringAsync();
+                _batch = 0;
+                var listQuery = BuildListQueryAsync(listParameters);
 
-            var searchDto = JsonSerializer.Deserialize<HotelOffersResponseDto>(json, new JsonSerializerOptions
+                // Byg HTTP request
+                var listRequest = new HttpRequestMessage(HttpMethod.Get, $"v1/reference-data/locations/hotels/by-city?{listQuery}");
+                listRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                listRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.amadeus+json"));
+
+                var listResponse = await _client.SendAsync(listRequest);
+                var listJson = await listResponse.Content.ReadAsStringAsync();
+
+                // Intern fejlkodehåndtering
+                if (listResponse.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    _logger.LogWarning($"Bad Request: {listJson}");
+
+                    var doc = JsonDocument.Parse(listJson);
+                    var errorCode = doc.RootElement
+                        .GetProperty("errors")[0]
+                        .GetProperty("code")
+                        .GetInt32();
+
+                    if (errorCode == 1157)
+                    {
+                        ApiResponseInfoMessage = "Error 1157: Invalid city code - Amadeus backend occasionally fakes this when it chokes on valid city codes. Known issue. Not your fault. Retry manually in a minute or light a candle.";
+                    }
+                    else
+                    {
+                        ApiResponseInfoMessage = "Bad request response on list-api";
+                    }
+
+                    return;
+                }
+
+                listResponse.EnsureSuccessStatusCode();
+
+                // Deserialisering
+                var listDto = JsonSerializer.Deserialize<HotelSearchResultDto>(listJson, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    PropertyNameCaseInsensitive = true
+                });
+
+                // Mapping
+                Hotels = listDto?.Data != null ? _mapper.Map<IEnumerable<Hotel>>(listDto.Data) : Enumerable.Empty<Hotel>();
+
+                if (!Hotels.Any())
+                {
+                    ApiResponseInfoMessage = "No hotels matched the search. Try a broader search.";
+
+                    return;
+                }
+
+                // Sæt hotelId'er
+                HotelIds = Hotels.Select(h => h.HotelId!).ToList();
+            }
+
+            // Batcher hotelOffer søgningen hvis der er flere end 50 hoteller
+            List<string> hotelIdsBatch;
+            if (HotelIds.Count() > 50)
+            {
+                hotelIdsBatch = HotelIds.Take(50).ToList();
+                HotelIds.RemoveRange(0, hotelIdsBatch.Count);
+            }
+            else
+            {
+                hotelIdsBatch = HotelIds.ToList();
+                HotelIds.Clear();
+            }
+
+            var offerQuery = BuildOffersQueryAsync(offerParameters, hotelIdsBatch);
+
+            // Byg HTTP request
+            var offerRequest = new HttpRequestMessage(HttpMethod.Get, $"v3/shopping/hotel-offers?{offerQuery}");
+            offerRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            offerRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.amadeus+json"));
+
+            var offerResponse = await _client.SendAsync(offerRequest);
+            var offerJson = await offerResponse.Content.ReadAsStringAsync();
+
+            // Hvis ingen offers findes (eller noget andet halløj), sættes information herom
+            if (offerResponse.StatusCode == HttpStatusCode.BadRequest)
+            {
+                _logger.LogWarning($"Bad Request: {offerJson}");
+
+                var doc = JsonDocument.Parse(offerJson);
+                var errorCode = doc.RootElement
+                    .GetProperty("errors")[0]
+                    .GetProperty("code")
+                    .GetInt32();
+
+                if (errorCode == 3664)
+                {
+                    ApiResponseInfoMessage = "No offers available for the selected hotels";
+                }
+                else if (errorCode == 1257)
+                {
+                    ApiResponseInfoMessage = "Missing hotel IDs";
+                }
+                else if (errorCode == 477)
+                {
+                    ApiResponseInfoMessage = "Invalid format";
+                }
+                else
+                {
+                    ApiResponseInfoMessage = "Bad request response on offers-api";
+                }
+
+                return;
+            }
+
+            offerResponse.EnsureSuccessStatusCode();
+
+            // Deserialisering
+            var searchDto = JsonSerializer.Deserialize<HotelOffersResponseDto>(offerJson, new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 PropertyNameCaseInsensitive = true
             });
 
-            HotelOfferDataDto? hotelOffers;
-
-            foreach (Hotel hotel in hotels)
+            // Næste batch (.Take(50) smider ikke error selvom der er færre end 50)
+            foreach (Hotel hotel in Hotels.Skip(_batch * 50).Take(50))
             {
-                hotelOffers = searchDto?.Data?.FirstOrDefault(h => h?.Hotel?.HotelId == hotel.HotelId);
+                // Match parent-offerDto til hotelobjekt ud fra hotelId
+                HotelOfferDataDto? hotelOffers = searchDto?.Data?.FirstOrDefault(h => h?.Hotel?.HotelId == hotel.HotelId);
+                // Map
                 hotel.Offers = hotelOffers?.Offers != null ? _mapper.Map<IReadOnlyList<HotelOffer>>(hotelOffers.Offers) : Array.Empty<HotelOffer>();
             }
-        }
 
-        return (hotels, _message!);
-    }
-
-    public string BuildListQuery(AmadeusHotelListParameters p)
-    {
-        var query = HttpUtility.ParseQueryString(string.Empty);
-
-        foreach (var prop in typeof(AmadeusHotelListParameters).GetProperties())
-        {
-            var attr = prop.GetCustomAttribute<JsonPropertyNameAttribute>();
-            if (attr == null) continue;
-
-            var name = attr.Name;
-            var value = prop.GetValue(p);
-
-            if (value is null) continue;
-
-            switch (value)
+            // Hvis der stadig er flere hoteller at søge tilbud i lægges 1 til batch for at alt stemmer ved kald efter flere tilbud.
+            if (HotelIds.Any())
             {
-                case string s when !string.IsNullOrWhiteSpace(s):
-                    query[name] = s;
-                    break;
-                case int i when !(prop.Name == nameof(p.Radius) && i == 5):
-                    query[name] = i.ToString();
-                    break;
-                case List<string> list when list.Any():
-                    query[name] = string.Join(",", list);
-                    break;
+                _batch++;
             }
         }
+        catch (InvalidOperationException)
+        {
+            ErrorMessage = $"Rate limit per minute exceeded, try again in 1 minute.";
+        }
+        catch (Exception ex)
+        {
+            if (string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                ErrorMessage = $"An unexpected error occurred: {ex}";
+            }
 
-        return query.ToString();
+            _logger.LogError(ex, ErrorMessage);
+        }
     }
 
-    public string BuildSearchQuery(AmadeusHotelSearchParameters p, List<string> hotelIds)
+    public string BuildListQueryAsync(AmadeusHotelListParameters p)
     {
         try
         {
-            var q = HttpUtility.ParseQueryString(string.Empty);
-            q["hotelIds"] = string.Join(",", hotelIds);
+            var query = HttpUtility.ParseQueryString(string.Empty);
 
-            foreach (var prop in typeof(AmadeusHotelSearchParameters).GetProperties())
+            foreach (var prop in typeof(AmadeusHotelListParameters).GetProperties())
             {
-                var attr = prop.GetCustomAttribute<JsonPropertyNameAttribute>();
-                if (attr == null || attr.Name == "hotelIds") continue; // already handled
+                // hvis propertyen ikke har en JsonPropertyName, skal det ikke med i queryen
+                var attribute = prop.GetCustomAttribute<JsonPropertyNameAttribute>();
+                if (attribute == null) continue;
 
-                var v = prop.GetValue(p);
-                if (v == null) continue;
+                // Hent værdi
+                var value = prop.GetValue(p);
 
-                switch (v)
+                // Hvis ingen værdi, skal de ikke sættes. Ellers sæt værdierne i query-byggeren.
+                if (value is null) continue;
+
+                switch (value)
                 {
                     case string s when !string.IsNullOrWhiteSpace(s):
-                        q[attr.Name] = s;
+                        query[attribute.Name] = s;
                         break;
 
                     case int i:
-                        q[attr.Name] = i.ToString();
-                        break;
-
-                    //case bool b when b:
-                    //    q[attr.Name] = "true";
-                    //    break;
-
-                    case DateOnly d:
-                        q[attr.Name] = d.ToString("yyyy-MM-dd");
+                        query[attribute.Name] = i.ToString();
                         break;
 
                     case List<string> list when list.Any():
-                        q[attr.Name] = string.Join(",", list);
+                        query[attribute.Name] = string.Join(",", list);
                         break;
                 }
             }
 
-            return q.ToString()!;
+            return query.ToString()!;
         }
-        catch
+        catch (Exception ex)
         {
-            // Do something here.
+            ErrorMessage = $"An error occurred building offer query: {ex}";
             throw;
         }
     }
 
-    public sealed record AmadeusTokenResponse(
-    [property: JsonPropertyName("access_token")] string AccessToken,
-    [property: JsonPropertyName("expires_in")] int ExpiresIn);
+    public string BuildOffersQueryAsync(AmadeusHotelOffersParameters p, List<string> hotelIds)
+    {
+        try
+        {
+            var query = HttpUtility.ParseQueryString(string.Empty);
+
+            // Sæt hotelId'er
+            query["hotelIds"] = string.Join(",", hotelIds);
+
+            foreach (var prop in typeof(AmadeusHotelOffersParameters).GetProperties())
+            {
+                var attribute = prop.GetCustomAttribute<JsonPropertyNameAttribute>();
+
+                // hotelId allerede håndteret
+                if (attribute == null || attribute.Name == "hotelIds") continue;
+
+                // Hent værdi
+                var value = prop.GetValue(p);
+
+                // Hvis ingen værdi, skal de ikke sættes. Ellers sæt værdierne i query-byggeren.
+                if (value == null) continue;
+
+                switch (value)
+                {
+                    case string s when !string.IsNullOrWhiteSpace(s):
+                        query[attribute.Name] = s;
+                        break;
+
+                    case int i:
+                        query[attribute.Name] = i.ToString();
+                        break;
+
+                    case bool b:
+                        query[attribute.Name] = b.ToString().ToLower();
+                        break;
+
+                    case DateOnly d:
+                        query[attribute.Name] = d.ToString("yyyy-MM-dd");
+                        break;
+
+                    case List<string> list when list.Any():
+                        query[attribute.Name] = string.Join(",", list);
+                        break;
+                }
+            }
+
+            return query.ToString()!;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"An error occurred building offer query: {ex}";
+            throw;
+        }
+    }
 }

@@ -3,8 +3,13 @@
 namespace GotorzProjectMain.Services.APIs.HotelAPIs;
 public interface IAmadeusHotelAPIService
 {
-    Task<(IEnumerable<Hotel>, string)> SearchHotelsAsync(AmadeusHotelListParameters parameters, AmadeusHotelSearchParameters searchParameters);
-    string BuildListQuery(AmadeusHotelListParameters parameters);
-    string BuildSearchQuery(AmadeusHotelSearchParameters parameters, List<string> hotelIds);
+    public string? ErrorMessage { get; set; }
+    public string? ApiResponseInfoMessage { get; set; }
+    public IEnumerable<Hotel> Hotels { get; set; }
+    public List<string> HotelIds { get; set; }
+
     Task<string> GetAccessTokenAsync();
+    Task SearchHotelsAsync(AmadeusHotelListParameters listParameters, AmadeusHotelOffersParameters offersParameters);
+    string BuildListQueryAsync(AmadeusHotelListParameters listParameters);
+    string BuildOffersQueryAsync(AmadeusHotelOffersParameters parameters, List<string> hotelIds);
 }
