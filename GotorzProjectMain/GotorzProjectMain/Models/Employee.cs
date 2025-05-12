@@ -2,6 +2,6 @@
 
 public class Employee : BaseUser
 {
-	public Uri? ProfilePicture { get; set; }
+	public string? ProfilePicture { get; set; }
 	public bool IsAdmin { get; set; }
 }

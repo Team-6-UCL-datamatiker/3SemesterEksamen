@@ -12,7 +12,6 @@ using GotorzProjectMain.Services.Mapping;
 using GotorzProjectMain.Services.APIs.HotelAPIs;
 using GotorzProjectMain.Services.APIs;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Get API-info from Environment
@@ -73,12 +72,18 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
 
 if (builder.Environment.IsDevelopment())
 {
-    builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+	builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 }
 else
 {
-    builder.Services.AddScoped<IEmailSender<ApplicationUser>, GmailEmailSender>();
+	builder.Services.AddScoped<IEmailSender<ApplicationUser>, GmailEmailSender>();
 }
+
+// Service to handle flight API
+builder.Services.AddHttpClient<IFlightService, FlightService>(client =>
+{
+	client.BaseAddress = new Uri("https://serpapi.com/");
+});
 
 // Authorization policies
 builder.Services.AddAuthorization(options =>
@@ -103,7 +108,7 @@ builder.Services.AddSignalR();
 builder.Services.AddResponseCompression(opts =>
 {
 	opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-		[ "application/octet-stream" ]);
+		["application/octet-stream"]);
 });
 
 var app = builder.Build();
@@ -112,10 +117,10 @@ app.UseResponseCompression();
 
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+	var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+	var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-    await DbInitializer.Execute(scope.ServiceProvider, context, userManager);
+	await DbInitializer.Execute(scope.ServiceProvider, context, userManager);
 }
 
 // Configure the HTTP request pipeline.
@@ -130,6 +135,7 @@ else
 	// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
 	app.UseHsts();
 	app.UseMigrationsEndPoint();
+	app.UseMigrationsEndPoint();
 }
 
 app.UseHttpsRedirection();
@@ -142,6 +148,7 @@ app.UseAntiforgery();
 
 
 app.MapHub<VacationRequestHub>("/vacationrequesthub");
+app.MapHub<ChatHub>("/chathub");
 
 app.MapRazorComponents<App>()
 	.AddInteractiveServerRenderMode()

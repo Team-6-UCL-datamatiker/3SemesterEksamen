@@ -1,0 +1,45 @@
+﻿@page "/flightbookings"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using GotorzProjectMain.Models
+@using GotorzProjectMain.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="flightbookings/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.FlightBookings">
+    <PropertyColumn Property="flightbooking => flightbooking.Airline" />
+    <PropertyColumn Property="flightbooking => flightbooking.SeatNumber" />
+    <PropertyColumn Property="flightbooking => flightbooking.Price" />
+    <PropertyColumn Property="flightbooking => flightbooking.BookingInformationLink" />
+    <PropertyColumn Property="flightbooking => flightbooking.DepartureTime" />
+    <PropertyColumn Property="flightbooking => flightbooking.ArrivalTime" />
+    <PropertyColumn Property="flightbooking => flightbooking.Misc" />
+    <PropertyColumn Property="flightbooking => flightbooking.DepartureAirport" />
+    <PropertyColumn Property="flightbooking => flightbooking.ArrivalAirport" />
+    <PropertyColumn Property="flightbooking => flightbooking.VacationOfferId" />
+
+    <TemplateColumn Context="flightbooking">
+        <a href="@($"flightbookings/edit?flightbookingid={flightbooking.FlightBookingId}")">Edit</a> |
+        <a href="@($"flightbookings/details?flightbookingid={flightbooking.FlightBookingId}")">Details</a> |
+        <a href="@($"flightbookings/delete?flightbookingid={flightbooking.FlightBookingId}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private ApplicationDbContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

@@ -54,9 +54,9 @@
 			</div>
 
 			<div class="form-floating mb-3">
-				<InputText id="username" @bind-Value="Input.CustomUserName" class="form-control" autocomplete="username" aria-required="true" oninput="@(async (ChangeEventArgs e) => await DebounceUsernameCheck(e))" />
+				<InputText id="username" @bind-Value="Input.CustomUsername" class="form-control" autocomplete="username" aria-required="true" oninput="@(async (ChangeEventArgs e) => await DebounceUsernameCheck(e))" />
 				<label for="username">Username</label>
-				<ValidationMessage For="() => Input.CustomUserName" class="alert alert-danger mt-3" />
+				<ValidationMessage For="() => Input.CustomUsername" class="alert alert-danger mt-3" />
 			</div>
 
 			<div class="form-floating mb-3">
@@ -101,7 +101,7 @@
 	{
 		_ec = new EditContext(Input);
 		_messageStore = new ValidationMessageStore(_ec);
-		_inputUserNameField = new FieldIdentifier(Input, nameof(Input.CustomUserName));
+		_inputUserNameField = new FieldIdentifier(Input, nameof(Input.CustomUsername));
 	}
 
 	public async Task RegisterUser()

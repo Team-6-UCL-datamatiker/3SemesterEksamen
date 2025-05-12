@@ -15,7 +15,7 @@ namespace TestProject.UnitTests
         {
             mockUserService = new Mock<IExtendedUserService>();
 
-            List<Customer>mockCustomers = new List<Customer>
+            List<Customer> mockCustomers = new List<Customer>
             {
                 new Customer
                 {
@@ -35,14 +35,14 @@ namespace TestProject.UnitTests
                 new Employee
                 {
                     Id = "1",
-                    ProfilePicture = new Uri("https://example.com/profile1.jpg"),
+                    ProfilePicture = new Uri("https://example.com/profile1.jpg").ToString(),
                     IsAdmin = true,
                     User = new ApplicationUser { UserName = "TestUser1" }
                 },
                 new Employee
                 {
                     Id = "2",
-                    ProfilePicture = new Uri("https://example.com/profile2.jpg"),
+                    ProfilePicture = new Uri("https://example.com/profile2.jpg").ToString(),
                     IsAdmin = false,
                     User = new ApplicationUser { UserName = "TestUser2" }
                 }
@@ -141,7 +141,7 @@ namespace TestProject.UnitTests
             Employee expectedEmployee = new Employee
             {
                 Id = "1",
-                ProfilePicture = new Uri("https://example.com/profile1.jpg"),
+                ProfilePicture = new Uri("https://example.com/profile1.jpg").ToString(),
                 IsAdmin = true,
                 User = new ApplicationUser { UserName = "TestUser1" }
             };
@@ -159,7 +159,7 @@ namespace TestProject.UnitTests
             Employee expectedEmployee = new Employee
             {
                 Id = "99",
-                ProfilePicture = new Uri("https://example.com/profile1.jpg"),
+                ProfilePicture = new Uri("https://example.com/profile1.jpg").ToString(),
                 IsAdmin = true,
                 User = new ApplicationUser { UserName = "TestUser99" }
             };

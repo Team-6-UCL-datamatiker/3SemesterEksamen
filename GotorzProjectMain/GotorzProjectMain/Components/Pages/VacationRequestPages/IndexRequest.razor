@@ -19,7 +19,7 @@
 
 <PageTitle>Index</PageTitle>
 
-<h1>Index</h1>
+<h1>Vacation Requests</h1>
 
 <p>
     <a href="vacationrequests/create">Create New</a>
@@ -34,7 +34,12 @@
         }
         @email
     </TemplateColumn>
-    <PropertyColumn Property="vacationrequest => vacationrequest.Country"/>
+
+    <PropertyColumn Property="vacationrequest => vacationrequest.DepartureCity" Title="Departure City" />
+    <PropertyColumn Property="vacationrequest => vacationrequest.DepartureCountry" Title="Departure Country" />
+    <PropertyColumn Property="vacationrequest => vacationrequest.ArrivalCity" Title="Arrival City" />
+    <PropertyColumn Property="vacationrequest => vacationrequest.ArrivalCountry" Title="Arrival Country" />    
+    
     <TemplateColumn Context="vacationrequest" Title="Start Date">
         @vacationrequest.StartDate.ToString("MMM dd, yyyy")
     </TemplateColumn>

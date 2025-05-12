@@ -1,5 +1,6 @@
 ﻿@page "/employees/edit"
 @using AutoMapper
+@using GotorzProjectMain.Client.Components
 @using GotorzProjectMain.Data
 @using GotorzProjectMain.InputModels.Users.EmployeeInputModels
 @using Microsoft.AspNetCore.Identity
@@ -49,6 +50,12 @@ else
 				</div>
 
 				<div class="mb-3">
+					<label for="username" class="form-label">Username:</label>
+					<InputText id="username" @bind-Value="Input.CustomUsername" class="form-control" />
+					<ValidationMessage For="() => Input.CustomUsername" class="text-danger" />
+				</div>
+
+				<div class="mb-3">
 					<label for="email" class="form-label">Email:</label>
 					<InputText id="email" @bind-Value="Input.Email" class="form-control" />
 					<ValidationMessage For="() => Input.Email" class="text-danger" />
@@ -68,21 +75,14 @@ else
 					<ValidationMessage For="() => Input.IsAdmin" class="text-danger" />
 				</div>
 
-				<div class="mb-3">
-					<label for="profile-picture" class="form-label">Profile Picture:</label>
-					<InputFile id="profile-picture" OnChange="HandleProfilePictureUpload" class="form-control" />
-					@if (Input.ProfilePictureFile != null)
-					{
-						<p>New file selected: @Input.ProfilePictureFile.Name</p>
-					}
-				</div>
+				<EmployeeProfilePicturePreview @bind-ProfilePictureFile="Input.ProfilePictureFile" />
 
-				@if (Employee.ProfilePicture != null)
+				@if (Input.ProfilePictureFile is null)
 				{
 					<img src="@Employee.ProfilePicture"
-						 alt="Profile picture"
-						 style="max-width:200px; max-height:200px;"
-						 class="img-thumbnail" />
+					alt="Profile picture"
+					style="max-width:200px; max-height:200px;"
+					class="img-thumbnail" />
 				}
 
 				<button type="submit" class="btn btn-primary">Save</button>
@@ -110,12 +110,14 @@ else
 	private Employee? Employee { get; set; }
 	private string? ErrorMessage { get; set; }
 	private EditContext? _ec;
-
+	private bool _imageSavedToFile;
+	private string? _oldProfilePicturePath;
+	private byte[]? _oldProfilePicture;
+	
 	protected override async Task OnInitializedAsync()
 	{
-
 		_ec = new EditContext(Input);
-	// Fetch the employee by ID in the query string
+		// Fetch the employee by ID in the query string
 		Employee = await UserService.GetEmployeeByIdAsync(Id);
 
 		if (Employee == null)
@@ -126,47 +128,97 @@ else
 		{
 			Mapper.Map(Employee, Input); // Map to input model
 		}
+
+		if (Employee.ProfilePicture is not null)
+		{
+			_oldProfilePicturePath = Employee.ProfilePicture;
+			var relativePath = _oldProfilePicturePath.TrimStart('/');
+			var filePath = Path.Combine(WebHostEnvironment.WebRootPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
+			_oldProfilePicture = await File.ReadAllBytesAsync(filePath);
+		}
 	}
 
 	// To protect from overposting attacks, enable the specific properties you want to bind to.
 	// For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
 	private async Task UpdateEmployee()
 	{
+		await using var transaction = await Context.Database.BeginTransactionAsync();
+
 		try
 		{
+			if (Input.Email != Employee.User.Email)
+			{
+				var oldEmail = Employee.User.Email;
+				var newEmail = Input.Email;
+
+				foreach (var vacationOffer in Context.VacationOffers.Where(v => v.EmployeeEmail == oldEmail))
+				{
+					vacationOffer.EmployeeEmail = newEmail;
+				}
+			}
+
 			// Copy input back into Employee
 			Mapper.Map(Input, Employee);
 
 			if (Input.ProfilePictureFile != null)
 			{
-				var newUri = await SaveProfilePicture(Input.ProfilePictureFile);
-				if (newUri != null)
-				{
-					Employee.ProfilePicture = newUri;
-				}
+				string newPath = await SaveProfilePicture(Input.ProfilePictureFile);
+				Employee.ProfilePicture = newPath;
+				_imageSavedToFile = true;
 			}
 
 			await Context.SaveChangesAsync();
+			await transaction.CommitAsync();
+
+			if (_oldProfilePicturePath != "/images/DefaultProfilePicture.jpg")
+			{
+				DeleteOldProfilePicture();
+			}
+
 			NavigationManager.NavigateTo("/employees");
 		}
 		catch (DbUpdateConcurrencyException ex)
 		{
+			await transaction.RollbackAsync();
+
+			if (_imageSavedToFile == true)
+			{
+				Employee.ProfilePicture = _oldProfilePicturePath;
+
+				if (_oldProfilePicturePath != "/images/DefaultProfilePicture.jpg")
+				{
+					await File.WriteAllBytesAsync(_oldProfilePicturePath, _oldProfilePicture);
+				}				
+			}
+
 			ErrorMessage = "Another user has modified this data since you started editing. Your changes were not saved. Please reload and try again.";
 			Logger.LogWarning(ex, ErrorMessage);
 		}
 		catch (Exception ex)
 		{
+			await transaction.RollbackAsync();
+
+			if (_imageSavedToFile == true)
+			{
+				Employee.ProfilePicture = _oldProfilePicturePath;
+
+				if (_oldProfilePicturePath != "/images/DefaultProfilePicture.jpg")
+				{
+					await File.WriteAllBytesAsync(_oldProfilePicturePath, _oldProfilePicture);
+				}
+			}
+
 			ErrorMessage = "An unexpected error occurred. Please try again.";
 			Logger.LogError(ex, ErrorMessage);
 		}
 	}
 
 	// Helper method to save the uploaded profile picture.
-	private async Task<Uri?> SaveProfilePicture(IBrowserFile file)
+	private async Task<string?> SaveProfilePicture(IBrowserFile file)
 	{
 		try
 		{
-			var fileName = Path.GetFileName(file.Name);
+			var fileName = $"{Guid.NewGuid()}{ Path.GetFileName(file.Name)}";
 			var imagesFolder = Path.Combine(WebHostEnvironment.WebRootPath, "images");
 
 			// Ensure the images folder exists
@@ -176,31 +228,44 @@ else
 			}
 
 			var filePath = Path.Combine(imagesFolder, fileName);
-			
-			// Check if the file already exists
-			if (!File.Exists(filePath))
+
+			using (var stream = new FileStream(filePath, FileMode.Create))
 			{
-				using (var stream = new FileStream(filePath, FileMode.Create))
-				{
-					await file.OpenReadStream().CopyToAsync(stream);
-				}
+				await file.OpenReadStream().CopyToAsync(stream);
 			}
 
-			var relativePath = "/images/" + fileName;
-			return new Uri(relativePath, UriKind.Relative);
+			string relativePath = "/images/" + fileName;
+			return relativePath;
 		}
 		catch (Exception ex)
 		{
 			Logger.LogError(ex, "Failed to save profile picture.");
-			return null;
+			throw;
 		}
 	}
 
-	private async Task HandleProfilePictureUpload(InputFileChangeEventArgs e)
+	private void DeleteOldProfilePicture()
 	{
-		if (e.File != null)
+		if (_oldProfilePicturePath == null) return;
+
+		try
 		{
-			Input.ProfilePictureFile = e.File;
+			var relativePath = _oldProfilePicturePath.ToString().TrimStart('/');
+			var fullPath = Path.Combine(WebHostEnvironment.WebRootPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
+
+			if (File.Exists(fullPath))
+			{
+				File.Delete(fullPath);
+				Logger.LogInformation($"Deleted old profile picture at {fullPath}");
+			}
+			else
+			{
+				Logger.LogWarning($"Tried to delete profile picture, but file was not found: {fullPath}");
+			}
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, $"Failed to delete old profile picture: {_oldProfilePicturePath}");
 		}
 	}
 }
