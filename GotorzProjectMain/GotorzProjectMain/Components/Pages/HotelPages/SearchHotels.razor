@@ -1,0 +1,550 @@
+﻿@page "/hotelsearch"
+@rendermode InteractiveServer
+
+@using GotorzProjectMain.Models
+@using GotorzProjectMain.Services.APIs
+@using GotorzProjectMain.Services.APIs.HotelAPIs
+
+@inject IAmadeusHotelAPIService Service
+@inject ICityLookupService CityLookupService
+
+<PageTitle>Search Hotels</PageTitle>
+
+<div class="row">
+	<div class="col-md-4">
+		@* fjernet valid *@
+		<EditForm EditContext="_ecList" FormName="listHotels">
+			<DataAnnotationsValidator />
+			<h2>Search for hotels</h2>
+
+			<div data-role="Airport" class="form-check mb-3">
+				<InputCheckbox id="isAirport" @bind-Value="_airport" class="form-check-input" />
+				<label for="isAirport" class="form-check-label">Airport code</label>
+			</div>
+
+			<div data-role="Destination" class="mb-3 form-floating position-relative">
+				<InputText id="destination" placeholder="City" autocomplete="off" class="form-control" @bind-Value="_destination" oninput="@(async (ChangeEventArgs e) => await OnDestinationInput(e))" @onkeydown="HandleDestinationKeyPress" />
+				<label for="destination">Destination:</label>
+				@* 				<ValidationMessage For="() => Input." class="alert alert-danger mt-3" /> *@
+
+				@if (DestinationSuggestions.Any() && _destination != "")
+				{
+					<ul class="list-group position-absolute mt-1 w-100" style="z-index:1000;">
+						@foreach (string suggestion in DestinationSuggestions)
+						{
+							<li class="list-group-item list-group-item-action" @onclick="() => SelectDestination(suggestion)">
+								@suggestion
+							</li>
+						}
+					</ul>
+				}
+
+				@if (!string.IsNullOrWhiteSpace(_selectedDestination))
+				{
+					<div class="alert alert-success mt-3" role="alert">
+						@_selectedDestination
+					</div>
+				}
+
+				@if (!string.IsNullOrWhiteSpace(_matchAlertMessage))
+				{
+					<div class="alert alert-danger mt-3" role="alert">
+						@_matchAlertMessage
+					</div>
+				}
+			</div>
+
+			<div data-role="Radius" class="form-floating mb-3">
+				<InputNumber id="radius" @bind-Value="_inputList.Radius" class="form-control" placeholder="Radius" />
+				<label for="radius">Search Radius</label>
+				<ValidationMessage For="() => _inputList.Radius" class="alert alert-danger mt-3" />
+			</div>
+
+			<div data-role="Radius Unit" class=" mb-3">
+				<select id="radius-unit" @bind="_inputList.RadiusUnit" class="form-select">
+					<option value="KM">KM</option>
+					<option value="MILE">MILE</option>
+				</select>
+			</div>
+
+			@* Har ikke tilføjet Chaincodes endnu - Hvis man vil søge på hotelkæder, skal det tilføjes *@
+
+			<div data-role="Amenities" class="form-floating mb-3 position-relative">
+				<InputText id="amenities" @bind-Value="AmenityInput" oninput="@(async (ChangeEventArgs e) => await OnAmenitiesInput(e))" @onkeydown="HandleAmenityKeyPress" class="form-control" autocomplete="off" placeholder="Amenities" />
+				<label for="amenities">Add Amenities</label>
+				@* 				<ValidationMessage For="() => Input.Amenities" class="alert alert-danger mt-3" /> *@
+
+				@if (AmenitiesSuggestions.Any() && AmenityInput != "")
+				{
+					<ul class="list-group position-absolute mt-1 w-100" style="z-index:1000;">
+						@foreach (string suggestion in AmenitiesSuggestions)
+						{
+							<li class="list-group-item list-group-item-action" @onclick="() => SelectAmenity(suggestion)">
+								@suggestion
+							</li>
+						}
+					</ul>
+				}
+
+				@if (_inputList.Amenities.Any())
+				{
+					<div>
+						<ul class="alert alert-success mt-3">
+							@foreach (var amenity in _inputList.Amenities)
+							{
+								<li>@amenity</li>
+							}
+						</ul>
+					</div>
+				}
+			</div>
+
+			<div data-role="Hotel Stars" class="mb-3">
+				<label class="form-label">Hotel Stars</label>
+				<div class="d-flex gap-3">
+					@for (int star = 1; star <= 5; star++)
+					{
+						string starValue = star.ToString();
+
+						<div class="form-check">
+							<input class="form-check-input"
+								   type="checkbox"
+								   value="@starValue"
+								   @onchange="e => ToggleRating(starValue, e.Value)" />
+							<label class="form-check-label">@star</label>
+						</div>
+					}
+				</div>
+			</div>
+
+			@* Man kan bestemme hvilken kilde man vil søge i - har ikke taget det med endnu.
+			   Ved ikke helt hvad det er for noget, men hvis man vil det, skal det tilføjes *@
+		</EditForm>
+	</div>
+	<div class="col-md-4">
+		<EditForm EditContext="_ecOffer" FormName="searchHotels">
+			<DataAnnotationsValidator />
+			<div class="mt-5"></div>
+
+			<div data-role="Adults" class="form-check mb-3">
+				<label for="adults">Adults</label>
+				<InputNumber id="adults" @bind-Value="_inputOffer.Adults" class="form-control" placeholder="Adults" />
+				<ValidationMessage For="() => _inputOffer.Adults" class="alert alert-danger mt-3" />
+			</div>
+
+			<div data-role="CheckIn" class="form-check mb-3">
+				<label for="checkInDate">Checkin Date:</label>
+				<InputDate id="checkInDate" @bind-Value="_inputOffer.CheckInDate" class="form-control" />
+				<ValidationMessage For="() => _inputOffer.CheckInDate" class="text-danger" />
+			</div>
+
+			<div data-role="CheckOut" class="form-check mb-3">
+				<label for="checOutDate">Checkout Date:</label>
+				<InputDate id="checkOutDate" @bind-Value="_inputOffer.CheckOutDate" class="form-control" />
+				<ValidationMessage For="() => _inputOffer.CheckOutDate" class="text-danger" />
+			</div>
+
+			@* Skipped country of residence *@
+
+			<div data-role="Rooms" class="form-check mb-3">
+				<label for="rooms">Rooms</label>
+				<InputNumber id="rooms" @bind-Value="_inputOffer.RoomQuantity" class="form-control" placeholder="Rooms" />
+				<ValidationMessage For="() => _inputOffer.RoomQuantity" class="alert alert-danger mt-3" />
+			</div>
+
+			<div data-role="Price" class="form-check mb-3">
+				<label for="price">Price</label>
+				<InputText id="price" @bind-Value="_inputOffer.PriceRange" placeholder="Price" autocomplete="off" class="form-control" />
+				<ValidationMessage For="() => _inputOffer.PriceRange" class="alert alert-danger mt-3" />
+			</div>
+
+			<div data-role="Currency" class="form-check mb-3">
+				<label for="currency">Currency</label>
+				<InputText id="currency" @bind-Value="_inputOffer.Currency" placeholder="EUR" autocomplete="off" class="form-control" />
+				<ValidationMessage For="() => _inputOffer.Currency" class="alert alert-danger mt-3" />
+			</div>
+
+			<div data-role="BestOfferOnly" class="form-check mb-3">
+				<InputCheckbox id="bestOffer" @bind-Value="_inputOffer.BestRateOnly" class="form-check-input" />
+				<label for="bestOffer" class="form-check-label">Only best offer</label>
+			</div>
+
+			@* Skipped paymentPolicy *@
+
+			<div data-role="Food" class=" mb-3">
+				<select id="food" @bind="_inputOffer.BoardType" class="form-select">
+					<option value=""></option>
+					<option value="ROOM_ONLY">Room only</option>
+					<option value="BREAKFAST">Breakfast</option>
+					<option value="HALF_BOARD">Half board</option>
+					<option value="FULL_BOARD">Full board</option>
+					<option value="ALL_INCLUSIVE">All inclusive</option>
+				</select>
+			</div>
+
+			@* Skipped 'include sold out, language of api descriptions' *@
+
+		</EditForm>
+	</div>
+	<div class="mt-3"></div>
+	<button @onclick="SubmitAll" class="w-100 btn btn-lg btn-primary" disabled="@((_destination == null || !CityLookupService.Cities.Contains(_destination)) || (!string.IsNullOrWhiteSpace(_inputOffer.PriceRange) && string.IsNullOrWhiteSpace(_inputOffer.Currency)))">Search</button>
+
+	@if (!string.IsNullOrWhiteSpace(Service.ErrorMessage))
+	{
+		<div class="alert alert-danger mt-3">
+			@Service.ErrorMessage
+		</div>
+	}
+	@if (!string.IsNullOrWhiteSpace(Service.ApiResponseInfoMessage))
+	{
+		<div class="alert alert-danger mt-3">
+			@Service.ApiResponseInfoMessage
+		</div>
+	}
+</div>
+
+<div class="row">
+</div>
+
+@if (Service.Hotels!.Any())
+{
+	<div class="mt-3"></div>
+	<div>
+		<h2>Hotels</h2>
+		<hr />
+
+		@foreach (Hotel hotel in Service.Hotels!.Where(h => h.Offers is not null && h.Offers.Any()))
+		{
+			<details style="margin-bottom: 1em;">
+				<summary class="fw-bold fs-5">@hotel.Name</summary>
+				<dl class="row">
+					@if (hotel.Rating is not null)
+					{
+						<dt class="col-sm-2">Rating</dt>
+						<dd class="col-sm-10">@hotel.Rating</dd>
+					}
+					@if (hotel.Distance is not null)
+					{
+						<dt class="col-sm-2">Distance</dt>
+						<dd class="col-sm-10">@hotel.Distance.Value @hotel.Distance.Unit</dd>
+					}
+					@if (hotel.Amenities?.Any() == true)
+					{
+						<dt class="col-sm-2">Amenities</dt>
+						<dd class="col-sm-10">
+							<ul>
+								@foreach (string a in hotel.Amenities)
+								{
+									<li>@a</li>
+								}
+							</ul>
+						</dd>
+					}
+				</dl>
+			</details>
+
+			@foreach (HotelOffer offer in hotel.Offers!)
+			{
+				<details style="margin-bottom: 1em;">
+					<summary class="p-2 rounded" style="background-color: rgba(0, 123, 255, 0.08);">
+						@($"{offer.Price!.TotalAmount} {offer.Price.Currency}")
+					</summary>
+					<dl class="row">
+
+						<dt class="col-sm-2">Dates</dt>
+						<dd class="col-sm-10">@($"{offer.CheckInDate} - {offer.CheckOutDate}")</dd>
+
+						@if (offer.Price.AverageNightlyAmount is not null)
+						{
+							<dt class="col-sm-2">Average price per night</dt>
+							<dd class="col-sm-10">@($"{offer.Price.AverageNightlyAmount} {offer.Price.Currency}")</dd>
+						}
+
+						@if (offer.Guests is not null)
+						{
+							<dt class="col-sm-2">People</dt>
+							<dd class="col-sm-10">@($"{offer.Guests.Adults} adults")</dd>
+						}
+
+						@if (offer.Room is not null)
+						{
+							@if (offer.Room.Type is not null)
+							{
+								<dt class="col-sm-2">Room</dt>
+								<dd class="col-sm-10">@offer.Room.Type</dd>
+							}
+							@if (offer.Room.Category is not null)
+							{
+								<dt class="col-sm-2">Category</dt>
+								<dd class="col-sm-10">@offer.Room.Category</dd>
+							}
+							@if (offer.Room.Beds is not null)
+							{
+								<dt class="col-sm-2">Beds</dt>
+								<dd class="col-sm-10">@offer.Room.Beds</dd>
+							}
+							@if (offer.Room.BedType is not null)
+							{
+								<dt class="col-sm-2">Bed Type</dt>
+								<dd class="col-sm-10">@offer.Room.BedType</dd>
+							}
+							@if (offer.Room.DescriptionText is not null)
+							{
+								<dt class="col-sm-2">Description</dt>
+								<dd class="col-sm-10">@offer.Room.DescriptionText</dd>
+							}
+						}
+
+						@if (offer.BoardType is not null)
+						{
+							<dt class="col-sm-2">Rating</dt>
+							<dd class="col-sm-10">@offer.BoardType</dd>
+						}
+					</dl>
+				</details>
+			}
+		}
+		<button @onclick="GetHotels" disabled="@(!Service.HotelIds.Any())" class="w-100 btn btn-lg btn-primary">Get more offers</button>
+
+		<details style="margin-bottom: 1em;">
+			<summary class="fw-bold fs-5">Complete hotel list (@Service.Hotels.Count())</summary>
+			@foreach (Hotel hotel in Service.Hotels)
+			{
+				<details style="margin-bottom: 1em;">
+					<summary class="fw-bold fs-5">@hotel.Name</summary>
+					<dl class="row">
+						@if (hotel.Rating is not null)
+						{
+							<dt class="col-sm-2">Rating</dt>
+							<dd class="col-sm-10">@hotel.Rating</dd>
+						}
+						@if (hotel.Distance is not null)
+						{
+							<dt class="col-sm-2">Distance</dt>
+							<dd class="col-sm-10">@hotel.Distance.Value @hotel.Distance.Unit</dd>
+						}
+						@if (hotel.Amenities?.Any() == true)
+						{
+							<dt class="col-sm-2">Amenities</dt>
+							<dd class="col-sm-10">
+								<ul>
+									@foreach (string a in hotel.Amenities)
+									{
+										<li>@a</li>
+									}
+								</ul>
+							</dd>
+						}
+					</dl>
+				</details>
+			}
+		</details>
+	</div>
+}
+
+
+@code {
+	// Offer API
+	private EditContext? _ecOffer;
+	private AmadeusHotelOffersParameters _inputOffer = new();
+	private AmadeusHotelOffersParameters? _validatedInputOffer;
+
+	// List API
+	private EditContext? _ecList;
+	private AmadeusHotelListParameters _inputList = new();
+	private AmadeusHotelListParameters? _validatedInputList;
+
+	//Destination autocomplete
+	private bool _airport = false;
+	private string? _destination;
+	private List<string> DestinationSuggestions { get; set; } = new();
+
+	//Amenities autocomplete (BAR or LOUNGE virker vist ikke.................?????????)
+	private List<string> AllAmenities = new()
+	{ "SWIMMING_POOL","SPA","FITNESS_CENTER","AIR_CONDITIONING","RESTAURANT","PARKING","PETS_ALLOWED",
+	  "AIRPORT_SHUTTLE","BUSINESS_CENTER","DISABLED_FACILITIES","WIFI","MEETING_ROOMS","NO_KID_ALLOWED",
+	  "TENNIS","GOLF","KITCHEN","ANIMAL_WATCHING","BABY-SITTING","BEACH","CASINO","JACUZZI","SAUNA","SOLARIUM",
+	  "MASSAGE","VALET_PARKING","BAR or LOUNGE","KIDS_WELCOME","NO_PORN_FILMS","MINIBAR","TELEVISION",
+	  "WI-FI_IN_ROOM","ROOM_SERVICE","GUARDED_PARKG","SERV_SPEC_MENU"
+	};
+	private List<string> AmenitiesSuggestions { get; set; } = new();
+	private string? _amenitiesMessage;
+	public string? AmenityInput { get; set; }
+
+	//Debouncer
+	private CancellationTokenSource? _debounceCts;
+
+	// Fejlinfo
+	private string? _matchAlertMessage;
+	private string? _selectedDestination;
+
+	protected override void OnInitialized()
+	{
+		_ecList = new EditContext(_inputList);
+		_ecOffer = new EditContext(_inputOffer);
+	}
+
+	private async Task SubmitAll()
+	{
+		if (!_ecList!.Validate() || !_ecOffer!.Validate())
+		{
+			return;
+		}
+
+		// noter validerede værdier til brug ved indhentning af yderligere tilbud på samme liste
+		_validatedInputList = _inputList;
+		_validatedInputOffer = _inputOffer;
+
+		// Fjern eventuelle værdier fra tidligere søgning
+		Service.Hotels = Enumerable.Empty<Hotel>();
+		Service.HotelIds.Clear();
+
+		await GetHotels();
+	}
+
+	private async Task GetHotels()
+	{
+		await Service.SearchHotelsAsync(_validatedInputList!, _validatedInputOffer!);
+	}
+
+	private async Task OnDestinationInput(ChangeEventArgs e)
+	{
+		_debounceCts?.Cancel();
+		_debounceCts?.Dispose();
+		_debounceCts = new CancellationTokenSource();
+		_matchAlertMessage = "";
+		_selectedDestination = "";
+
+		if (e.Value is not null)
+		{
+			await Task.Delay(300, _debounceCts.Token);
+			DestinationSuggestions = CityLookupService.Search(e.Value.ToString()!).ToList();
+		}
+	}
+
+	private void HandleDestinationKeyPress(KeyboardEventArgs e)
+	{
+		if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(_destination))
+		{
+			string trimmed = _destination.Trim();
+			string? match = null;
+
+			if (DestinationSuggestions.Any())
+			{
+				match = DestinationSuggestions.FirstOrDefault(d => d.Contains(trimmed, StringComparison.OrdinalIgnoreCase));
+			}
+
+			if (match != null)
+			{
+				(string CityCode, string AirportCode)? codes = CityLookupService.GetCodes(match);
+
+				if (!_airport)
+				{
+					_inputList.CityOrAirportCode = codes.Value.CityCode;
+				}
+				else
+				{
+					_inputList.CityOrAirportCode = codes.Value.AirportCode;
+				}
+
+				_selectedDestination = $"{match}, Code: {_inputList.CityOrAirportCode}";
+
+				_destination = match;
+			}
+			else
+			{
+				_matchAlertMessage = "No such match";
+			}
+			DestinationSuggestions.Clear();
+		}
+	}
+
+	private void SelectDestination(string suggestion)
+	{
+		_destination = suggestion;
+		(string CityCode, string AirportCode)? codes = CityLookupService.GetCodes(suggestion);
+
+		if (!_airport)
+		{
+			_inputList.CityOrAirportCode = codes!.Value.CityCode;
+		}
+		else
+		{
+			_inputList.CityOrAirportCode = codes!.Value.AirportCode;
+		}
+
+		_selectedDestination = $"{suggestion}, Code: {_inputList.CityOrAirportCode}";
+		DestinationSuggestions.Clear();
+	}
+
+	private async Task OnAmenitiesInput(ChangeEventArgs e)
+	{
+		_debounceCts?.Cancel();
+		_debounceCts?.Dispose();
+		_debounceCts = new CancellationTokenSource();
+		_amenitiesMessage = "";
+
+		if (e.Value is not null)
+		{
+			await Task.Delay(200, _debounceCts.Token);
+			AmenitiesSuggestions = AllAmenities.Where(a => a.StartsWith(e.Value.ToString()!.Trim(), StringComparison.OrdinalIgnoreCase))
+								.Take(10).ToList();
+		}
+	}
+
+	private void HandleAmenityKeyPress(KeyboardEventArgs e)
+	{
+		if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(AmenityInput))
+		{
+			string trimmed = AmenityInput.Trim();
+			string? match = null;
+
+			if (AmenitiesSuggestions.Any())
+			{
+				match = AmenitiesSuggestions.FirstOrDefault(a => a.Contains(trimmed, StringComparison.OrdinalIgnoreCase));
+			}
+
+			if (match != null)
+			{
+				if (_inputList.Amenities.Contains(match))
+				{
+					_inputList.Amenities.Remove(match);
+				}
+				else
+				{
+					_inputList.Amenities.Add(match);
+				}
+				AmenityInput = "";
+			}
+		}
+	}
+
+	private void SelectAmenity(string suggestion)
+	{
+		AmenityInput = suggestion;
+
+		if (_inputList.Amenities.Contains(AmenityInput))
+		{
+			_inputList.Amenities.Remove(AmenityInput);
+		}
+		else
+		{
+			_inputList.Amenities.Add(AmenityInput);
+		}
+
+		AmenitiesSuggestions.Clear();
+	}
+
+	private void ToggleRating(string starValue, object? isChecked)
+	{
+
+		if ((bool)isChecked!)
+		{
+			_inputList.Ratings.Add(starValue);
+		}
+		else
+		{
+			_inputList.Ratings.Remove(starValue);
+		}
+	}
+}

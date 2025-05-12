@@ -8,18 +8,23 @@ using Microsoft.AspNetCore.ResponseCompression;
 using GotorzProjectMain.Hubs;
 using GotorzProjectMain.Services;
 using GotorzProjectMain.Models;
-using AutoMapper;
 using GotorzProjectMain.Services.Mapping;
-using GotorzProjectMain.Services.API;
+using GotorzProjectMain.Services.APIs.HotelAPIs;
+using GotorzProjectMain.Services.APIs;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Get API-info from Environment
+var apiKey = Environment.GetEnvironmentVariable("AMADEUS_API_KEY");
+var apiSecret = Environment.GetEnvironmentVariable("AMADEUS_API_SECRET");
+builder.Services.AddSingleton(new AmadeusSettings(apiKey, apiSecret));
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents()
 	.AddInteractiveWebAssemblyComponents();
 
-builder.Services.AddAutoMapper(typeof(UserMappingProfiles), typeof(VacationRequestMappingProfiles));
+builder.Services.AddAutoMapper(typeof(UserMappingProfiles), typeof(VacationRequestMappingProfiles), typeof(AmadeusMappingProfiles));
 
 // Ensure the configuration file is being read correctly
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -27,6 +32,13 @@ builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnC
 					 .AddJsonFile("Connection.json", optional: false, reloadOnChange: true);
 
 builder.Services.AddQuickGridEntityFrameworkAdapter();
+
+builder.Services.AddScoped<IRateLimiter, RateLimiter>();
+builder.Services.AddSingleton<ICityLookupService, CityLookupService>();
+builder.Services.AddHttpClient<IAmadeusHotelAPIService, AmadeusHotelAPIService>(client =>
+{
+	client.BaseAddress = new Uri("https://api.amadeus.com/");
+});
 
 //Used for getting the user data everytime an employee or customer is loaded
 builder.Services.AddScoped<IExtendedUserService, ExtendedUserService>();
@@ -37,6 +49,7 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
+
 
 builder.Services.AddScoped<VacationRequestSignalRService>();
 
