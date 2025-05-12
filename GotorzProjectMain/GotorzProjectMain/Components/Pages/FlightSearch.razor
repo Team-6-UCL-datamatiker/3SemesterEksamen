@@ -1,6 +1,8 @@
 ﻿@page "/flights/search"
 
+@using GotorzProjectMain.Components.Pages.HotelPages
 @using GotorzProjectMain.Models
+
 @rendermode InteractiveServer
 <details>
     <summary class="summary-heading">Flight Search 1</summary><br/>
@@ -9,6 +11,10 @@
 <details>
     <summary class="summary-heading">Flight Search 2</summary><br/>
     <FlightComponent ComponentId="2" OnFlightSelected="HandleFlightSelected" />
+</details>
+<details>
+    <summary class="summary-heading">Hotel Search</summary><br />
+    <SearchHotels />
 </details>
 
 @code
@@ -27,8 +33,6 @@
             Return = selection.Route;
         }
     }
-
-
 }
 
 

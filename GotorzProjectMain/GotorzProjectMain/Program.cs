@@ -11,6 +11,7 @@ using GotorzProjectMain.Models;
 using GotorzProjectMain.Services.Mapping;
 using GotorzProjectMain.Services.APIs.HotelAPIs;
 using GotorzProjectMain.Services.APIs;
+using GotorzProjectMain.Services.API;
 
 var builder = WebApplication.CreateBuilder(args);
 

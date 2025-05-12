@@ -99,6 +99,7 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
                 // Byg HTTP request
                 var listRequest = new HttpRequestMessage(HttpMethod.Get, $"v1/reference-data/locations/hotels/by-city?{listQuery}");
                 listRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                // Fortæller hvilken api version vi bruger. Hvis den ændrer sig, tror jeg det her smider en eller anden form for fejl - noget i den stil.
                 listRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.amadeus+json"));
 
                 var listResponse = await _client.SendAsync(listRequest);
@@ -117,7 +118,11 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
 
                     if (errorCode == 1157)
                     {
-                        ApiResponseInfoMessage = "Error 1157: Invalid city code - Amadeus backend occasionally fakes this when it chokes on valid city codes. Known issue. Not your fault. Retry manually in a minute or light a candle.";
+                        ApiResponseInfoMessage = "Invalid city code - Amadeus backend occasionally fakes this when it chokes on valid city codes. Known issue. Not your fault. Retry manually in a minute or light a candle.";
+                    }
+                    else if (errorCode == 895)
+                    {
+                        ApiResponseInfoMessage = "Nothing found for the requested criteria";
                     }
                     else
                     {
@@ -168,6 +173,7 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
             // Byg HTTP request
             var offerRequest = new HttpRequestMessage(HttpMethod.Get, $"v3/shopping/hotel-offers?{offerQuery}");
             offerRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            // Fortæller hvilken api version vi bruger. Hvis den ændrer sig, tror jeg det her smider en eller anden form for fejl - noget i den stil.
             offerRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.amadeus+json"));
 
             var offerResponse = await _client.SendAsync(offerRequest);
