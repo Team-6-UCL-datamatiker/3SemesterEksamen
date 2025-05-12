@@ -190,13 +190,6 @@
             childCount);
     }
 
-    private int? expandedIndex;
-
-    private void ToggleRow(int index)
-    {
-        expandedIndex = expandedIndex == index ? null : index;
-    }
-
     private async Task SelectFlight(FlightRoute route)
     {
         selectedFlightRoute = route;
