@@ -26,4 +26,16 @@
     <Folder Include="Migrations\" />
   </ItemGroup>
 
+	<!-- Bring SQL Server up before you launch debugging -->
+	<Target Name="ComposeUp" BeforeTargets="Build">
+		<Message Text="→ Starting SQL Server container..." Importance="high" />
+		<Exec Command="docker-compose -f &quot;$(ProjectDir)Docker\docker-compose.yml&quot; up -d" />
+	</Target>
+
+	<!-- Stop the container after you finish debugging -->
+	<Target Name="ComposeStop" AfterTargets="Clean">
+		<Message Text="← Stopping SQL Server container..." Importance="high" />
+		<Exec Command="docker-compose -f &quot;$(ProjectDir)Docker\docker-compose.yml&quot; stop" />
+	</Target>
+
 </Project>
