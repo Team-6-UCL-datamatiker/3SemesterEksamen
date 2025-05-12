@@ -1,0 +1,89 @@
+﻿@page "/hotelbookings/create"
+@using Microsoft.EntityFrameworkCore
+@using GotorzProjectMain.Models
+@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>HotelBooking</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="HotelBooking" OnValidSubmit="AddHotelBooking" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            <div class="mb-3">
+                <label for="hotelname" class="form-label">HotelName:</label> 
+                <InputText id="hotelname" @bind-Value="HotelBooking.HotelName" class="form-control" /> 
+                <ValidationMessage For="() => HotelBooking.HotelName" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="address" class="form-label">Address:</label> 
+                <InputText id="address" @bind-Value="HotelBooking.Address" class="form-control" /> 
+                <ValidationMessage For="() => HotelBooking.Address" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="roomdescription" class="form-label">RoomDescription:</label> 
+                <InputText id="roomdescription" @bind-Value="HotelBooking.RoomDescription" class="form-control" /> 
+                <ValidationMessage For="() => HotelBooking.RoomDescription" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="price" class="form-label">Price:</label> 
+                <InputNumber id="price" @bind-Value="HotelBooking.Price" class="form-control" /> 
+                <ValidationMessage For="() => HotelBooking.Price" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="bookinginformationlink" class="form-label">BookingInformationLink:</label> 
+                <InputText id="bookinginformationlink" @bind-Value="HotelBooking.BookingInformationLink" class="form-control" /> 
+                <ValidationMessage For="() => HotelBooking.BookingInformationLink" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="hotellink" class="form-label">HotelLink:</label> 
+                <InputText id="hotellink" @bind-Value="HotelBooking.HotelLink" class="form-control" /> 
+                <ValidationMessage For="() => HotelBooking.HotelLink" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="checkindate" class="form-label">CheckInDate:</label> 
+                <InputDate id="checkindate" @bind-Value="HotelBooking.CheckInDate" class="form-control" /> 
+                <ValidationMessage For="() => HotelBooking.CheckInDate" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="checkoutdate" class="form-label">CheckOutDate:</label> 
+                <InputDate id="checkoutdate" @bind-Value="HotelBooking.CheckOutDate" class="form-control" /> 
+                <ValidationMessage For="() => HotelBooking.CheckOutDate" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="misc" class="form-label">Misc:</label> 
+                <InputText id="misc" @bind-Value="HotelBooking.Misc" class="form-control" /> 
+                <ValidationMessage For="() => HotelBooking.Misc" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="vacationofferid" class="form-label">VacationOfferId:</label> 
+                <InputNumber id="vacationofferid" @bind-Value="HotelBooking.VacationOfferId" class="form-control" /> 
+                <ValidationMessage For="() => HotelBooking.VacationOfferId" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/hotelbookings">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private HotelBooking HotelBooking { get; set; } = new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddHotelBooking()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.HotelBookings.Add(HotelBooking);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/hotelbookings");
+    }
+}

@@ -5,11 +5,23 @@ namespace GotorzProjectMain.InputModels.VacationRequestInputModels
 {
     public class VacationRequestBaseInputModel
     {
-        [Required]
-        [Display(Name = "Country")]
-        public string Country { get; set; }
+		[Required]
+		[Display(Name = "Departure City")]
+		public string DepartureCity { get; set; }
 
-        [Required]
+		[Required]
+		[Display(Name = "Arrival City")]
+		public string ArrivalCity { get; set; }
+
+		[Required]
+		[Display(Name = "Departure Country")]
+		public string DepartureCountry { get; set; }
+
+		[Required]
+		[Display(Name = "Arrival Country")]
+		public string ArrivalCountry { get; set; }
+
+		[Required]
         [Display(Name = "Start Date")]
         public DateTime StartDate { get; set; } = DateTime.Now;
 		[Required]

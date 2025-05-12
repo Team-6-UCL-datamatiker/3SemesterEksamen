@@ -5,6 +5,7 @@
 @using System.Text
 @using System.Text.Encodings.Web
 @using AutoMapper
+@using GotorzProjectMain.Client.Components
 @using GotorzProjectMain.InputModels.Users.EmployeeInputModels
 @using GotorzProjectMain.Models
 @using Microsoft.AspNetCore.Authorization
@@ -52,6 +53,12 @@
 			</div>
 
 			<div class="form-floating mb-3">
+				<InputText id="username" @bind-Value="Input.CustomUsername" class="form-control" autocomplete="family-name" aria-required="true" placeholder="doe" />
+				<label for="username">Username</label>
+				<ValidationMessage For="() => Input.CustomUsername" class="text-danger" />
+			</div>
+
+			<div class="form-floating mb-3">
 				<InputText id="email" @bind-Value="Input.Email" class="form-control" autocomplete="email" aria-required="true" placeholder="name@example.com" />
 				<label for="email">Email</label>
 				<ValidationMessage For="() => Input.Email" class="text-danger" />
@@ -75,11 +82,7 @@
 				<ValidationMessage For="() => Input.Phone" class="text-danger" />
 			</div>
 
-			<div class="mb-3">
-				<label for="profilePicture" class="form-label">Profile Picture:</label>
-				<InputFile id="profilePicture" accept="image/*" OnChange="HandleProfilePictureUpload" class="form-control" />
-				<ValidationMessage For="() => Input.ProfilePictureFile" class="text-danger" />
-			</div>
+			<EmployeeProfilePicturePreview @bind-ProfilePictureFile="Input.ProfilePictureFile" />
 
 			<!--    Field to set role, might need revisiting    -->
 			<div class="form-check mb-3">
@@ -113,6 +116,7 @@
 	private string? ReturnUrl { get; set; }
 	private IEnumerable<IdentityError> _identityErrors = Enumerable.Empty<IdentityError>();
 	private string? _message => !_identityErrors.Any() ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
+	private bool _imageSavedToFile;
 	private EditContext? _ec;
 
 	protected override void OnInitialized()
@@ -140,20 +144,22 @@
 			_identityErrors = _identityErrors.Concat(result.Succeeded ? Enumerable.Empty<IdentityError>() : result.Errors);
 
 			//If a profile picture was uploaded, handle file processing
-			Uri? profilePictureUri = null;
+			string? profilePictureString = null;
 			if (Input.ProfilePictureFile != null)
 			{
-				profilePictureUri = await SaveProfilePicture(Input.ProfilePictureFile);
-				Console.WriteLine($"Profile picture saved at: {profilePictureUri}");
+				profilePictureString = await SaveProfilePicture(Input.ProfilePictureFile);
+				Logger.LogInformation($"Profile picture saved at: {profilePictureString}");
 			}
-
-			var defaultPicture = new Uri("/images/DefaultProfilePicture.jpg", UriKind.Relative);
+			else
+			{
+				profilePictureString = "/images/DefaultProfilePicture.jpg";
+			}
 
 			var employee = new Employee
 				{
 					Id = user.Id,
 					User = user,
-					ProfilePicture = profilePictureUri ?? defaultPicture, // Default picture if none uploaded
+					ProfilePicture = profilePictureString // Default picture if none uploaded
 				};
 
 			Mapper.Map(Input, employee);
@@ -176,7 +182,6 @@
 			Logger.LogError(ex, "An unexpected error occurred.");
 			throw;
 		}
-
 	}
 	private async Task SendConfirmationEmailAndRedirect(ApplicationUser user)
 	{
@@ -203,12 +208,12 @@
 	}
 
 	// Helper method to save the profile picture and return the file URI
-	private async Task<Uri?> SaveProfilePicture(IBrowserFile file)
+	private async Task<string?> SaveProfilePicture(IBrowserFile file)
 	{
 		try
 		{
-			// Use the file name from the uploaded file
-			var fileName = Path.GetFileName(file.Name);
+			// Use the file name from the uploaded file + guidId to not get duplicates
+			var fileName = $"{Guid.NewGuid()}{Path.GetFileName(file.Name)}";
 			var imagesFolder = Path.Combine(WebHostEnvironment.WebRootPath, "images");
 
 			if (!Directory.Exists(imagesFolder))
@@ -230,8 +235,8 @@
 			}
 
 			// Return the URI that points to the image.
-			var relativePath = "/images/" + fileName;
-			return new Uri(relativePath, UriKind.Relative);
+			string relativePath = "/images/" + fileName;
+			return relativePath;
 		}
 		catch (Exception ex)
 		{
@@ -239,20 +244,4 @@
 			return null;
 		}
 	}
-
-	// Event handler for the file input, which assigns the selected file to our model property.
-	private async Task HandleProfilePictureUpload(InputFileChangeEventArgs e)
-	{
-		var file = e.File;
-		if (file != null)
-		{
-			Input.ProfilePictureFile = file;
-		}
-		else
-		{
-			Input.ProfilePictureFile = null;
-		}
-	}
-
-
 }

@@ -1,0 +1,134 @@
+﻿@page "/flightbookings/edit"
+@using Microsoft.EntityFrameworkCore
+@using GotorzProjectMain.Models
+@inject IDbContextFactory<GotorzProjectMain.Data.ApplicationDbContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>FlightBooking</h2>
+<hr />
+@if (FlightBooking is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="FlightBooking" OnValidSubmit="UpdateFlightBooking" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="FlightBooking.FlightBookingId" value="@FlightBooking.FlightBookingId" />
+                <div class="mb-3">
+                    <label for="airline" class="form-label">Airline:</label>
+                    <InputText id="airline" @bind-Value="FlightBooking.Airline" class="form-control" />
+                    <ValidationMessage For="() => FlightBooking.Airline" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="seatnumber" class="form-label">SeatNumber:</label>
+                    <InputNumber id="seatnumber" @bind-Value="FlightBooking.SeatNumber" class="form-control" />
+                    <ValidationMessage For="() => FlightBooking.SeatNumber" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="price" class="form-label">Price:</label>
+                    <InputNumber id="price" @bind-Value="FlightBooking.Price" class="form-control" />
+                    <ValidationMessage For="() => FlightBooking.Price" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="bookinginformationlink" class="form-label">BookingInformationLink:</label>
+                    <InputText id="bookinginformationlink" @bind-Value="FlightBooking.BookingInformationLink" class="form-control" />
+                    <ValidationMessage For="() => FlightBooking.BookingInformationLink" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="departuretime" class="form-label">DepartureTime:</label>
+                    <InputDate id="departuretime" @bind-Value="FlightBooking.DepartureTime" class="form-control" />
+                    <ValidationMessage For="() => FlightBooking.DepartureTime" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="arrivaltime" class="form-label">ArrivalTime:</label>
+                    <InputDate id="arrivaltime" @bind-Value="FlightBooking.ArrivalTime" class="form-control" />
+                    <ValidationMessage For="() => FlightBooking.ArrivalTime" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="misc" class="form-label">Misc:</label>
+                    <InputText id="misc" @bind-Value="FlightBooking.Misc" class="form-control" />
+                    <ValidationMessage For="() => FlightBooking.Misc" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="departureairport" class="form-label">DepartureAirport:</label>
+                    <InputText id="departureairport" @bind-Value="FlightBooking.DepartureAirport" class="form-control" />
+                    <ValidationMessage For="() => FlightBooking.DepartureAirport" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="arrivalairport" class="form-label">ArrivalAirport:</label>
+                    <InputText id="arrivalairport" @bind-Value="FlightBooking.ArrivalAirport" class="form-control" />
+                    <ValidationMessage For="() => FlightBooking.ArrivalAirport" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="vacationofferid" class="form-label">VacationOfferId:</label>
+                    <InputNumber id="vacationofferid" @bind-Value="FlightBooking.VacationOfferId" class="form-control" />
+                    <ValidationMessage For="() => FlightBooking.VacationOfferId" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/flightbookings">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int FlightBookingId { get; set; }
+
+    [SupplyParameterFromForm]
+    private FlightBooking? FlightBooking { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        FlightBooking ??= await context.FlightBookings.FirstOrDefaultAsync(m => m.FlightBookingId == FlightBookingId);
+
+        if (FlightBooking is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateFlightBooking()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(FlightBooking!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!FlightBookingExists(FlightBooking!.FlightBookingId))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/flightbookings");
+    }
+
+    private bool FlightBookingExists(int flightbookingid)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.FlightBookings.Any(e => e.FlightBookingId == flightbookingid);
+    }
+}

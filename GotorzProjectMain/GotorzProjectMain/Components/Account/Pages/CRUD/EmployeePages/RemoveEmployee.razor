@@ -3,6 +3,8 @@
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Authorization
 @using GotorzProjectMain.Models
+@using System.Security.Claims
+
 @inject NavigationManager NavigationManager
 @inject Services.IExtendedUserService UserService
 @inject ApplicationDbContext Context
@@ -30,9 +32,9 @@
                 @if (employee.ProfilePicture != null)
                 {
                     <img src="@employee.ProfilePicture"
-                         alt="Profile"
-                         style="max-width:200px; max-height:200px;"
-                         class="img-thumbnail" />
+                    alt="Profile"
+                    style="max-width:200px; max-height:200px;"
+                    class="img-thumbnail" />
                 }
                 else
                 {
@@ -41,6 +43,10 @@
             </dd>
         </dl>
         <dl class="row">
+            <dt class="col-sm-2">@employee.User.FirstName</dt>
+            <dt class="col-sm-2">@employee.User.LastName</dt>
+            <dt class="col-sm-2">@employee.User.Email</dt>
+            <dt class="col-sm-2">@employee.CustomUserName</dt>
             <dt class="col-sm-2">Role</dt>
             <dd class="col-sm-10">@employee.IsAdmin</dd>
         </dl>
@@ -60,6 +66,9 @@
 @code {
     private Employee? employee;
 
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
+
     [SupplyParameterFromQuery]
     private string Id { get; set; }
     private string? _errorMessage;
@@ -78,6 +87,20 @@
     {
         try
         {
+            // Get the current user
+            var currentUser = (await AuthenticationStateTask).User;
+
+            // Sets userid to the current user's ID if the user is authenticated
+            var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                            ?? throw new InvalidOperationException("User not authenticated");
+
+            // Check if admin is trying to selfdestruct.
+            if (Id == userId)
+            {
+                _errorMessage = "Admin can't delete own profile. Delete from another admin profile";
+                return;
+            }
+
             if (employee is not null)
             {
                 // 🔥 Load the ApplicationUser

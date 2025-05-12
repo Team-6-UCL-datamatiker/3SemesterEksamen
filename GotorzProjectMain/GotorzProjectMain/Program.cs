@@ -8,17 +8,24 @@ using Microsoft.AspNetCore.ResponseCompression;
 using GotorzProjectMain.Hubs;
 using GotorzProjectMain.Services;
 using GotorzProjectMain.Models;
-using AutoMapper;
 using GotorzProjectMain.Services.Mapping;
+using GotorzProjectMain.Services.APIs.HotelAPIs;
+using GotorzProjectMain.Services.APIs;
+using GotorzProjectMain.Services.API;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Get API-info from Environment
+var apiKey = Environment.GetEnvironmentVariable("AMADEUS_API_KEY");
+var apiSecret = Environment.GetEnvironmentVariable("AMADEUS_API_SECRET");
+builder.Services.AddSingleton(new AmadeusSettings(apiKey, apiSecret));
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents()
 	.AddInteractiveWebAssemblyComponents();
 
-builder.Services.AddAutoMapper(typeof(UserMappingProfiles), typeof(VacationRequestMappingProfiles));
+builder.Services.AddAutoMapper(typeof(UserMappingProfiles), typeof(VacationRequestMappingProfiles), typeof(AmadeusMappingProfiles));
 
 // Ensure the configuration file is being read correctly
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -26,6 +33,13 @@ builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnC
 					 .AddJsonFile("Connection.json", optional: false, reloadOnChange: true);
 
 builder.Services.AddQuickGridEntityFrameworkAdapter();
+
+builder.Services.AddScoped<IRateLimiter, RateLimiter>();
+builder.Services.AddSingleton<ICityLookupService, CityLookupService>();
+builder.Services.AddHttpClient<IAmadeusHotelAPIService, AmadeusHotelAPIService>(client =>
+{
+	client.BaseAddress = new Uri("https://api.amadeus.com/");
+});
 
 //Used for getting the user data everytime an employee or customer is loaded
 builder.Services.AddScoped<IExtendedUserService, ExtendedUserService>();
@@ -36,6 +50,7 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
+
 
 builder.Services.AddScoped<VacationRequestSignalRService>();
 
@@ -58,12 +73,18 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
 
 if (builder.Environment.IsDevelopment())
 {
-    builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+	builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 }
 else
 {
-    builder.Services.AddScoped<IEmailSender<ApplicationUser>, GmailEmailSender>();
+	builder.Services.AddScoped<IEmailSender<ApplicationUser>, GmailEmailSender>();
 }
+
+// Service to handle flight API
+builder.Services.AddHttpClient<IFlightService, FlightService>(client =>
+{
+	client.BaseAddress = new Uri("https://serpapi.com/");
+});
 
 // Authorization policies
 builder.Services.AddAuthorization(options =>
@@ -88,7 +109,7 @@ builder.Services.AddSignalR();
 builder.Services.AddResponseCompression(opts =>
 {
 	opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-		[ "application/octet-stream" ]);
+		["application/octet-stream"]);
 });
 
 var app = builder.Build();
@@ -97,10 +118,10 @@ app.UseResponseCompression();
 
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+	var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+	var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-    await DbInitializer.Execute(scope.ServiceProvider, context, userManager);
+	await DbInitializer.Execute(scope.ServiceProvider, context, userManager);
 }
 
 // Configure the HTTP request pipeline.
@@ -115,6 +136,7 @@ else
 	// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
 	app.UseHsts();
 	app.UseMigrationsEndPoint();
+	app.UseMigrationsEndPoint();
 }
 
 app.UseHttpsRedirection();
@@ -127,6 +149,7 @@ app.UseAntiforgery();
 
 
 app.MapHub<VacationRequestHub>("/vacationrequesthub");
+app.MapHub<ChatHub>("/chathub");
 
 app.MapRazorComponents<App>()
 	.AddInteractiveServerRenderMode()
