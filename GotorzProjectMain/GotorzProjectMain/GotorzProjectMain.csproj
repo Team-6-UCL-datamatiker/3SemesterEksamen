@@ -29,13 +29,8 @@
 	<!-- Bring SQL Server up before you launch debugging -->
 	<Target Name="ComposeUp" BeforeTargets="Build">
 		<Message Text="→ Starting SQL Server container..." Importance="high" />
-		<Exec Command="docker-compose -f &quot;$(ProjectDir)Docker\docker-compose.yml&quot; up -d" />
-	</Target>
-
-	<!-- Stop the container after you finish debugging -->
-	<Target Name="ComposeStop" AfterTargets="Clean">
-		<Message Text="← Stopping SQL Server container..." Importance="high" />
-		<Exec Command="docker-compose -f &quot;$(ProjectDir)Docker\docker-compose.yml&quot; stop" />
+		<Exec Command="docker-compose -f $(ProjectDir)Docker\docker-compose.yml up -d" />
+		<Exec Command="cmd /c (sleep 5 || ping 127.0.0.1 -n 6)" />
 	</Target>
 
 </Project>
