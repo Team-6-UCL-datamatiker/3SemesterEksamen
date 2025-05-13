@@ -2540,7 +2540,18 @@ public class CityLookupService : ICityLookupService
                       .Take(max);
     }
 
-    // Returns both airport and city codes of a specific match - used after a match is found via Search()
-    public (string, string)? GetCodes(string input)
+	public IEnumerable<string> SearchContains(string input, int max = 10)
+	{
+		if (string.IsNullOrWhiteSpace(input))
+			return Enumerable.Empty<string>();
+
+		return Cities
+			.Where(key => key
+				.IndexOf(input, StringComparison.OrdinalIgnoreCase) >= 0)
+			.Take(max);
+	}
+
+	// Returns both airport and city codes of a specific match - used after a match is found via Search()
+	public (string, string)? GetCodes(string input)
         => _cityToIata.TryGetValue(input, out var codes) ? codes : null;
 }
