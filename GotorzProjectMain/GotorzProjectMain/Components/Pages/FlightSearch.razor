@@ -1,7 +1,11 @@
 ﻿@page "/flights/search"
 
+@using AutoMapper
 @using GotorzProjectMain.Components.Pages.HotelPages
 @using GotorzProjectMain.Models
+
+@inject IMapper Mapper
+@inject ILogger<FlightSearch> Logger
 
 @rendermode InteractiveServer
 <details>
@@ -14,13 +18,14 @@
 </details>
 <details>
     <summary class="summary-heading">Hotel Search</summary><br />
-    <SearchHotels />
+    <SearchHotels OnHotelSelected="HandleHotelSelected" />
 </details>
 
 @code
 {
     FlightRoute? Outward { get; set; }
     FlightRoute? Return { get; set; }
+    HotelBooking? HotelBooking { get; set; }
 
     private void HandleFlightSelected((string ComponentId, FlightRoute Route) selection)
     {
@@ -31,6 +36,18 @@
         else if (selection.ComponentId == "2")
         {
             Return = selection.Route;
+        }
+    }
+
+    private void HandleHotelSelected(Hotel selectedHotel)
+    {
+        try
+        {
+            HotelBooking = Mapper.Map<HotelBooking>(selectedHotel);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError($"Mapping error: {ex}");
         }
     }
 }

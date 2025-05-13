@@ -107,9 +107,9 @@
 
 						<div class="form-check">
 							<input class="form-check-input"
-								   type="checkbox"
-								   value="@starValue"
-								   @onchange="e => ToggleRating(starValue, e.Value)" />
+							type="checkbox"
+							value="@starValue"
+							@onchange="e => ToggleRating(starValue, e.Value)" />
 							<label class="form-check-label">@star</label>
 						</div>
 					}
@@ -300,6 +300,12 @@
 							<dd class="col-sm-10">@offer.BoardType</dd>
 						}
 					</dl>
+
+					<button @onclick="() => SelectHotel(hotel, offer)"
+					class="btn @((SelectedHotel == hotel && SelectedHotelOffer == offer) ? "btn-success" : "btn-outline-primary")"
+					style="margin-bottom: 0.5rem;">
+						@((SelectedHotel == hotel && SelectedHotelOffer == offer) ? "Selected" : "Select this offer")
+					</button>
 				</details>
 			}
 		}
@@ -343,6 +349,12 @@
 
 
 @code {
+	// Component Binding
+	public Hotel? SelectedHotel { get; set; }
+	[Parameter]
+	public EventCallback<Hotel> OnHotelSelected { get; set; }
+	private HotelOffer? SelectedHotelOffer { get; set; }
+
 	// Offer API
 	private EditContext? _ecOffer;
 	private AmadeusHotelOffersParameters _inputOffer = new();
@@ -545,5 +557,13 @@
 		{
 			_inputList.Ratings.Remove(starValue);
 		}
+	}
+	private async Task SelectHotel (Hotel hotel, HotelOffer offer) 
+	{
+		hotel.Offers = new[] { offer };
+		SelectedHotel = hotel;
+		SelectedHotelOffer = offer;
+
+		await OnHotelSelected.InvokeAsync(hotel);
 	}
 }
