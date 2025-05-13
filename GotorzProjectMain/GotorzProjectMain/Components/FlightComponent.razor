@@ -1,28 +1,35 @@
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Models.DTOs
 @using GotorzProjectMain.Services.API
+@using GotorzProjectMain.Services.APIs
+@using GotorzProjectMain.Components
 
 @inject IFlightService FlightService
+@inject ICityLookupService CityLookupService
 
 @rendermode InteractiveServer
 
 @* Inputs *@
 <div style="display:flex; gap:1rem; align-items:flex-start; margin-bottom:1rem; height:4rem">
-    <div>
-        <label for="fromCity">Depature City</label><br />
-        <input id="fromCity"
-               @bind="fromCity"
-               placeholder="Type a city"
-               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
-    </div>
+   <div>
+    <AutoCompleteInputComponent
+      Id="fromCity"
+      Label="Departure City"
+      Value="@fromCity"
+      ValueChanged="@(val => fromCity = val)"
+      Placeholder="Type a city"
+      SearchSuggestions="SearchCitySuggestions" />
+  </div>
 
-    <div>
-        <label for="toCity">Arrival City</label><br />
-        <input id="toCity"
-               @bind="toCity"
-               placeholder="Type a city"
-               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
-    </div>
+  <div>
+    <AutoCompleteInputComponent
+      Id="toCity"
+      Label="Arrival City"
+      Value="@toCity"
+      ValueChanged="@(val => toCity = val)"
+      Placeholder="Type a city"
+      SearchSuggestions="SearchCitySuggestions" />
+  </div>
 
     <div>
         <label for="outbound">Outbound Date</label><br />
@@ -55,6 +62,14 @@
     </div>
 
 </div>
+
+@* Error message *@
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="alert alert-warning">
+        @ErrorMessage
+    </div>
+}
 
 @if (FlightRoutes != null)
 {
@@ -128,8 +143,10 @@
     public EventCallback<(string ComponentId, FlightRoute Route)> OnFlightSelected { get; set; }
 
 
-    private string fromCity = "Copenhagen";
-    private string toCity = "London";
+    private string fromCity = "Copenhagen (CPH)";
+    private string toCity = "London, Heathrow (LHR)";
+
+
     private DateTime outbound = DateTime.Today.AddDays(7);
     private int adultCount = 1;
     private int childCount = 0;
@@ -150,6 +167,12 @@
                 : null;
 
 
+	// Autocomplete suggestions for departure city
+    private Task<List<string>> SearchCitySuggestions(string city)
+      => Task.FromResult(CityLookupService.SearchContains(city, 10).ToList());
+
+  
+
     // Performs a flight search using city names
     async Task Search()
     {
@@ -164,30 +187,41 @@
             return;
         }
 
-        // Look up airport codes based on user input
-        if (!CityAirportMap.Map.TryGetValue(fromCity, out string[] fromAirports)) //if it gets a match, it saves it to fromAirports else set errormessage
+		// Lookup airport codes for the given cities
+        var fromMatch = CityLookupService.GetCodes(fromCity);
+        if (fromMatch == null)
         {
-            ErrorMessage = $"Origin city “{fromCity}” is not supported.";
+            ErrorMessage = $"Depature “{fromCity}” not found.";
             return;
         }
-        if (!CityAirportMap.Map.TryGetValue(toCity, out string[] toAirports)) //if it gets a match, it saves it to toAirports else set errormessage
+
+        var toMatch = CityLookupService.GetCodes(toCity);
+        if (toMatch == null)
         {
-            ErrorMessage = $"Destination city “{toCity}” is not supported.";
+            ErrorMessage = $"Destination “{toCity}” not found.";
             return;
         }
 
 
-        // Pass comma-separated Airport codes to the API
-        string fromAirportsString = string.Join(",", fromAirports);
-        string toAirportsString = string.Join(",", toAirports);
+        // CityLookupService.GetCodes returns (CityCode, AirportCode)
+        string fromAirportCode = fromMatch.Value.AirportCode;
+        string toAirportCode = toMatch.Value.AirportCode;
 
         // Request flight offers from the external API
         FlightRoutes = await FlightService.SearchAsync(
-            fromAirportsString,
-            toAirportsString,
+            fromAirportCode,
+            toAirportCode,
             outbound,
             adultCount,
             childCount);
+
+        // Post-search, empty result
+        if (!FlightRoutes.Any())
+        {
+            ErrorMessage = "No flights found. Either you picked an unsupported code " +
+                           "(eg “London (LON)”) or there simply aren’t any offers " +
+                           "for that date and passenger count. Please try one of the suggestions above.";
+        }
     }
 
     private async Task SelectFlight(FlightRoute route)
@@ -196,9 +230,4 @@
         Console.WriteLine($"Selected route: {route.TotalPrice} DKK in component {ComponentId}");
         await OnFlightSelected.InvokeAsync((ComponentId, route));
     }
-
-
-
-
-
 }
