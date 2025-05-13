@@ -51,7 +51,7 @@
         _debounceCts = new();
         try
         {
-            // Cancel any in-progress debounce
+			// Wait for 300ms before searching for suggestions
             await Task.Delay(300, _debounceCts.Token);
             if (!string.IsNullOrWhiteSpace(Value))
                 Suggestions = await SearchSuggestions(Value);
