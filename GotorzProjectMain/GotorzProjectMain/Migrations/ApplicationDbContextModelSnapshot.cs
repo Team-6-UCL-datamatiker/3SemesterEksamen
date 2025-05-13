@@ -299,39 +299,45 @@ namespace GotorzProjectMain.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("HotelBookingId"));
 
                     b.Property<string>("Address")
-                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Adults")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BoardType")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("BookingInformationLink")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("CheckInDate")
+                    b.Property<DateTime?>("CheckInDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("CheckOutDate")
+                    b.Property<DateTime?>("CheckOutDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("HotelLink")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("HotelName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("HotelRating")
+                        .HasColumnType("int");
+
                     b.Property<string>("Misc")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<float>("Price")
                         .HasColumnType("real");
 
                     b.Property<string>("RoomDescription")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("VacationOfferId")
+                    b.Property<int?>("VacationOfferId")
                         .HasColumnType("int");
 
                     b.HasKey("HotelBookingId");
@@ -373,22 +379,6 @@ namespace GotorzProjectMain.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VacationOfferId"));
-
-                    b.Property<string>("ArrivalCity")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ArrivalCountry")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DepartureCity")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DepartureCountry")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EmployeeEmail")
                         .IsRequired()
@@ -684,9 +674,7 @@ namespace GotorzProjectMain.Migrations
                 {
                     b.HasOne("GotorzProjectMain.Models.VacationOffer", "VacationOffer")
                         .WithMany()
-                        .HasForeignKey("VacationOfferId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("VacationOfferId");
 
                     b.Navigation("VacationOffer");
                 });

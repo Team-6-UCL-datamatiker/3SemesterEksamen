@@ -1,10 +1,12 @@
-﻿@page "/offercomponent"
-
+﻿
+@using AutoMapper
 @using GotorzProjectMain.Components.Pages.HotelPages
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Data
 @inject NavigationManager NavigationManager
 @inject ApplicationDbContext Context
+@inject IMapper Mapper
+@inject ILogger<FlightSearch> Logger
 
 @rendermode InteractiveServer
 
@@ -19,10 +21,11 @@
 </details>
 <details>
     <summary class="summary-heading">Hotel Search</summary><br />
-    <SearchHotels />
+    <SearchHotels OnHotelSelected="HandleHotelSelected" />
 </details>
 
-<button />
+
+<button @onclick="CreateVacationOffer" disabled="@(OutwardRoute == null || ReturnRoute == null || HotelBooking == null)" class="btn btn-primary" style="padding: 0.4rem 1rem; padding-top: 0.6rem">Create Offer</button>
 
 @code
 {
@@ -38,7 +41,7 @@
     FlightBooking OutwardFlightBooking { get; set; }
     FlightBooking ReturnFlightBooking { get; set; }
 
-    HotelBooking HotelBooking { get; set; }
+    HotelBooking? HotelBooking { get; set; }
 
     FlightRoute? OutwardRoute { get; set; }
     FlightRoute? ReturnRoute { get; set; }
@@ -102,14 +105,19 @@
             }
         }
 
+        if (HotelBooking != null)
+        {
+            HotelBooking.VacationOfferId = vacationOffer.VacationOfferId;
+            Context.HotelBookings.Add(HotelBooking);
+        }
+
         vacationOffer.StartDate = OutwardFlightBooking.DepartureTime;
         vacationOffer.EndDate = ReturnRoute.Legs.Last().ArrivalTime;
         vacationOffer.OfferStatus = OfferStatus.Waiting;
-        // TODO: Snak om expiration date
         vacationOffer.ExpirationDate = DateTime.Now.AddDays(10);
         vacationOffer.VacationRequestId = VacationRequest.VacationRequestId;
         // TODO: tilføj Hotel pris i nedenstående udregning
-        vacationOffer.TotalPrice = Convert.ToSingle(OutwardRoute.TotalPrice + ReturnRoute.TotalPrice);
+        vacationOffer.TotalPrice = Convert.ToSingle(OutwardRoute.TotalPrice + ReturnRoute.TotalPrice) + HotelBooking.Price;
         vacationOffer.EmployeeEmail = Employee.User.Email;
 
     }
@@ -123,6 +131,18 @@
         else if (selection.ComponentId == "2")
         {
             ReturnRoute = selection.Route;
+        }
+    }
+
+    private void HandleHotelSelected(Hotel selectedHotel)
+    {
+        try
+        {
+            HotelBooking = Mapper.Map<HotelBooking>(selectedHotel);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError($"Mapping error: {ex}");
         }
     }
 
