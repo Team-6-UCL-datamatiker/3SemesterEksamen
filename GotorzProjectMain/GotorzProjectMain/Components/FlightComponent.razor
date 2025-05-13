@@ -1,8 +1,10 @@
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Models.DTOs
 @using GotorzProjectMain.Services.API
+@using GotorzProjectMain.Services.APIs
 
 @inject IFlightService FlightService
+@inject ICityLookupService CityLookupService
 
 @rendermode InteractiveServer
 
@@ -13,7 +15,22 @@
         <input id="fromCity"
                @bind="fromCity"
                placeholder="Type a city"
-               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
+               autocomplete="off"
+               @oninput="@(e => OnFromInput(e))"
+               @onkeydown="HandleFromKeyPress"
+               class="form-control" />
+        @if (FromSuggestions.Any() && !string.IsNullOrWhiteSpace(fromCity))
+        {
+            <ul class="list-group position-absolute mt-1 w-100" style="z-index:1000;">
+                @foreach (var suggestion in FromSuggestions)
+                {
+                    <li class="list-group-item list-group-item-action"
+                        @onclick="() => SelectFrom(suggestion)">
+                        @suggestion
+                    </li>
+                }
+            </ul>
+        }
     </div>
 
     <div>
@@ -21,7 +38,22 @@
         <input id="toCity"
                @bind="toCity"
                placeholder="Type a city"
-               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
+               autocomplete="off"
+               @oninput="@(e => OnToInput(e))"
+               @onkeydown="HandleToKeyPress"
+               class="form-control" />
+        @if (ToSuggestions.Any() && !string.IsNullOrWhiteSpace(toCity))
+        {
+            <ul class="list-group position-absolute mt-1 w-100" style="z-index:1000;">
+                @foreach (var suggestion in ToSuggestions)
+                {
+                    <li class="list-group-item list-group-item-action"
+                        @onclick="() => SelectTo(suggestion)">
+                        @suggestion
+                    </li>
+                }
+            </ul>
+        }
     </div>
 
     <div>
@@ -55,6 +87,14 @@
     </div>
 
 </div>
+
+@* Error message *@
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="alert alert-warning">
+        @ErrorMessage
+    </div>
+}
 
 @if (FlightRoutes != null)
 {
@@ -128,8 +168,15 @@
     public EventCallback<(string ComponentId, FlightRoute Route)> OnFlightSelected { get; set; }
 
 
-    private string fromCity = "Copenhagen";
-    private string toCity = "London";
+    private string fromCity = "Copenhagen (CPH)";
+    private string toCity = "London, Heathrow (LHR)";
+
+    // Autocompletion
+    private List<string> FromSuggestions = new();
+    private List<string> ToSuggestions = new();
+    private CancellationTokenSource? _debounceCts;
+
+
     private DateTime outbound = DateTime.Today.AddDays(7);
     private int adultCount = 1;
     private int childCount = 0;
@@ -164,30 +211,41 @@
             return;
         }
 
-        // Look up airport codes based on user input
-        if (!CityAirportMap.Map.TryGetValue(fromCity, out string[] fromAirports)) //if it gets a match, it saves it to fromAirports else set errormessage
+		// Lookup airport codes for the given cities
+        var fromMatch = CityLookupService.GetCodes(fromCity);
+        if (fromMatch == null)
         {
-            ErrorMessage = $"Origin city “{fromCity}” is not supported.";
+            ErrorMessage = $"Depature “{fromCity}” not found.";
             return;
         }
-        if (!CityAirportMap.Map.TryGetValue(toCity, out string[] toAirports)) //if it gets a match, it saves it to toAirports else set errormessage
+
+        var toMatch = CityLookupService.GetCodes(toCity);
+        if (toMatch == null)
         {
-            ErrorMessage = $"Destination city “{toCity}” is not supported.";
+            ErrorMessage = $"Destination “{toCity}” not found.";
             return;
         }
 
 
-        // Pass comma-separated Airport codes to the API
-        string fromAirportsString = string.Join(",", fromAirports);
-        string toAirportsString = string.Join(",", toAirports);
+        // CityLookupService.GetCodes returns (CityCode, AirportCode)
+        string fromAirportCode = fromMatch.Value.AirportCode;
+        string toAirportCode = toMatch.Value.AirportCode;
 
         // Request flight offers from the external API
         FlightRoutes = await FlightService.SearchAsync(
-            fromAirportsString,
-            toAirportsString,
+            fromAirportCode,
+            toAirportCode,
             outbound,
             adultCount,
             childCount);
+
+        // Post-search, empty result
+        if (!FlightRoutes.Any())
+        {
+            ErrorMessage = "No flights found. Either you picked an unsupported code " +
+                           "(eg “London (LON)”) or there simply aren’t any offers " +
+                           "for that date and passenger count. Please try one of the suggestions above.";
+        }
     }
 
     private async Task SelectFlight(FlightRoute route)
@@ -198,7 +256,49 @@
     }
 
 
-
-
+	// Autocompletion for departure city
+    private async Task OnFromInput(ChangeEventArgs e)
+    {
+        _debounceCts?.Cancel();
+        _debounceCts = new CancellationTokenSource();
+        fromCity = e?.Value?.ToString() ?? "";
+        await Task.Delay(300, _debounceCts.Token);
+        FromSuggestions = CityLookupService.SearchContains(fromCity).ToList();
+    }
+	// Handle key press for departure city
+    private void HandleFromKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter") return;
+        if (FromSuggestions.Any())
+            SelectFrom(FromSuggestions.First());
+    }
+	// Select a city from the suggestions
+    private void SelectFrom(string city)
+    {
+        fromCity = city;
+        FromSuggestions.Clear();
+    }
+	// Autocompletion for arrival city
+    private async Task OnToInput(ChangeEventArgs e)
+    {
+        _debounceCts?.Cancel();
+        _debounceCts = new CancellationTokenSource();
+        toCity = e?.Value?.ToString() ?? "";
+        await Task.Delay(300, _debounceCts.Token);
+        ToSuggestions = CityLookupService.SearchContains(toCity).ToList();
+    }
+	// Handle key press for arrival city
+    private void HandleToKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter") return;
+        if (ToSuggestions.Any())
+            SelectTo(ToSuggestions.First());
+    }
+	// Select a city from the suggestions
+    private void SelectTo(string city)
+    {
+        toCity = city;
+        ToSuggestions.Clear();
+    }
 
 }
