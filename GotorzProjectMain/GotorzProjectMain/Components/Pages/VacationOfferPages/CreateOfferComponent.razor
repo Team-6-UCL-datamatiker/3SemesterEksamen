@@ -1,0 +1,130 @@
+﻿@page "/offercomponent"
+
+@using GotorzProjectMain.Components.Pages.HotelPages
+@using GotorzProjectMain.Models
+@using GotorzProjectMain.Data
+@inject NavigationManager NavigationManager
+@inject ApplicationDbContext Context
+
+@rendermode InteractiveServer
+
+
+<details>
+    <summary class="summary-heading">Flight Search 1</summary><br />
+    <FlightComponent ComponentId="1" OnFlightSelected="HandleFlightSelected" />
+</details>
+<details>
+    <summary class="summary-heading">Flight Search 2</summary><br />
+    <FlightComponent ComponentId="2" OnFlightSelected="HandleFlightSelected" />
+</details>
+<details>
+    <summary class="summary-heading">Hotel Search</summary><br />
+    <SearchHotels />
+</details>
+
+<button />
+
+@code
+{
+    [Parameter]
+    public VacationRequest VacationRequest { get; set; }
+
+    [Parameter]
+    public Employee Employee { get; set; }
+
+
+    VacationOffer vacationOffer = new VacationOffer();
+
+    FlightBooking OutwardFlightBooking { get; set; }
+    FlightBooking ReturnFlightBooking { get; set; }
+
+    HotelBooking HotelBooking { get; set; }
+
+    FlightRoute? OutwardRoute { get; set; }
+    FlightRoute? ReturnRoute { get; set; }
+
+    public void CreateVacationOffer()
+    {
+        Context.VacationOffers.Add(vacationOffer);
+        Context.SaveChanges();
+
+        if (OutwardRoute != null)
+        {
+            OutwardFlightBooking = new FlightBooking
+                {
+                    FlightRoute = OutwardRoute,
+                    Airline = string.Join(", ", OutwardRoute.Legs.Select(leg => leg.Airline)),
+                    DepartureTime = OutwardRoute.Legs.First().DepartureTime,
+                    VacationOfferId = vacationOffer.VacationOfferId
+                };
+            Context.FlightBookings.Add(OutwardFlightBooking);
+            Context.SaveChanges();
+
+            Context.FlightRoutes.Add(OutwardRoute);
+            Context.SaveChanges();
+
+            foreach (var flight in OutwardRoute.Legs)
+            {
+                flight.FlightRouteId = OutwardRoute.RouteId;
+                Context.Flights.Add(flight);
+            }
+            foreach (var layover in OutwardRoute.Layovers)
+            {
+                layover.FlightRouteId = OutwardRoute.RouteId;
+                Context.Layovers.Add(layover);
+            }
+        }
+
+        if (ReturnRoute != null)
+        {
+            ReturnFlightBooking = new FlightBooking
+                {
+                    FlightRoute = ReturnRoute,
+                    Airline = string.Join(", ", ReturnRoute.Legs.Select(leg => leg.Airline)),
+                    DepartureTime = ReturnRoute.Legs.First().DepartureTime,
+                    VacationOfferId = vacationOffer.VacationOfferId
+                };
+            Context.FlightBookings.Add(ReturnFlightBooking);
+            Context.SaveChanges();
+
+            Context.FlightRoutes.Add(ReturnRoute);
+            Context.SaveChanges();
+
+            foreach (var flight in ReturnRoute.Legs)
+            {
+                flight.FlightRouteId = ReturnRoute.RouteId;
+                Context.Flights.Add(flight);
+            }
+            foreach (var layover in ReturnRoute.Layovers)
+            {
+                layover.FlightRouteId = ReturnRoute.RouteId;
+                Context.Layovers.Add(layover);
+            }
+        }
+
+        vacationOffer.StartDate = OutwardFlightBooking.DepartureTime;
+        vacationOffer.EndDate = ReturnRoute.Legs.Last().ArrivalTime;
+        vacationOffer.OfferStatus = OfferStatus.Waiting;
+        // TODO: Snak om expiration date
+        vacationOffer.ExpirationDate = DateTime.Now.AddDays(10);
+        vacationOffer.VacationRequestId = VacationRequest.VacationRequestId;
+        // TODO: tilføj Hotel pris i nedenstående udregning
+        vacationOffer.TotalPrice = Convert.ToSingle(OutwardRoute.TotalPrice + ReturnRoute.TotalPrice);
+        vacationOffer.EmployeeEmail = Employee.User.Email;
+
+    }
+
+    private void HandleFlightSelected((string ComponentId, FlightRoute Route) selection)
+    {
+        if (selection.ComponentId == "1")
+        {
+            OutwardRoute = selection.Route;
+        }
+        else if (selection.ComponentId == "2")
+        {
+            ReturnRoute = selection.Route;
+        }
+    }
+
+
+}

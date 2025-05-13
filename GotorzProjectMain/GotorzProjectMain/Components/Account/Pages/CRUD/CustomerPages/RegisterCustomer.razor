@@ -28,176 +28,188 @@
 <h1>Register</h1>
 
 <div class="row">
-	<div class="col-md-4">
-		<EditForm EditContext="_ec" OnValidSubmit="RegisterUser" FormName="register">
-			<DataAnnotationsValidator />
-			<h2>Create a new account.</h2>
-			<hr />
-			@* 			<ValidationSummary class="text-danger" role="alert" /> *@
+    <div class="col-md-4">
+        <EditForm EditContext="_ec" OnValidSubmit="RegisterUser" FormName="register">
+            <DataAnnotationsValidator />
+            <h2>Create a new account.</h2>
+            <hr />
+            @* 			<ValidationSummary class="text-danger" role="alert" /> *@
 
-			<div class="form-floating mb-3">
-				<InputText id="first-name" @bind-Value="Input.FirstName" class="form-control" autocomplete="given-name" aria-required="true" />
-				<label for="first-name">First Name</label>
-				<ValidationMessage For="() => Input.FirstName" class="alert alert-danger mt-3" />
-			</div>
+            <div class="form-floating mb-3">
+                <InputText id="first-name" @bind-Value="Input.FirstName" class="form-control" autocomplete="given-name" aria-required="true" />
+                <label for="first-name">First Name</label>
+                <ValidationMessage For="() => Input.FirstName" class="alert alert-danger mt-3" />
+            </div>
 
-			<div class="form-floating mb-3">
-				<InputText id="last-name" @bind-Value="Input.LastName" class="form-control" autocomplete="family-name" aria-required="true" />
-				<label for="last-name">Last Name</label>
-				<ValidationMessage For="() => Input.LastName" class="alert alert-danger mt-3" />
-			</div>
+            <div class="form-floating mb-3">
+                <InputText id="last-name" @bind-Value="Input.LastName" class="form-control" autocomplete="family-name" aria-required="true" />
+                <label for="last-name">Last Name</label>
+                <ValidationMessage For="() => Input.LastName" class="alert alert-danger mt-3" />
+            </div>
 
-			<div class="form-floating mb-3">
-				<InputText id="email" @bind-Value="Input.Email" class="form-control" autocomplete="email" aria-required="true" />
-				<label for="email">Email</label>
-				<ValidationMessage For="() => Input.Email" class="alert alert-danger mt-3" />
-			</div>
+            <div class="form-floating mb-3">
+                <InputText id="email" @bind-Value="Input.Email" class="form-control" autocomplete="email" aria-required="true" />
+                <label for="email">Email</label>
+                <ValidationMessage For="() => Input.Email" class="alert alert-danger mt-3" />
+            </div>
 
-			<div class="form-floating mb-3">
-				<InputText id="username" @bind-Value="Input.CustomUsername" class="form-control" autocomplete="username" aria-required="true" oninput="@(async (ChangeEventArgs e) => await DebounceUsernameCheck(e))" />
-				<label for="username">Username</label>
-				<ValidationMessage For="() => Input.CustomUsername" class="alert alert-danger mt-3" />
-			</div>
+            <div class="form-floating mb-3">
+                <InputText id="username" @bind-Value="Input.CustomUsername" class="form-control" autocomplete="username" aria-required="true" oninput="@(async (ChangeEventArgs e) => await DebounceUsernameCheck(e))" />
+                <label for="username">Username</label>
+                <ValidationMessage For="() => Input.CustomUsername" class="alert alert-danger mt-3" />
+            </div>
 
-			<div class="form-floating mb-3">
-				<InputText id="password" type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" />
-				<label for="password">Password</label>
-				<ValidationMessage For="() => Input.Password" class="alert alert-danger mt-3" />
-			</div>
+            <div class="form-floating mb-3">
+                <InputText id="password" type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" />
+                <label for="password">Password</label>
+                <ValidationMessage For="() => Input.Password" class="alert alert-danger mt-3" />
+            </div>
 
-			<div class="form-floating mb-3">
-				<InputText id="confirm-password" type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" />
-				<label for="confirm-password">Confirm Password</label>
-				<ValidationMessage For="() => Input.ConfirmPassword" class="alert alert-danger mt-3" />
-			</div>
+            <div class="form-floating mb-3">
+                <InputText id="confirm-password" type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" />
+                <label for="confirm-password">Confirm Password</label>
+                <ValidationMessage For="() => Input.ConfirmPassword" class="alert alert-danger mt-3" />
+            </div>
 
-			<div class="form-floating mb-3">
-				<InputText id="phone" @bind-Value="Input.Phone" class="form-control" aria-required="true" onblur="@(() => { if (string.IsNullOrWhiteSpace(Input.Phone)) { Input.Phone = null; _ec.Validate(); }})" />
-				<label for="phone">Phone Number (optional)</label>
-				<ValidationMessage For="() => Input.Phone" class="alert alert-danger mt-3" />
-			</div>
+            <div class="form-floating mb-3">
+                <InputText id="phone" @bind-Value="Input.Phone" class="form-control" aria-required="true" onblur="@(() => { if (string.IsNullOrWhiteSpace(Input.Phone)) { Input.Phone = null; _ec.Validate(); }})" />
+                <label for="phone">Phone Number (optional)</label>
+                <ValidationMessage For="() => Input.Phone" class="alert alert-danger mt-3" />
+            </div>
 
-			<button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
-		</EditForm>
-		<StatusMessage Message="@_message" />
-	</div>
-	@* // <ExternalLoginPicker /> can be used to add third party authentications systems such as Google*@
+            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
+        </EditForm>
+        <StatusMessage Message="@_message" />
+    </div>
+    @* // <ExternalLoginPicker /> can be used to add third party authentications systems such as Google*@
 </div>
 
 @code {
-	[SupplyParameterFromForm]
-	private RegisterCustomerInputModel Input { get; set; } = new();
-	[SupplyParameterFromQuery]
-	private string? ReturnUrl { get; set; }
-	private IEnumerable<IdentityError> _identityErrors = Enumerable.Empty<IdentityError>();
-	private string? _message => !_identityErrors.Any() ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
-	private EditContext? _ec;
-	private string? _userNameErrorMessage;
-	private CancellationTokenSource? _debounceCts;
-	private ValidationMessageStore? _messageStore;
-	private FieldIdentifier _inputUserNameField;
+    [SupplyParameterFromForm]
+    private RegisterCustomerInputModel Input { get; set; } = new();
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+    private IEnumerable<IdentityError> _identityErrors = Enumerable.Empty<IdentityError>();
+    private string? _message => !_identityErrors.Any() ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
+    private EditContext? _ec;
+    private string? _userNameErrorMessage;
+    private CancellationTokenSource? _debounceCts;
+    private ValidationMessageStore? _messageStore;
+    private FieldIdentifier _inputUserNameField;
 
-	protected override void OnInitialized()
-	{
-		_ec = new EditContext(Input);
-		_messageStore = new ValidationMessageStore(_ec);
-		_inputUserNameField = new FieldIdentifier(Input, nameof(Input.CustomUsername));
-	}
+    protected override void OnInitialized()
+    {
+        _ec = new EditContext(Input);
+        _messageStore = new ValidationMessageStore(_ec);
+        _inputUserNameField = new FieldIdentifier(Input, nameof(Input.CustomUsername));
+    }
 
-	public async Task RegisterUser()
-	{
-		try
-		{
-			var user = new ApplicationUser();
+    public async Task RegisterUser()
+    {
+        try
+        {
+            var user = new ApplicationUser();
 
-			// UserStore = The object that actually knows how to create, read, update, delete users from your database.
-			await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+            // UserStore = The object that actually knows how to create, read, update, delete users from your database.
+            await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
 
-			// Casts userstore to an IUserEmailStore<ApplicationUser>. Meaning: it forces the underlying database / user - store thing to support email operations like setting, getting, verifying emails for users.
-			var emailStore = (IUserEmailStore<ApplicationUser>)UserStore;
-			await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+            // Casts userstore to an IUserEmailStore<ApplicationUser>. Meaning: it forces the underlying database / user - store thing to support email operations like setting, getting, verifying emails for users.
+            var emailStore = (IUserEmailStore<ApplicationUser>)UserStore;
+            await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
 
-			// Giver identityErrors en værdi hvis metoden ikke returnerer succes. identityErrors bliver vist i browseren i så fald.			
-			var result = await UserManager.CreateAsync(user, Input.Password);
-			_identityErrors = _identityErrors.Concat(result.Succeeded ? Enumerable.Empty<IdentityError>() : result.Errors);
+            // Giver identityErrors en værdi hvis metoden ikke returnerer succes. identityErrors bliver vist i browseren i så fald.
+            var result = await UserManager.CreateAsync(user, Input.Password);
+            _identityErrors = _identityErrors.Concat(result.Succeeded ? Enumerable.Empty<IdentityError>() : result.Errors);
 
-			result = await UserManager.AddToRoleAsync(user, "Customer");
-			_identityErrors = _identityErrors.Concat(result.Succeeded ? Enumerable.Empty<IdentityError>() : result.Errors);
+            result = await UserManager.AddToRoleAsync(user, "Customer");
+            _identityErrors = _identityErrors.Concat(result.Succeeded ? Enumerable.Empty<IdentityError>() : result.Errors);
 
-			var customer = new Customer
-				{
-					Id = user.Id,
-					User = user
-				};
+            var customer = new Customer
+                {
+                    Id = user.Id,
+                    User = user
+                };
 
-			Mapper.Map(Input, customer);
+            Mapper.Map(Input, customer);
 
-			Context.Customers.Add(customer);
-			await Context.SaveChangesAsync();
+            Context.Customers.Add(customer);
+            await Context.SaveChangesAsync();
 
-			// Er det her noget vi bruger?
-			Logger.LogInformation($"User ({user.Id}) created a new account with password.");
+            // Er det her noget vi bruger?
+            Logger.LogInformation($"User ({user.Id}) created a new account with password.");
 
-			await SendConfirmationEmailAndRedirect(user);
-		}
-		catch (Exception ex)
-		{
-			Logger.LogError(ex, "An unexpected error occurred.");
-			throw;
-		}
+            await SendConfirmationEmailAndRedirect(user);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "An unexpected error occurred.");
+            throw;
+        }
 
-	}
+    }
 
-	private async Task DebounceUsernameCheck(ChangeEventArgs e)
-	{
-		_messageStore.Clear(_inputUserNameField); // wipe old errors
-		_debounceCts?.Cancel();
-		_debounceCts?.Dispose();
-		_debounceCts = new CancellationTokenSource();
+    private async Task DebounceUsernameCheck(ChangeEventArgs e)
+    {
+        _messageStore.Clear(_inputUserNameField); // wipe old errors
+        _debounceCts?.Cancel();
+        _debounceCts?.Dispose();
+        _debounceCts = new CancellationTokenSource();
 
-		try
-		{
-			if (e.Value is null)
-			{
-				return;
-			}
+        try
+        {
+            if (e.Value is null)
+            {
+                return;
+            }
 
-			await Task.Delay(500, _debounceCts.Token); // 500ms debounce
-			_userNameErrorMessage = await Context.Customers.AnyAsync(c => c.CustomUserName.Equals(e.Value.ToString(), StringComparison.OrdinalIgnoreCase)) ? "Sorry, that username is already in use. Please try a different one." : null;
+            await Task.Delay(500, _debounceCts.Token); // 500ms debounce
+            
+            #region
+            // TODO: snak om _userNameErrorMessage
+            // Blev nød til at skifte denne kodeblock ud med hvad der kommer efter region. Er ikke sikker på problemet, så lad os snakke om det.
+            // _userNameErrorMessage = await Context.Customers.AnyAsync(c => c.CustomUserName.Equals(e.Value.ToString(), StringComparison.OrdinalIgnoreCase)) ? "Sorry, that username is already in use. Please try a different one." : null;
+            #endregion
+            var inputValue = e.Value?.ToString()?.ToUpper() ?? string.Empty;
 
-			if (_userNameErrorMessage is not null)
-			{
-				_messageStore.Add(_inputUserNameField, _userNameErrorMessage); // add new error
-				_ec.NotifyValidationStateChanged();
-			}
-		}
-		catch (TaskCanceledException)
-		{
-			// Ignore, because it means user typed again before 500ms
-		}
-	}
+            _userNameErrorMessage = await Context.Customers
+                .AnyAsync(c => c.CustomUserName.ToUpper() == inputValue)
+                ? "Sorry, that username is already in use. Please try a different one."
+                : null;
 
-	private async Task SendConfirmationEmailAndRedirect(ApplicationUser user)
-	{
-		// Link til emailbekræftelse, tror jeg? Noget i den stil.
-		var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
-		code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-		var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-			NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-			new Dictionary<string, object?> { ["userId"] = user.Id, ["code"] = code, ["returnUrl"] = ReturnUrl });
 
-		await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+            if (_userNameErrorMessage is not null)
+            {
+                _messageStore.Add(_inputUserNameField, _userNameErrorMessage); // add new error
+                _ec.NotifyValidationStateChanged();
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            // Ignore, because it means user typed again before 500ms
+        }
+    }
 
-		if (UserManager.Options.SignIn.RequireConfirmedAccount)
-		{
-			NavigationManager.NavigateTo(
-				$"/Account/RegisterConfirmation?email={WebUtility.UrlEncode(Input.Email)}&returnUrl={WebUtility.UrlEncode(ReturnUrl ?? "/")}",
-				forceLoad: false);
-		}
-		else
-		{
-			await SignInManager.SignInAsync(user, isPersistent: false);
-			NavigationManager.NavigateTo(ReturnUrl ?? "/");
-		}
-	}
+    private async Task SendConfirmationEmailAndRedirect(ApplicationUser user)
+    {
+        // Link til emailbekræftelse, tror jeg? Noget i den stil.
+        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+            new Dictionary<string, object?> { ["userId"] = user.Id, ["code"] = code, ["returnUrl"] = ReturnUrl });
+
+        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+        if (UserManager.Options.SignIn.RequireConfirmedAccount)
+        {
+            NavigationManager.NavigateTo(
+                $"/Account/RegisterConfirmation?email={WebUtility.UrlEncode(Input.Email)}&returnUrl={WebUtility.UrlEncode(ReturnUrl ?? "/")}",
+                forceLoad: false);
+        }
+        else
+        {
+            await SignInManager.SignInAsync(user, isPersistent: false);
+            NavigationManager.NavigateTo(ReturnUrl ?? "/");
+        }
+    }
 }
