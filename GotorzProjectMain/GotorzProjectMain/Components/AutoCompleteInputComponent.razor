@@ -1,0 +1,78 @@
+﻿@using Microsoft.AspNetCore.Components.Web
+
+<div class="position-relative">
+    <label for="@Id">@Label</label><br />
+    <input id="@Id"
+    class="form-control"
+    placeholder="@Placeholder"
+    autocomplete="off"
+    @bind="Value"
+    @oninput="OnInput"
+    @onkeydown="HandleKeyPress" />
+
+    @if (Suggestions.Any())
+    {
+        <ul class="list-group position-absolute mt-1 w-100" style="z-index:1000;">
+            @foreach (var suggestion in Suggestions)
+            {
+                <li class="list-group-item list-group-item-action"
+                @onclick="() => Select(suggestion)">
+                    @suggestion
+                </li>
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    [Parameter] public string Id { get; set; } = Guid.NewGuid().ToString();
+    [Parameter] public string Label { get; set; } = "City";
+    [Parameter] public string Value { get; set; } = string.Empty;
+    // Event callback to notify parent of value changes
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    // Function provided by the parent to fetch suggestion list
+    [Parameter] public Func<string, Task<List<string>>> SearchSuggestions { get; set; } = default!;
+    [Parameter] public string Placeholder { get; set; } = "Type a city";
+
+    private List<string> Suggestions = new();
+
+    // Debounce token to prevent too-frequent searches
+    private CancellationTokenSource? _debounceCts;
+
+    // Handles user input events, debounces, and fetches suggestions via provided delegate.
+    private async Task OnInput(ChangeEventArgs e)
+    {
+        // Update the bound value
+        Value = e?.Value?.ToString() ?? "";
+        await ValueChanged.InvokeAsync(Value);
+
+        // Cancel any in-progress debounce
+        _debounceCts?.Cancel();
+        _debounceCts = new();
+        try
+        {
+            // Cancel any in-progress debounce
+            await Task.Delay(300, _debounceCts.Token);
+            if (!string.IsNullOrWhiteSpace(Value))
+                Suggestions = await SearchSuggestions(Value);
+        }
+        catch (TaskCanceledException)
+        {
+            // Silently ignore if debounce was reset :D
+        }
+    }
+
+    // Handles Enter key by selecting the first suggestion.
+  private void HandleKeyPress(KeyboardEventArgs e)
+  {
+    if (e.Key == "Enter" && Suggestions.Any())
+      _ = Select(Suggestions.First());
+  }
+
+    // Clears suggestions and notifies parent of selected suggestion.
+  private async Task Select(string suggestion)
+  {
+    Suggestions.Clear();
+    await ValueChanged.InvokeAsync(suggestion);
+  }
+}

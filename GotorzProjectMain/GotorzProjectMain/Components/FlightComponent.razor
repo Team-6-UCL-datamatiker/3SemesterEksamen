@@ -2,6 +2,7 @@
 @using GotorzProjectMain.Models.DTOs
 @using GotorzProjectMain.Services.API
 @using GotorzProjectMain.Services.APIs
+@using GotorzProjectMain.Components
 
 @inject IFlightService FlightService
 @inject ICityLookupService CityLookupService
@@ -10,51 +11,25 @@
 
 @* Inputs *@
 <div style="display:flex; gap:1rem; align-items:flex-start; margin-bottom:1rem; height:4rem">
-    <div>
-        <label for="fromCity">Depature City</label><br />
-        <input id="fromCity"
-               @bind="fromCity"
-               placeholder="Type a city"
-               autocomplete="off"
-               @oninput="@(e => OnFromInput(e))"
-               @onkeydown="HandleFromKeyPress"
-               class="form-control" />
-        @if (FromSuggestions.Any() && !string.IsNullOrWhiteSpace(fromCity))
-        {
-            <ul class="list-group position-absolute mt-1 w-100" style="z-index:1000;">
-                @foreach (var suggestion in FromSuggestions)
-                {
-                    <li class="list-group-item list-group-item-action"
-                        @onclick="() => SelectFrom(suggestion)">
-                        @suggestion
-                    </li>
-                }
-            </ul>
-        }
-    </div>
+   <div>
+    <AutoCompleteInputComponent
+      Id="fromCity"
+      Label="Departure City"
+      Value="@fromCity"
+      ValueChanged="@(val => fromCity = val)"
+      Placeholder="Type a city"
+      SearchSuggestions="SearchCitySuggestions" />
+  </div>
 
-    <div>
-        <label for="toCity">Arrival City</label><br />
-        <input id="toCity"
-               @bind="toCity"
-               placeholder="Type a city"
-               autocomplete="off"
-               @oninput="@(e => OnToInput(e))"
-               @onkeydown="HandleToKeyPress"
-               class="form-control" />
-        @if (ToSuggestions.Any() && !string.IsNullOrWhiteSpace(toCity))
-        {
-            <ul class="list-group position-absolute mt-1 w-100" style="z-index:1000;">
-                @foreach (var suggestion in ToSuggestions)
-                {
-                    <li class="list-group-item list-group-item-action"
-                        @onclick="() => SelectTo(suggestion)">
-                        @suggestion
-                    </li>
-                }
-            </ul>
-        }
-    </div>
+  <div>
+    <AutoCompleteInputComponent
+      Id="toCity"
+      Label="Arrival City"
+      Value="@toCity"
+      ValueChanged="@(val => toCity = val)"
+      Placeholder="Type a city"
+      SearchSuggestions="SearchCitySuggestions" />
+  </div>
 
     <div>
         <label for="outbound">Outbound Date</label><br />
@@ -171,11 +146,6 @@
     private string fromCity = "Copenhagen (CPH)";
     private string toCity = "London, Heathrow (LHR)";
 
-    // Autocompletion
-    private List<string> FromSuggestions = new();
-    private List<string> ToSuggestions = new();
-    private CancellationTokenSource? _debounceCts;
-
 
     private DateTime outbound = DateTime.Today.AddDays(7);
     private int adultCount = 1;
@@ -196,6 +166,12 @@
                 ? FlightRoutes[selectedFlightRouteIndex.Value]
                 : null;
 
+
+	// Autocomplete suggestions for departure city
+    private Task<List<string>> SearchCitySuggestions(string city)
+      => Task.FromResult(CityLookupService.SearchContains(city, 10).ToList());
+
+  
 
     // Performs a flight search using city names
     async Task Search()
@@ -254,51 +230,4 @@
         Console.WriteLine($"Selected route: {route.TotalPrice} DKK in component {ComponentId}");
         await OnFlightSelected.InvokeAsync((ComponentId, route));
     }
-
-
-	// Autocompletion for departure city
-    private async Task OnFromInput(ChangeEventArgs e)
-    {
-        _debounceCts?.Cancel();
-        _debounceCts = new CancellationTokenSource();
-        fromCity = e?.Value?.ToString() ?? "";
-        await Task.Delay(300, _debounceCts.Token);
-        FromSuggestions = CityLookupService.SearchContains(fromCity).ToList();
-    }
-	// Handle key press for departure city
-    private void HandleFromKeyPress(KeyboardEventArgs e)
-    {
-        if (e.Key != "Enter") return;
-        if (FromSuggestions.Any())
-            SelectFrom(FromSuggestions.First());
-    }
-	// Select a city from the suggestions
-    private void SelectFrom(string city)
-    {
-        fromCity = city;
-        FromSuggestions.Clear();
-    }
-	// Autocompletion for arrival city
-    private async Task OnToInput(ChangeEventArgs e)
-    {
-        _debounceCts?.Cancel();
-        _debounceCts = new CancellationTokenSource();
-        toCity = e?.Value?.ToString() ?? "";
-        await Task.Delay(300, _debounceCts.Token);
-        ToSuggestions = CityLookupService.SearchContains(toCity).ToList();
-    }
-	// Handle key press for arrival city
-    private void HandleToKeyPress(KeyboardEventArgs e)
-    {
-        if (e.Key != "Enter") return;
-        if (ToSuggestions.Any())
-            SelectTo(ToSuggestions.First());
-    }
-	// Select a city from the suggestions
-    private void SelectTo(string city)
-    {
-        toCity = city;
-        ToSuggestions.Clear();
-    }
-
 }
