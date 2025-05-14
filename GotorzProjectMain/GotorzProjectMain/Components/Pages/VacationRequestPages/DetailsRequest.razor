@@ -36,7 +36,7 @@
                 <dt class="col-sm-2">Full Name</dt>
                 <dd class="col-sm-10">Customer not found</dd>
             }
-            <dd class="col-sm-10" style="display:none">@vacationrequest.UserId</dd>
+            <dd class="col-sm-10" style="display:none">@vacationrequest.CustomerId</dd>
 
             <dt class="col-sm-2">Departure City</dt>
             <dd class="col-sm-10">@vacationrequest.DepartureCity</dd>
@@ -127,7 +127,7 @@
 
         try
         {
-            Customer = await UserService.GetCustomerByIdAsync(vacationrequest.UserId);
+            Customer = await UserService.GetCustomerByIdAsync(vacationrequest.CustomerId);
         }
         catch (Exception ex)
         {
