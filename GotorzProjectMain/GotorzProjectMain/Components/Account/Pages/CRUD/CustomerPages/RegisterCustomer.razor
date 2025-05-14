@@ -164,17 +164,8 @@
 
             await Task.Delay(500, _debounceCts.Token); // 500ms debounce
             
-            #region
-            // TODO: snak om _userNameErrorMessage
-            // Blev nød til at skifte denne kodeblock ud med hvad der kommer efter region. Er ikke sikker på problemet, så lad os snakke om det.
-            // _userNameErrorMessage = await Context.Customers.AnyAsync(c => c.CustomUserName.Equals(e.Value.ToString(), StringComparison.OrdinalIgnoreCase)) ? "Sorry, that username is already in use. Please try a different one." : null;
-            #endregion
-            var inputValue = e.Value?.ToString()?.ToUpper() ?? string.Empty;
+            _userNameErrorMessage = await Context.Customers.AnyAsync(c => c.CustomUserName.ToLower() == e.Value.ToString().ToLowerInvariant()) ? "Sorry, that username is already in use. Please try a different one." : null;
 
-            _userNameErrorMessage = await Context.Customers
-                .AnyAsync(c => c.CustomUserName.ToUpper() == inputValue)
-                ? "Sorry, that username is already in use. Please try a different one."
-                : null;
 
 
             if (_userNameErrorMessage is not null)
