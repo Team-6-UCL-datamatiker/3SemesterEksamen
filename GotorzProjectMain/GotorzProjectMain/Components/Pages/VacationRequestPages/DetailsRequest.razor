@@ -21,7 +21,8 @@
     {
         <p><em>Loading...</em></p>
     }
-    else {
+    else
+    {
         <dl class="row">
             @if (Customer?.User is not null)
             {
@@ -74,15 +75,19 @@
         </div>
     }
 </div>
+<br/>
+@if (VacationOffer != null)
+{
+    <details>
+        <summary class="summary-heading">Offer 1</summary><br />
+        <DetailsOfferComponent VacationOfferId="VacationOffer.VacationOfferId" />
+    </details>
+}
+
 @if (vacationrequest != null && Employee?.User != null)
 {
-    <label>@Employee.User.Email</label>
     <br />
     <CreateOfferComponent Employee="Employee" VacationRequest="vacationrequest" />
-}
-else
-{
-    <p><em>Loading employee and request data...</em></p>
 }
 
 
@@ -90,6 +95,7 @@ else
     private VacationRequest? vacationrequest;
     private Customer? Customer { get; set; }
     private Employee? Employee { get; set; }
+    private VacationOffer? VacationOffer { get; set; }
 
     [SupplyParameterFromQuery]
     private int VacationRequestId { get; set; }
@@ -104,6 +110,8 @@ else
             vacationrequest = await Context.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
 
             Employee = await UserService.GetEmployeeByIdAsync(EmployeeId);
+
+            VacationOffer = await Context.VacationOffers.FirstOrDefaultAsync(o => o.VacationRequestId == VacationRequestId);
         }
         catch (Exception ex)
         {
@@ -126,6 +134,6 @@ else
             // Handle the exception (e.g., log it, show a message, etc.)
             Console.WriteLine($"Error fetching customer details: {ex.Message}");
         }
-    
+
     }
 }

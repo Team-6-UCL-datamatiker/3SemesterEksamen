@@ -48,6 +48,14 @@
 
     public void CreateVacationOffer()
     {
+        vacationOffer.EmployeeEmail = Employee.User.Email;
+        vacationOffer.Misc = "Test";
+        vacationOffer.VacationRequestId = VacationRequest.VacationRequestId;
+        vacationOffer.TotalPrice = Convert.ToSingle(OutwardRoute.TotalPrice + ReturnRoute.TotalPrice) + HotelBooking.Price;
+        vacationOffer.StartDate = OutwardRoute.Legs.First().DepartureTime;
+        vacationOffer.EndDate = ReturnRoute.Legs.Last().ArrivalTime;
+        vacationOffer.OfferStatus = OfferStatus.Waiting;
+        vacationOffer.ExpirationDate = DateTime.Now.AddDays(10);
         Context.VacationOffers.Add(vacationOffer);
         Context.SaveChanges();
 
@@ -58,13 +66,13 @@
                     FlightRoute = OutwardRoute,
                     Airline = string.Join(", ", OutwardRoute.Legs.Select(leg => leg.Airline)),
                     DepartureTime = OutwardRoute.Legs.First().DepartureTime,
-                    VacationOfferId = vacationOffer.VacationOfferId
+                    VacationOfferId = vacationOffer.VacationOfferId,
+                    DepartureAirport = OutwardRoute.Legs.First().DepartureAirportName,
+                    ArrivalAirport = OutwardRoute.Legs.Last().ArrivalAirportName
                 };
             Context.FlightBookings.Add(OutwardFlightBooking);
-            Context.SaveChanges();
 
             Context.FlightRoutes.Add(OutwardRoute);
-            Context.SaveChanges();
 
             foreach (var flight in OutwardRoute.Legs)
             {
@@ -85,13 +93,13 @@
                     FlightRoute = ReturnRoute,
                     Airline = string.Join(", ", ReturnRoute.Legs.Select(leg => leg.Airline)),
                     DepartureTime = ReturnRoute.Legs.First().DepartureTime,
-                    VacationOfferId = vacationOffer.VacationOfferId
+                    VacationOfferId = vacationOffer.VacationOfferId,
+                    DepartureAirport = ReturnRoute.Legs.First().DepartureAirportName,
+                    ArrivalAirport = ReturnRoute.Legs.Last().ArrivalAirportName
                 };
             Context.FlightBookings.Add(ReturnFlightBooking);
-            Context.SaveChanges();
 
             Context.FlightRoutes.Add(ReturnRoute);
-            Context.SaveChanges();
 
             foreach (var flight in ReturnRoute.Legs)
             {
@@ -110,16 +118,8 @@
             HotelBooking.VacationOfferId = vacationOffer.VacationOfferId;
             Context.HotelBookings.Add(HotelBooking);
         }
-
-        vacationOffer.StartDate = OutwardFlightBooking.DepartureTime;
-        vacationOffer.EndDate = ReturnRoute.Legs.Last().ArrivalTime;
-        vacationOffer.OfferStatus = OfferStatus.Waiting;
-        vacationOffer.ExpirationDate = DateTime.Now.AddDays(10);
-        vacationOffer.VacationRequestId = VacationRequest.VacationRequestId;
-        // TODO: tilføj Hotel pris i nedenstående udregning
-        vacationOffer.TotalPrice = Convert.ToSingle(OutwardRoute.TotalPrice + ReturnRoute.TotalPrice) + HotelBooking.Price;
-        vacationOffer.EmployeeEmail = Employee.User.Email;
-
+        Context.SaveChanges();
+        NavigationManager.NavigateTo("/vacationrequests");
     }
 
     private void HandleFlightSelected((string ComponentId, FlightRoute Route) selection)

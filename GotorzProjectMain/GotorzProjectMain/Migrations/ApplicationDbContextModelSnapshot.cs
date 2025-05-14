@@ -226,35 +226,30 @@ namespace GotorzProjectMain.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FlightBookingId"));
 
                     b.Property<string>("Airline")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ArrivalAirport")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("ArrivalTime")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("BookingInformationLink")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DepartureAirport")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DepartureTime")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Misc")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<float>("Price")
+                    b.Property<float?>("Price")
                         .HasColumnType("real");
 
-                    b.Property<int>("SeatNumber")
+                    b.Property<int?>("SeatNumber")
                         .HasColumnType("int");
 
                     b.Property<int>("VacationOfferId")
