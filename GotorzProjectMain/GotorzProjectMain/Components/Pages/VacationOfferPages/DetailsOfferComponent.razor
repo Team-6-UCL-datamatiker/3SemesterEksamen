@@ -1,0 +1,58 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using GotorzProjectMain.Models
+@using GotorzProjectMain.Data
+
+@inject ApplicationDbContext Context
+@inject NavigationManager NavigationManager
+
+
+<h1>Offer for vacation request</h1>
+
+<div>
+    <hr />
+    @if (vacationoffer is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            @* <dt class="col-sm-2">VacationRequestId</dt>
+            <dd class="col-sm-10">@vacationoffer.VacationRequestId</dd> *@
+            <dt class="col-sm-2">EmployeeEmail</dt>
+            <dd class="col-sm-10">@vacationoffer.EmployeeEmail</dd>
+            <dt class="col-sm-2">TotalPrice</dt>
+            <dd class="col-sm-10">@vacationoffer.TotalPrice</dd>
+            <dt class="col-sm-2">StartDate</dt>
+            <dd class="col-sm-10">@vacationoffer.StartDate</dd>
+            <dt class="col-sm-2">EndDate</dt>
+            <dd class="col-sm-10">@vacationoffer.EndDate</dd>
+            <dt class="col-sm-2">Misc</dt>
+            <dd class="col-sm-10">@vacationoffer.Misc</dd>
+            <dt class="col-sm-2">OfferStatus</dt>
+            <dd class="col-sm-10">@vacationoffer.OfferStatus</dd>
+            <dt class="col-sm-2">ExpirationDate</dt>
+            <dd class="col-sm-10">@vacationoffer.ExpirationDate</dd>
+        </dl>
+        <div>
+            <button class="btn btn-primary">Accept Offer</button>
+            <button class="btn btn-danger">Decline Offer</button>
+        </div>
+    }
+</div>
+
+@code {
+    private VacationOffer? vacationoffer;
+
+    [Parameter]
+    public int VacationOfferId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        vacationoffer = await Context.VacationOffers.FirstOrDefaultAsync(m => m.VacationOfferId == VacationOfferId);
+
+        if (vacationoffer is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

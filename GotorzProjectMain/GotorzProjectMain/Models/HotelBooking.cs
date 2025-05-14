@@ -19,7 +19,7 @@ namespace GotorzProjectMain.Models
         // Food stuff
         public string? BoardType { get; set; }
 
-        public float? Price { get; set; }
+        public float Price { get; set; }
         public string? Currency {  get; set; }
 
         public string? BookingInformationLink { get; set; }

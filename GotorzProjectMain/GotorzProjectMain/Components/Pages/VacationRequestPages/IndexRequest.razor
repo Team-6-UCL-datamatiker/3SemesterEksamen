@@ -30,8 +30,8 @@
     <TemplateColumn Context="vacationrequest" Title="User Email">
         @{
             var email = customers
-                .FirstOrDefault(c => c.User?.Id == vacationrequest.UserId)
-                ?.User?.Email ?? "Unknown";
+            .FirstOrDefault(c => c.User?.Id == vacationrequest.UserId)
+            ?.User?.Email ?? "Unknown";
         }
         @email
     </TemplateColumn>
@@ -39,8 +39,8 @@
     <PropertyColumn Property="vacationrequest => vacationrequest.DepartureCity" Title="Departure City" />
     <PropertyColumn Property="vacationrequest => vacationrequest.DepartureCountry" Title="Departure Country" />
     <PropertyColumn Property="vacationrequest => vacationrequest.ArrivalCity" Title="Arrival City" />
-    <PropertyColumn Property="vacationrequest => vacationrequest.ArrivalCountry" Title="Arrival Country" />    
-    
+    <PropertyColumn Property="vacationrequest => vacationrequest.ArrivalCountry" Title="Arrival Country" />
+
     <TemplateColumn Context="vacationrequest" Title="Start Date">
         @vacationrequest.StartDate.ToString("MMM dd, yyyy")
     </TemplateColumn>
@@ -48,13 +48,18 @@
     <TemplateColumn Context="vacationrequest" Title="End Date">
         @vacationrequest.EndDate.ToString("MMM dd, yyyy")
     </TemplateColumn>
-    <PropertyColumn Property="vacationrequest => vacationrequest.Status"/>
+    <PropertyColumn Property="vacationrequest => vacationrequest.Status" />
 
 
     <TemplateColumn Context="vacationrequest">
         <a href="@($"vacationrequests/edit?vacationrequestid={vacationrequest.VacationRequestId}")">Edit</a> |
         <a href="@($"vacationrequests/details?vacationrequestid={vacationrequest.VacationRequestId}")">Details</a> |
-        <a href="@($"vacationrequests/delete?vacationrequestid={vacationrequest.VacationRequestId}")">Delete</a>
+        <a href="@($"vacationrequests/delete?vacationrequestid={vacationrequest.VacationRequestId}")">Delete</a> |
+        @if (isEmployee)
+        {
+            <a href="@($"vacationrequests/details?vacationrequestid={vacationrequest.VacationRequestId}&employeeid={userId}")">Create Offer</a>
+
+        }
     </TemplateColumn>
 </QuickGrid>
 @code {
@@ -75,7 +80,7 @@
         await LoadDataAsync();
 
         await SignalRService.InitializeAsync();
-        
+
         SignalRService.OnVacationRequestReceived += async () =>
         {
             Console.WriteLine("🔥 Handler started");
@@ -88,7 +93,7 @@
         Console.WriteLine("🔗 SignalR event handler attached in Index.razor");
 
     }
-    
+
     private async Task LoadDataAsync()
     {
         // Load requests -  all for employees, only own for customers
@@ -110,5 +115,5 @@
         Console.WriteLine("Data reloaded at " + lastUpdated);
     }
 
-    
+
 }
