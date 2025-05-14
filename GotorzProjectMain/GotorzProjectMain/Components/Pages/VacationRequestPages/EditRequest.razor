@@ -125,7 +125,7 @@ else
 				return;
 			}
 			Mapper.Map(VacationRequest, InputModel);
-			Customer = await ExtendedUserService.GetCustomerByIdAsync(VacationRequest.UserId);
+			Customer = await ExtendedUserService.GetCustomerByIdAsync(VacationRequest.CustomerId);
 		}
 		catch (Exception ex)
 		{

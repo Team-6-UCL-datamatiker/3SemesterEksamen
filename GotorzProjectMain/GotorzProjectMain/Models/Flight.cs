@@ -5,12 +5,8 @@ namespace GotorzProjectMain.Models
 {
 	public class Flight
 	{
-		[Key]
 		public int FlightId { get; set; }
-
-        [ForeignKey("FlightRoute")]
         public int FlightRouteId { get; set; }
-
         public string DepartureAirportCode { get; set; }
 		public string DepartureAirportName { get; set; }
 		public string ArrivalAirportCode { get; set; }

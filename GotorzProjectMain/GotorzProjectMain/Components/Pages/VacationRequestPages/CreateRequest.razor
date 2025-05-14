@@ -157,12 +157,12 @@
 				return;
 			}
 			// Set the UserId to the customer's ID
-			vacationRequest.UserId = customer.Id;
+			vacationRequest.CustomerId = customer.Id;
 		}
 		else
 		{
 			// If the user is not an employee, use their own ID
-			vacationRequest.UserId = currentUserId;
+			vacationRequest.CustomerId = currentUserId;
 		}
 
 		// Save

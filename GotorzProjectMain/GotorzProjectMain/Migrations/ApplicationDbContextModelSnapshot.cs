@@ -257,7 +257,8 @@ namespace GotorzProjectMain.Migrations
 
                     b.HasKey("FlightBookingId");
 
-                    b.HasIndex("VacationOfferId");
+                    b.HasIndex("VacationOfferId")
+                        .IsUnique();
 
                     b.ToTable("FlightBookings", (string)null);
                 });
@@ -337,7 +338,9 @@ namespace GotorzProjectMain.Migrations
 
                     b.HasKey("HotelBookingId");
 
-                    b.HasIndex("VacationOfferId");
+                    b.HasIndex("VacationOfferId")
+                        .IsUnique()
+                        .HasFilter("[VacationOfferId] IS NOT NULL");
 
                     b.ToTable("HotelBookings", (string)null);
                 });
@@ -431,6 +434,10 @@ namespace GotorzProjectMain.Migrations
                     b.Property<int>("ChildrenAmount")
                         .HasColumnType("int");
 
+                    b.Property<string>("CustomerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("DepartureCity")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -470,13 +477,7 @@ namespace GotorzProjectMain.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("VacationRequestId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("VacationRequests", (string)null);
                 });
@@ -617,8 +618,8 @@ namespace GotorzProjectMain.Migrations
             modelBuilder.Entity("GotorzProjectMain.Models.Customer", b =>
                 {
                     b.HasOne("GotorzProjectMain.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("Id")
+                        .WithOne()
+                        .HasForeignKey("GotorzProjectMain.Models.Customer", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -628,8 +629,8 @@ namespace GotorzProjectMain.Migrations
             modelBuilder.Entity("GotorzProjectMain.Models.Employee", b =>
                 {
                     b.HasOne("GotorzProjectMain.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("Id")
+                        .WithOne()
+                        .HasForeignKey("GotorzProjectMain.Models.Employee", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -648,8 +649,8 @@ namespace GotorzProjectMain.Migrations
             modelBuilder.Entity("GotorzProjectMain.Models.FlightBooking", b =>
                 {
                     b.HasOne("GotorzProjectMain.Models.VacationOffer", "VacationOffer")
-                        .WithMany()
-                        .HasForeignKey("VacationOfferId")
+                        .WithOne("FlightBooking")
+                        .HasForeignKey("GotorzProjectMain.Models.FlightBooking", "VacationOfferId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -658,18 +659,20 @@ namespace GotorzProjectMain.Migrations
 
             modelBuilder.Entity("GotorzProjectMain.Models.FlightRoute", b =>
                 {
-                    b.HasOne("GotorzProjectMain.Models.FlightBooking", null)
+                    b.HasOne("GotorzProjectMain.Models.FlightBooking", "FlightBooking")
                         .WithOne("FlightRoute")
                         .HasForeignKey("GotorzProjectMain.Models.FlightRoute", "FlightBookingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("FlightBooking");
                 });
 
             modelBuilder.Entity("GotorzProjectMain.Models.HotelBooking", b =>
                 {
                     b.HasOne("GotorzProjectMain.Models.VacationOffer", "VacationOffer")
-                        .WithMany()
-                        .HasForeignKey("VacationOfferId");
+                        .WithOne("HotelBooking")
+                        .HasForeignKey("GotorzProjectMain.Models.HotelBooking", "VacationOfferId");
 
                     b.Navigation("VacationOffer");
                 });
@@ -685,24 +688,11 @@ namespace GotorzProjectMain.Migrations
 
             modelBuilder.Entity("GotorzProjectMain.Models.VacationOffer", b =>
                 {
-                    b.HasOne("GotorzProjectMain.Models.VacationRequest", "VacationRequest")
-                        .WithMany()
+                    b.HasOne("GotorzProjectMain.Models.VacationRequest", null)
+                        .WithMany("Offers")
                         .HasForeignKey("VacationRequestId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("VacationRequest");
-                });
-
-            modelBuilder.Entity("GotorzProjectMain.Models.VacationRequest", b =>
-                {
-                    b.HasOne("GotorzProjectMain.Models.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -767,6 +757,18 @@ namespace GotorzProjectMain.Migrations
                     b.Navigation("Layovers");
 
                     b.Navigation("Legs");
+                });
+
+            modelBuilder.Entity("GotorzProjectMain.Models.VacationOffer", b =>
+                {
+                    b.Navigation("FlightBooking");
+
+                    b.Navigation("HotelBooking");
+                });
+
+            modelBuilder.Entity("GotorzProjectMain.Models.VacationRequest", b =>
+                {
+                    b.Navigation("Offers");
                 });
 #pragma warning restore 612, 618
         }

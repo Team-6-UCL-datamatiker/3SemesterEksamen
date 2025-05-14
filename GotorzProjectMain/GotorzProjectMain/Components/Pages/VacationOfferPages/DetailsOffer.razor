@@ -69,7 +69,7 @@
         try
         {
             vacationoffer = await Context.VacationOffers
-            .Include(o => o.VacationRequest)
+            // .Include(o => o.VacationRequest) ---------------------------------- Er vores system ikke omvendt? Ser vi ikke offers under requests? - Jeg aner ikke hvad der foregår på den her side.
             .FirstOrDefaultAsync(o => o.VacationOfferId == VacationOfferId);
         }
         catch (Exception ex)
@@ -78,15 +78,15 @@
             Console.WriteLine($"Error fetching vacation offer: {ex.Message}");
         }
 
-        if (vacationoffer?.VacationRequest is null)
-        {
-            NavigationManager.NavigateTo("notfound");
-            return;
-        }
+        // if (vacationoffer?.VacationRequest is null)
+        // {
+        //     NavigationManager.NavigateTo("notfound");
+        //     return;
+        // }
 
         try
         {
-            Customer = await UserService.GetCustomerByIdAsync(vacationoffer.VacationRequest.UserId);
+            // Customer = await UserService.GetCustomerByIdAsync(vacationoffer.VacationRequest.CustomerId);
         }
         catch (Exception ex)
         {
