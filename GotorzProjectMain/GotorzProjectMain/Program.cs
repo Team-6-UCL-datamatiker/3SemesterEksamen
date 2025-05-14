@@ -86,6 +86,11 @@ builder.Services.AddHttpClient<IFlightService, FlightService>(client =>
 	client.BaseAddress = new Uri("https://serpapi.com/");
 });
 
+// Service to see who is logged in
+builder.Services
+	.AddScoped<ICurrentUserService, CurrentUserService>();
+
+
 // Authorization policies
 builder.Services.AddAuthorization(options =>
 {

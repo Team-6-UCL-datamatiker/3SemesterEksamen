@@ -1,5 +1,6 @@
 ﻿@page "/employees/delete"
 @using GotorzProjectMain.Data
+@using GotorzProjectMain.Services
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Authorization
 @using GotorzProjectMain.Models
@@ -9,6 +10,7 @@
 @inject Services.IExtendedUserService UserService
 @inject ApplicationDbContext Context
 @inject ILogger<RemoveEmployee> Logger
+@inject ICurrentUserService CurrentUserService
 
 @attribute [Authorize(Policy = "Admin")]
 
@@ -66,9 +68,6 @@
 @code {
     private Employee? employee;
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
-
     [SupplyParameterFromQuery]
     private string Id { get; set; }
     private string? _errorMessage;
@@ -88,11 +87,8 @@
         try
         {
             // Get the current user
-            var currentUser = (await AuthenticationStateTask).User;
-
-            // Sets userid to the current user's ID if the user is authenticated
-            var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                            ?? throw new InvalidOperationException("User not authenticated");
+            string? userId = await CurrentUserService.GetUserIdAsync()
+                                            ?? throw new InvalidOperationException("User not authenticated");
 
             // Check if admin is trying to selfdestruct.
             if (Id == userId)

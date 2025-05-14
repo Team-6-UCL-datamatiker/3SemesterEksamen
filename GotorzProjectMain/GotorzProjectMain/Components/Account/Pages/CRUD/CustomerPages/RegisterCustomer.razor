@@ -163,7 +163,7 @@
 			}
 
 			await Task.Delay(500, _debounceCts.Token); // 500ms debounce
-			_userNameErrorMessage = await Context.Customers.AnyAsync(c => c.CustomUserName.Equals(e.Value.ToString(), StringComparison.OrdinalIgnoreCase)) ? "Sorry, that username is already in use. Please try a different one." : null;
+			_userNameErrorMessage = await Context.Customers.AnyAsync(c => c.CustomUserName.ToLower() == e.Value.ToString().ToLowerInvariant()) ? "Sorry, that username is already in use. Please try a different one." : null;
 
 			if (_userNameErrorMessage is not null)
 			{
