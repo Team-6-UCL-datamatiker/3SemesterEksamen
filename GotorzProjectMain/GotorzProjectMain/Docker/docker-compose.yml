@@ -10,7 +10,8 @@ services:
     ports:
       - "1433:1433"
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "YourStrong!Passw0rd", "-Q", "SELECT 1"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/127.0.0.1/1433' || exit 1"]
+      interval: 5s        # probe every 5 seconds
+      timeout: 5s
+      start_period: 10s   # give SQL Server time to boot before counting failures
+      retries: 12         # up to 1 minute of retries

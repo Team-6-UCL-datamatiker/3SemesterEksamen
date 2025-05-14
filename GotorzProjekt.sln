@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GotorzProjectMain.Client", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject", "TestProject\TestProject.csproj", "{D7A1C615-B8F2-4CC2-BF44-98C86A27D259}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GotorzLauncher", "GotorzLauncher\GotorzLauncher.csproj", "{56B28A42-F62C-41E8-AE6A-3334E5B7896E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{D7A1C615-B8F2-4CC2-BF44-98C86A27D259}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7A1C615-B8F2-4CC2-BF44-98C86A27D259}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7A1C615-B8F2-4CC2-BF44-98C86A27D259}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56B28A42-F62C-41E8-AE6A-3334E5B7896E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56B28A42-F62C-41E8-AE6A-3334E5B7896E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56B28A42-F62C-41E8-AE6A-3334E5B7896E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56B28A42-F62C-41E8-AE6A-3334E5B7896E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
