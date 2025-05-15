@@ -10,7 +10,6 @@ class Program
         // Path Plumbing
         //------------------------------------------------------------------
         string launcherDir = AppContext.BaseDirectory;
-
         string solutionRoot = Path.GetFullPath(Path.Combine(launcherDir, "..", "..", "..", ".."));
         string composeFolder = Path.Combine(solutionRoot, "GotorzProjectMain", "GotorzProjectMain", "Docker");
         string composeFile = Path.Combine(composeFolder, "docker-compose.yml");
