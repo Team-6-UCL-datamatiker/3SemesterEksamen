@@ -119,6 +119,21 @@ builder.Services.AddResponseCompression(opts =>
 
 var app = builder.Build();
 
+// --------------------------------------------------------------------------------------
+#if DEBUG
+string solutionRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+
+Console.WriteLine($"Waiting for launcher signal...");
+string gotorzSignalFile = Path.Combine(solutionRoot, "gotorzLaunch.trigger");
+int retries = 60;
+while (!File.Exists(gotorzSignalFile) && retries-- > 0)
+{
+    Thread.Sleep(1000);
+}
+Console.WriteLine("Proceeding...");
+#endif
+// --------------------------------------------------------------------------------------
+
 app.UseResponseCompression();
 
 using (var scope = app.Services.CreateScope())
