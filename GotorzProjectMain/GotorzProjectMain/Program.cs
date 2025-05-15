@@ -125,7 +125,7 @@ string solutionRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, ".
 
 Console.WriteLine($"Waiting for launcher signal...");
 string gotorzSignalFile = Path.Combine(solutionRoot, "gotorzLaunch.trigger");
-int retries = 60;
+int retries = 600;
 while (!File.Exists(gotorzSignalFile) && retries-- > 0)
 {
     Thread.Sleep(1000);

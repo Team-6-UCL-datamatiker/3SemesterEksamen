@@ -25,27 +25,5 @@
 	<ItemGroup>
 		<Folder Include="Migrations\" />
 	</ItemGroup>
-
-	<Target Name="AutoInitMigration"
-			BeforeTargets="CoreCompile"
-			Condition="'$(DesignTimeBuild)' != 'true' and '$(IsEFCoreDesignTimeBuild)' != 'true'">
-
-		<!-- Do we already have any migration files? -->
-		<ItemGroup>
-			<_Existing Include="Migrations\**\*.cs" />
-		</ItemGroup>
-
-		<!-- Create the very first migration only if the folder is empty -->
-		<Exec Condition="'@(_Existing)' == ''"
-			  Command="dotnet ef migrations add Init --no-build --output-dir Migrations"
-			  WorkingDirectory="$(MSBuildProjectDirectory)"
-			  StandardOutputImportance="high"
-			  StandardErrorImportance="high" />
-
-		<!-- Make freshly-generated files part of this compile -->
-		<ItemGroup Condition="'@(_Existing)' == ''">
-			<Compile Include="Migrations\**\*.cs" />
-		</ItemGroup>
-	</Target>
-
+	
 </Project>
