@@ -1,4 +1,4 @@
-﻿namespace GotorzProjectMain.Services.APIs.HotelAPIs;
+﻿namespace GotorzProjectMain.InputModels.HotelAPIInputModels;
 
 using System;
 using System.Collections.Generic;

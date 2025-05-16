@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
 using GotorzProjectMain.Models;
-using GotorzProjectMain.Models.DTOs;
+using GotorzProjectMain.Services.APIs.FlightAPI.DTO;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Globalization;
 
-namespace GotorzProjectMain.Services.API
+namespace GotorzProjectMain.Services.APIs.FlightAPI
 {
     public interface IFlightService
     {

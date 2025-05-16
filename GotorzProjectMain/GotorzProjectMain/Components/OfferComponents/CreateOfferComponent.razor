@@ -1,27 +1,28 @@
 ﻿
 @using AutoMapper
-@using GotorzProjectMain.Components.Pages.HotelPages
+@using GotorzProjectMain.Components
+@using GotorzProjectMain.Components.SearchComponents
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Data
 @inject NavigationManager NavigationManager
 @inject ApplicationDbContext Context
 @inject IMapper Mapper
-@inject ILogger<FlightSearch> Logger
+@inject ILogger<CreateOfferComponent> Logger
 
 @rendermode InteractiveServer
 
 
 <details>
     <summary class="summary-heading">Flight Search 1</summary><br />
-    <FlightComponent ComponentId="1" OnFlightSelected="HandleFlightSelected" />
+    <SearchFlightComponent ComponentId="1" OnFlightSelected="HandleFlightSelected" />
 </details>
 <details>
     <summary class="summary-heading">Flight Search 2</summary><br />
-    <FlightComponent ComponentId="2" OnFlightSelected="HandleFlightSelected" />
+    <SearchFlightComponent ComponentId="2" OnFlightSelected="HandleFlightSelected" />
 </details>
 <details>
     <summary class="summary-heading">Hotel Search</summary><br />
-    <SearchHotels OnHotelSelected="HandleHotelSelected" />
+    <SearchHotelComponent OnHotelSelected="HandleHotelSelected" />
 </details>
 
 

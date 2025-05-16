@@ -9,6 +9,8 @@ using System.Text.Json.Serialization;
 using System.Net;
 using Azure.Core;
 using Azure;
+using GotorzProjectMain.InputModels.HotelAPIInputModels;
+using GotorzProjectMain.Services.APIs.HotelAPIs.DTO;
 
 namespace GotorzProjectMain.Services.APIs.HotelAPIs;
 
@@ -76,7 +78,7 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
         return _accessToken;
     }
 
-    public async Task SearchHotelsAsync(AmadeusHotelListParameters listParameters, AmadeusHotelOffersParameters offerParameters)
+    public async Task SearchHotelsAsync(AmadeusHotelListInputModel listParameters, AmadeusHotelOffersParameters offerParameters)
     {
         try
         {
@@ -249,13 +251,13 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
         }
     }
 
-    public string BuildListQueryAsync(AmadeusHotelListParameters p)
+    public string BuildListQueryAsync(AmadeusHotelListInputModel p)
     {
         try
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
 
-            foreach (var prop in typeof(AmadeusHotelListParameters).GetProperties())
+            foreach (var prop in typeof(AmadeusHotelListInputModel).GetProperties())
             {
                 // hvis propertyen ikke har en JsonPropertyName, skal det ikke med i queryen
                 var attribute = prop.GetCustomAttribute<JsonPropertyNameAttribute>();

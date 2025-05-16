@@ -1,4 +1,5 @@
-﻿using GotorzProjectMain.Models;
+﻿using GotorzProjectMain.InputModels.HotelAPIInputModels;
+using GotorzProjectMain.Models;
 
 namespace GotorzProjectMain.Services.APIs.HotelAPIs;
 public interface IAmadeusHotelAPIService
@@ -9,7 +10,7 @@ public interface IAmadeusHotelAPIService
     public List<string> HotelIds { get; set; }
 
     Task<string> GetAccessTokenAsync();
-    Task SearchHotelsAsync(AmadeusHotelListParameters listParameters, AmadeusHotelOffersParameters offersParameters);
-    string BuildListQueryAsync(AmadeusHotelListParameters listParameters);
+    Task SearchHotelsAsync(AmadeusHotelListInputModel listParameters, AmadeusHotelOffersParameters offersParameters);
+    string BuildListQueryAsync(AmadeusHotelListInputModel listParameters);
     string BuildOffersQueryAsync(AmadeusHotelOffersParameters parameters, List<string> hotelIds);
 }

@@ -1,5 +1,7 @@
 ﻿@rendermode InteractiveServer
 
+@using GotorzProjectMain.InputModels
+@using GotorzProjectMain.InputModels.HotelAPIInputModels
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Services.APIs
 @using GotorzProjectMain.Services.APIs.HotelAPIs
@@ -362,8 +364,8 @@
 
 	// List API
 	private EditContext? _ecList;
-	private AmadeusHotelListParameters _inputList = new();
-	private AmadeusHotelListParameters? _validatedInputList;
+	private AmadeusHotelListInputModel _inputList = new();
+	private AmadeusHotelListInputModel? _validatedInputList;
 
 	//Destination autocomplete
 	private bool _airport = false;

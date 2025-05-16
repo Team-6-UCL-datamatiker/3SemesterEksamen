@@ -1,4 +1,4 @@
-﻿using GotorzProjectMain.Models.DTOs;
+﻿using GotorzProjectMain.Services.APIs.FlightAPI.DTO;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 

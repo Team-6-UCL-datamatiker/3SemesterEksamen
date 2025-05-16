@@ -5,9 +5,9 @@ using Humanizer;
 using Newtonsoft.Json.Linq;
 using NuGet.Protocol.Plugins;
 
-namespace GotorzProjectMain.Services.APIs.HotelAPIs;
+namespace GotorzProjectMain.InputModels.HotelAPIInputModels;
 
-public class AmadeusHotelListParameters
+public class AmadeusHotelListInputModel
 {
     // DESTINATION CITY CODE OR AIRPORT CODE
     // In case of city code, the search will be done around the city center.
