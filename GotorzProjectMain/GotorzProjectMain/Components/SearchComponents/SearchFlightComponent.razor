@@ -16,8 +16,7 @@
       Label="Departure City"
       Value="@fromCity"
       ValueChanged="@(val => fromCity = val)"
-      Placeholder="Type a city"
-      SearchSuggestions="SearchCitySuggestions" />
+      Placeholder="Type a city" />
   </div>
 
   <div>
@@ -26,8 +25,7 @@
       Label="Arrival City"
       Value="@toCity"
       ValueChanged="@(val => toCity = val)"
-      Placeholder="Type a city"
-      SearchSuggestions="SearchCitySuggestions" />
+      Placeholder="Type a city" />
   </div>
 
     <div>
@@ -164,13 +162,6 @@
         selectedFlightRouteIndex.HasValue
                 ? FlightRoutes[selectedFlightRouteIndex.Value]
                 : null;
-
-
-	// Autocomplete suggestions for departure city
-    private Task<List<string>> SearchCitySuggestions(string city)
-      => Task.FromResult(CityLookupService.SearchContains(city, 10).ToList());
-
-  
 
     // Performs a flight search using city names
     async Task Search()

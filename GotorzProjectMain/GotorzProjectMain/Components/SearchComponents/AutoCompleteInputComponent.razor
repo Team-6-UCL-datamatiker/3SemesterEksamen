@@ -1,4 +1,7 @@
-﻿@using Microsoft.AspNetCore.Components.Web
+﻿@using GotorzProjectMain.Services.APIs
+@using Microsoft.AspNetCore.Components.Web
+
+@inject ICityLookupService CityLookupService
 
 <div class="position-relative">
     <label for="@Id">@Label</label><br />
@@ -10,7 +13,7 @@
     @oninput="OnInput"
     @onkeydown="HandleKeyPress" />
 
-    @if (Suggestions.Any())
+    @if (Suggestions.Any() && !string.IsNullOrWhiteSpace(Value))
     {
         <ul class="list-group position-absolute mt-1 w-100" style="z-index:1000;">
             @foreach (var suggestion in Suggestions)
@@ -31,7 +34,6 @@
     // Event callback to notify parent of value changes
     [Parameter] public EventCallback<string> ValueChanged { get; set; }
     // Function provided by the parent to fetch suggestion list
-    [Parameter] public Func<string, Task<List<string>>> SearchSuggestions { get; set; } = default!;
     [Parameter] public string Placeholder { get; set; } = "Type a city";
 
     private List<string> Suggestions = new();
@@ -54,7 +56,7 @@
 			// Wait for 300ms before searching for suggestions
             await Task.Delay(300, _debounceCts.Token);
             if (!string.IsNullOrWhiteSpace(Value))
-                Suggestions = await SearchSuggestions(Value);
+                Suggestions = await Task.FromResult(CityLookupService.SearchContains(Value, 10).ToList());
         }
         catch (TaskCanceledException)
         {

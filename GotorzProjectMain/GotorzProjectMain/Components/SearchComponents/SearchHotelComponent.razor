@@ -23,22 +23,17 @@
 				<label for="isAirport" class="form-check-label">Airport code</label>
 			</div>
 
-			<div data-role="Destination" class="mb-3 form-floating position-relative">
-				<InputText id="destination" placeholder="City" autocomplete="off" class="form-control" @bind-Value="_destination" oninput="@(async (ChangeEventArgs e) => await OnDestinationInput(e))" @onkeydown="HandleDestinationKeyPress" />
-				<label for="destination">Destination:</label>
-				@* 				<ValidationMessage For="() => Input." class="alert alert-danger mt-3" /> *@
-
-				@if (DestinationSuggestions.Any() && _destination != "")
-				{
-					<ul class="list-group position-absolute mt-1 w-100" style="z-index:1000;">
-						@foreach (string suggestion in DestinationSuggestions)
-						{
-							<li class="list-group-item list-group-item-action" @onclick="() => SelectDestination(suggestion)">
-								@suggestion
-							</li>
-						}
-					</ul>
-				}
+			<div>
+				<AutoCompleteInputComponent Id="destination"
+											Label="Destination"
+											Value="@_destination"
+											ValueChanged="@(val =>
+											{
+												_destination = val;
+												SelectDestination(val);
+											})"
+											Placeholder="Type a city"
+											SearchSuggestions="SearchCitySuggestions" />
 
 				@if (!string.IsNullOrWhiteSpace(_selectedDestination))
 				{
@@ -109,9 +104,9 @@
 
 						<div class="form-check">
 							<input class="form-check-input"
-							type="checkbox"
-							value="@starValue"
-							@onchange="e => ToggleRating(starValue, e.Value)" />
+								   type="checkbox"
+								   value="@starValue"
+								   @onchange="e => ToggleRating(starValue, e.Value)" />
 							<label class="form-check-label">@star</label>
 						</div>
 					}
@@ -304,8 +299,8 @@
 					</dl>
 
 					<button @onclick="() => SelectHotel(hotel, offer)"
-					class="btn @((SelectedHotel == hotel && SelectedHotelOffer == offer) ? "btn-success" : "btn-outline-primary")"
-					style="margin-bottom: 0.5rem;">
+							class="btn @((SelectedHotel == hotel && SelectedHotelOffer == offer) ? "btn-success" : "btn-outline-primary")"
+							style="margin-bottom: 0.5rem;">
 						@((SelectedHotel == hotel && SelectedHotelOffer == offer) ? "Selected" : "Select this offer")
 					</button>
 				</details>
@@ -370,7 +365,6 @@
 	//Destination autocomplete
 	private bool _airport = false;
 	private string? _destination;
-	private List<string> DestinationSuggestions { get; set; } = new();
 
 	//Amenities autocomplete (BAR or LOUNGE virker vist ikke.................?????????)
 	private List<string> AllAmenities = new()
@@ -420,58 +414,6 @@
 		await Service.SearchHotelsAsync(_validatedInputList!, _validatedInputOffer!);
 	}
 
-	private async Task OnDestinationInput(ChangeEventArgs e)
-	{
-		_debounceCts?.Cancel();
-		_debounceCts?.Dispose();
-		_debounceCts = new CancellationTokenSource();
-		_matchAlertMessage = "";
-		_selectedDestination = "";
-
-		if (e.Value is not null)
-		{
-			await Task.Delay(300, _debounceCts.Token);
-			DestinationSuggestions = CityLookupService.Search(e.Value.ToString()!).ToList();
-		}
-	}
-
-	private void HandleDestinationKeyPress(KeyboardEventArgs e)
-	{
-		if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(_destination))
-		{
-			string trimmed = _destination.Trim();
-			string? match = null;
-
-			if (DestinationSuggestions.Any())
-			{
-				match = DestinationSuggestions.FirstOrDefault(d => d.Contains(trimmed, StringComparison.OrdinalIgnoreCase));
-			}
-
-			if (match != null)
-			{
-				(string CityCode, string AirportCode)? codes = CityLookupService.GetCodes(match);
-
-				if (!_airport)
-				{
-					_inputList.CityOrAirportCode = codes.Value.CityCode;
-				}
-				else
-				{
-					_inputList.CityOrAirportCode = codes.Value.AirportCode;
-				}
-
-				_selectedDestination = $"{match}, Code: {_inputList.CityOrAirportCode}";
-
-				_destination = match;
-			}
-			else
-			{
-				_matchAlertMessage = "No such match";
-			}
-			DestinationSuggestions.Clear();
-		}
-	}
-
 	private void SelectDestination(string suggestion)
 	{
 		_destination = suggestion;
@@ -487,7 +429,6 @@
 		}
 
 		_selectedDestination = $"{suggestion}, Code: {_inputList.CityOrAirportCode}";
-		DestinationSuggestions.Clear();
 	}
 
 	private async Task OnAmenitiesInput(ChangeEventArgs e)
@@ -560,7 +501,8 @@
 			_inputList.Ratings.Remove(starValue);
 		}
 	}
-	private async Task SelectHotel (Hotel hotel, HotelOffer offer) 
+
+	private async Task SelectHotel(Hotel hotel, HotelOffer offer)
 	{
 		hotel.Offers = new[] { offer };
 		SelectedHotel = hotel;
