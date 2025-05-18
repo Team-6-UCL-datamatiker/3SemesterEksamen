@@ -134,7 +134,6 @@ namespace GotorzProjectMain.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("CustomUserName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<byte[]>("RowVersion")
@@ -155,7 +154,6 @@ namespace GotorzProjectMain.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("CustomUserName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsAdmin")

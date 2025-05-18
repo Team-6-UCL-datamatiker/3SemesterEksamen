@@ -7,7 +7,7 @@ public abstract class BaseUser
 {
     public string Id { get; set; }
 
-	public string CustomUserName { get; set; }
+	public string? CustomUserName { get; set; }
 
 	public ApplicationUser User { get; set; }
 

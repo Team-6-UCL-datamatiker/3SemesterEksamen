@@ -74,6 +74,10 @@
 					.Where(c => c.Id == customer.Id)
 					.ExecuteDeleteAsync();
 
+				await Context.Users
+					.Where(u => u.Id == customer.Id)
+					.ExecuteDeleteAsync();
+
 				await transaction.CommitAsync();
 			}
 		}
