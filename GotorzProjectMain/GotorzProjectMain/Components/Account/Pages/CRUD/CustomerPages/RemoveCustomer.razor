@@ -66,20 +66,14 @@
 		{
 			if (customer is not null)
 			{
-				// Load the ApplicationUser
-				var user = await Context.Users.FirstOrDefaultAsync(u => u.Id == customer.Id);
-
-				if (user is not null)
-				{
-					Context.Users.Remove(user); // Delete the Identity user
-				}
-
 				await Context.VacationRequests
 					.Where(vr => vr.CustomerId == Id && vr.Status == RequestStatus.PendingRequest)
 					.ExecuteDeleteAsync();
 
-				Context.Customers.Remove(customer); // Delete the Customer
-				await Context.SaveChangesAsync();
+				await Context.Customers
+					.Where(c => c.Id == customer.Id)
+					.ExecuteDeleteAsync();
+
 				await transaction.CommitAsync();
 			}
 		}

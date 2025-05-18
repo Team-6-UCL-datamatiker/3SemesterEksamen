@@ -48,79 +48,42 @@
 
 	public async Task CreateVacationOffer()
 	{
-		await using var transaction = await Context.Database.BeginTransactionAsync();
-
-		try {
+		try
+		{
 			VacationOffer = new VacationOffer
-			{
-				VacationRequestId = VacationRequest!.VacationRequestId,
-				EmployeeEmail = Employee!.User.Email!,
-				StartDate = OutwardRoute!.Legs.First().DepartureTime,
-				EndDate = ReturnRoute!.Legs.Last().ArrivalTime,
-				Misc = "-",
-				OfferStatus = OfferStatus.Waiting,
-				ExpirationDate = DateTime.Now.AddDays(10),
-			};
+				{
+					EmployeeEmail = Employee!.User.Email!,
+					StartDate = OutwardRoute!.Legs.First().DepartureTime,
+					EndDate = ReturnRoute!.Legs.Last().ArrivalTime,
+					Misc = "-",
+					OfferStatus = OfferStatus.Waiting,
+					ExpirationDate = DateTime.Now.AddDays(10),
+				};
 
-			Context.VacationOffers.Add(VacationOffer);
-			Context.SaveChanges();
+			VacationRequest!.Offers.Add(VacationOffer);
+			VacationOffer.HotelBooking = HotelBooking;
 
 			FlightBooking = new FlightBooking
-			{
+				{
 				// Airline = string.Join(", ", OutwardRoute.Legs.Select(leg => leg.Airline)),
-				TotalPrice = OutwardRoute.TotalPrice + ReturnRoute.TotalPrice,
-				DepartureTime = OutwardRoute.Legs.First().DepartureTime,
-				VacationOfferId = VacationOffer.VacationOfferId,
-				DepartureAirport = OutwardRoute.Legs.First().DepartureAirportName,
+					TotalPrice = OutwardRoute.TotalPrice + ReturnRoute.TotalPrice,
+					DepartureTime = OutwardRoute.Legs.First().DepartureTime,
+					DepartureAirport = OutwardRoute.Legs.First().DepartureAirportName,
 				// ArrivalAirport = OutwardRoute.Legs.Last().ArrivalAirportName
-				ArrivalAirport = ReturnRoute.Legs.Last().ArrivalAirportName
-			};
+					ArrivalAirport = ReturnRoute.Legs.Last().ArrivalAirportName
+				};
 
-			Context.FlightBookings.Add(FlightBooking);
-			Context.SaveChanges();
-
-			OutwardRoute.FlightBookingId = FlightBooking.FlightBookingId;
-			ReturnRoute.FlightBookingId = FlightBooking.FlightBookingId;
-			Context.FlightRoutes.Add(OutwardRoute);
-			Context.FlightRoutes.Add(ReturnRoute);
-			Context.SaveChanges();
-
-			foreach (var flight in OutwardRoute.Legs)
-			{
-				flight.FlightRouteId = OutwardRoute.RouteId;
-				Context.Flights.Add(flight);
-			}
-			foreach (var layover in OutwardRoute.Layovers)
-			{
-				layover.FlightRouteId = OutwardRoute.RouteId;
-				Context.Layovers.Add(layover);
-			}
-			foreach (var flight in ReturnRoute.Legs)
-			{
-				flight.FlightRouteId = ReturnRoute.RouteId;
-				Context.Flights.Add(flight);
-			}
-			foreach (var layover in ReturnRoute.Layovers)
-			{
-				layover.FlightRouteId = ReturnRoute.RouteId;
-				Context.Layovers.Add(layover);
-			}
-
-			if (HotelBooking != null)
-			{
-				HotelBooking.VacationOfferId = VacationOffer.VacationOfferId;
-				Context.HotelBookings.Add(HotelBooking);
-			}
-
+			VacationOffer.FlightBooking = FlightBooking;
+			FlightBooking.FlightRoutes.Add(OutwardRoute);
+			FlightBooking.FlightRoutes.Add(ReturnRoute);
 			VacationOffer.TotalPrice = FlightBooking!.TotalPrice + HotelBooking!.TotalPrice;
-			Context.VacationOffers.Add(VacationOffer);
-			Context.SaveChanges();
-			await transaction.CommitAsync();
+			VacationRequest.Status = RequestStatus.WaitingApproval;
+
+			await Context.SaveChangesAsync();
 			NavigationManager.NavigateTo("/vacationrequests");
 		}
 		catch (Exception ex)
 		{
-			await transaction.RollbackAsync();
 			ErrorMessage = "An unexpected error occurred. Please try again.";
 			Logger.LogError(ex, ErrorMessage);
 		}
@@ -149,6 +112,4 @@
 			Logger.LogError($"Mapping error: {ex}");
 		}
 	}
-
-
 }
