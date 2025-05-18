@@ -10,13 +10,12 @@ namespace GotorzProjectMain.Models
         public int RouteId { get; set; }
 		// The flight booking associated with this route
         public int FlightBookingId { get; set; }
-		public FlightBooking FlightBooking { get; set; }
         // All legs in this route, in order
         public List<Flight> Legs { get; set; }
 		// Layover info between legs
 		public List<Layover> Layovers { get; set; }
 		// Total price across all legs
-		public decimal TotalPrice { get; set; }
+		public float TotalPrice { get; set; }
 		// Total traveltime (across all legs and layovers)
 		public TimeSpan TotalTravelTime
 		{

@@ -15,9 +15,9 @@
 </p>
 
 <QuickGrid Class="table" Items="context.FlightBookings">
-    <PropertyColumn Property="flightbooking => flightbooking.Airline" />
-    <PropertyColumn Property="flightbooking => flightbooking.SeatNumber" />
-    <PropertyColumn Property="flightbooking => flightbooking.Price" />
+@*     <PropertyColumn Property="flightbooking => flightbooking.Airline" />
+    <PropertyColumn Property="flightbooking => flightbooking.SeatNumber" /> *@
+    <PropertyColumn Property="flightbooking => flightbooking.TotalPrice" />
     <PropertyColumn Property="flightbooking => flightbooking.BookingInformationLink" />
     <PropertyColumn Property="flightbooking => flightbooking.DepartureTime" />
     <PropertyColumn Property="flightbooking => flightbooking.ArrivalTime" />

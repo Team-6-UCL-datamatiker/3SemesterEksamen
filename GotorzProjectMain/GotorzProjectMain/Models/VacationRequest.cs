@@ -15,7 +15,7 @@ namespace GotorzProjectMain.Models
 		public int ChildrenAmount { get; set; }
 		public int AdultsAmount { get; set; }
 		public int RoomsAmount { get; set; }
-        public ICollection<VacationOffer> Offers { get; } = new List<VacationOffer>();
+        public ICollection<VacationOffer> Offers { get; set; } = new List<VacationOffer>();
         public string HotelRequest { get; set; }
 		public string FlightRequest { get; set; }
 		public string Misc { get; set; }

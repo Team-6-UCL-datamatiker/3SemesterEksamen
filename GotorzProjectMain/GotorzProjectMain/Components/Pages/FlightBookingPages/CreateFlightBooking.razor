@@ -15,7 +15,7 @@
         <EditForm method="post" Model="FlightBooking" OnValidSubmit="AddFlightBooking" FormName="create" Enhance>
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" role="alert"/>
-            <div class="mb-3">
+@*             <div class="mb-3">
                 <label for="airline" class="form-label">Airline:</label> 
                 <InputText id="airline" @bind-Value="FlightBooking.Airline" class="form-control" /> 
                 <ValidationMessage For="() => FlightBooking.Airline" class="text-danger" /> 
@@ -24,11 +24,11 @@
                 <label for="seatnumber" class="form-label">SeatNumber:</label> 
                 <InputNumber id="seatnumber" @bind-Value="FlightBooking.SeatNumber" class="form-control" /> 
                 <ValidationMessage For="() => FlightBooking.SeatNumber" class="text-danger" /> 
-            </div>        
+            </div>  *@       
             <div class="mb-3">
                 <label for="price" class="form-label">Price:</label> 
-                <InputNumber id="price" @bind-Value="FlightBooking.Price" class="form-control" /> 
-                <ValidationMessage For="() => FlightBooking.Price" class="text-danger" /> 
+                <InputNumber id="price" @bind-Value="FlightBooking.TotalPrice" class="form-control" /> 
+                <ValidationMessage For="() => FlightBooking.TotalPrice" class="text-danger" /> 
             </div>        
             <div class="mb-3">
                 <label for="bookinginformationlink" class="form-label">BookingInformationLink:</label> 

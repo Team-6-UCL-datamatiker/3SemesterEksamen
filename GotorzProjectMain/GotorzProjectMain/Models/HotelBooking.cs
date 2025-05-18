@@ -13,7 +13,7 @@ namespace GotorzProjectMain.Models
         public string? RoomDescription { get; set; }        
         // Food stuff
         public string? BoardType { get; set; }
-        public float Price { get; set; }
+        public float? TotalPrice { get; set; }
         public string? Currency {  get; set; }
         public string? BookingInformationLink { get; set; }
         public string? HotelLink { get; set; }
@@ -21,6 +21,5 @@ namespace GotorzProjectMain.Models
         public DateTime? CheckOutDate { get; set; }
         public string? Misc { get; set; }
         public int? VacationOfferId { get; set; }
-        public VacationOffer? VacationOffer { get; set; }
     }
 }

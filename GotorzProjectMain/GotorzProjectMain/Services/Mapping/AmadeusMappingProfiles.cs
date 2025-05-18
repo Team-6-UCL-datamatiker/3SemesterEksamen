@@ -75,7 +75,7 @@ public class AmadeusMappingProfiles : Profile
         // Specifik addresse ikke tilgængelig gennem API, kun geoCode...
         CreateMap<Hotel, HotelBooking>()
             .ForMember(hb => hb.HotelName, opt => opt.MapFrom(h => h.Name))
-            .ForMember(hb => hb.Price, opt => opt.MapFrom(h => float.Parse(h.Offers!.First().Price!.TotalAmount!, CultureInfo.InvariantCulture)))
+            .ForMember(hb => hb.TotalPrice, opt => opt.MapFrom(h => float.Parse(h.Offers!.First().Price!.TotalAmount!, CultureInfo.InvariantCulture)))
             .ForMember(hb => hb.Currency, opt => opt.MapFrom(h => h.Offers!.First().Price!.Currency))
             .ForMember(hb => hb.CheckInDate, opt => opt.MapFrom(h => DateTime.Parse(h.Offers!.First().CheckInDate!, CultureInfo.InvariantCulture)))
             .ForMember(hb => hb.CheckOutDate, opt => opt.MapFrom(h => DateTime.Parse(h.Offers!.First().CheckOutDate!, CultureInfo.InvariantCulture)))

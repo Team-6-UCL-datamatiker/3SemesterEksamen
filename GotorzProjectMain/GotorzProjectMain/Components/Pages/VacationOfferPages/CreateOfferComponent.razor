@@ -1,8 +1,8 @@
-﻿
-@using AutoMapper
+﻿@using AutoMapper
 @using GotorzProjectMain.Components.Pages.HotelPages
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Data
+@using Microsoft.EntityFrameworkCore
 @inject NavigationManager NavigationManager
 @inject ApplicationDbContext Context
 @inject IMapper Mapper
@@ -10,141 +10,145 @@
 
 @rendermode InteractiveServer
 
+<details>
+	<summary class="summary-heading">Flight Search 1</summary><br />
+	<FlightComponent ComponentId="1" OnFlightSelected="HandleFlightSelected" />
+</details>
+<details>
+	<summary class="summary-heading">Flight Search 2</summary><br />
+	<FlightComponent ComponentId="2" OnFlightSelected="HandleFlightSelected" />
+</details>
+<details>
+	<summary class="summary-heading">Hotel Search</summary><br />
+	<SearchHotels OnHotelSelected="HandleHotelSelected" />
+</details>
 
-<details>
-    <summary class="summary-heading">Flight Search 1</summary><br />
-    <FlightComponent ComponentId="1" OnFlightSelected="HandleFlightSelected" />
-</details>
-<details>
-    <summary class="summary-heading">Flight Search 2</summary><br />
-    <FlightComponent ComponentId="2" OnFlightSelected="HandleFlightSelected" />
-</details>
-<details>
-    <summary class="summary-heading">Hotel Search</summary><br />
-    <SearchHotels OnHotelSelected="HandleHotelSelected" />
-</details>
-
+@if (!string.IsNullOrWhiteSpace(ErrorMessage))
+{
+	<div class="alert alert-danger mt-3" role="alert">
+		@ErrorMessage
+	</div>
+}
 
 <button @onclick="CreateVacationOffer" disabled="@(OutwardRoute == null || ReturnRoute == null || HotelBooking == null)" class="btn btn-primary" style="padding: 0.4rem 1rem; padding-top: 0.6rem">Create Offer</button>
 
 @code
 {
-    [Parameter]
-    public VacationRequest VacationRequest { get; set; }
+	string? ErrorMessage;
+	[Parameter]
+	public VacationRequest? VacationRequest { get; set; }
+	[Parameter]
+	public Employee? Employee { get; set; }
+	VacationOffer? VacationOffer { get; set; }
+	FlightBooking? FlightBooking { get; set; }
+	FlightBooking? ReturnFlightBooking { get; set; }
+	HotelBooking? HotelBooking { get; set; }
+	FlightRoute? OutwardRoute { get; set; }
+	FlightRoute? ReturnRoute { get; set; }
 
-    [Parameter]
-    public Employee Employee { get; set; }
+	public async Task CreateVacationOffer()
+	{
+		await using var transaction = await Context.Database.BeginTransactionAsync();
 
+		try {
+			VacationOffer = new VacationOffer
+			{
+				VacationRequestId = VacationRequest!.VacationRequestId,
+				EmployeeEmail = Employee!.User.Email!,
+				StartDate = OutwardRoute!.Legs.First().DepartureTime,
+				EndDate = ReturnRoute!.Legs.Last().ArrivalTime,
+				Misc = "-",
+				OfferStatus = OfferStatus.Waiting,
+				ExpirationDate = DateTime.Now.AddDays(10),
+			};
 
-    VacationOffer vacationOffer = new VacationOffer();
+			Context.VacationOffers.Add(VacationOffer);
+			Context.SaveChanges();
 
-    FlightBooking OutwardFlightBooking { get; set; }
-    FlightBooking ReturnFlightBooking { get; set; }
+			FlightBooking = new FlightBooking
+			{
+				// Airline = string.Join(", ", OutwardRoute.Legs.Select(leg => leg.Airline)),
+				TotalPrice = OutwardRoute.TotalPrice + ReturnRoute.TotalPrice,
+				DepartureTime = OutwardRoute.Legs.First().DepartureTime,
+				VacationOfferId = VacationOffer.VacationOfferId,
+				DepartureAirport = OutwardRoute.Legs.First().DepartureAirportName,
+				// ArrivalAirport = OutwardRoute.Legs.Last().ArrivalAirportName
+				ArrivalAirport = ReturnRoute.Legs.Last().ArrivalAirportName
+			};
 
-    HotelBooking? HotelBooking { get; set; }
+			Context.FlightBookings.Add(FlightBooking);
+			Context.SaveChanges();
 
-    FlightRoute? OutwardRoute { get; set; }
-    FlightRoute? ReturnRoute { get; set; }
+			OutwardRoute.FlightBookingId = FlightBooking.FlightBookingId;
+			ReturnRoute.FlightBookingId = FlightBooking.FlightBookingId;
+			Context.FlightRoutes.Add(OutwardRoute);
+			Context.FlightRoutes.Add(ReturnRoute);
+			Context.SaveChanges();
 
-    public void CreateVacationOffer()
-    {
-        vacationOffer.EmployeeEmail = Employee.User.Email;
-        vacationOffer.Misc = "Test";
-        vacationOffer.VacationRequestId = VacationRequest.VacationRequestId;
-        vacationOffer.TotalPrice = Convert.ToSingle(OutwardRoute.TotalPrice + ReturnRoute.TotalPrice) + HotelBooking.Price;
-        vacationOffer.StartDate = OutwardRoute.Legs.First().DepartureTime;
-        vacationOffer.EndDate = ReturnRoute.Legs.Last().ArrivalTime;
-        vacationOffer.OfferStatus = OfferStatus.Waiting;
-        vacationOffer.ExpirationDate = DateTime.Now.AddDays(10);
-        Context.VacationOffers.Add(vacationOffer);
-        Context.SaveChanges();
+			foreach (var flight in OutwardRoute.Legs)
+			{
+				flight.FlightRouteId = OutwardRoute.RouteId;
+				Context.Flights.Add(flight);
+			}
+			foreach (var layover in OutwardRoute.Layovers)
+			{
+				layover.FlightRouteId = OutwardRoute.RouteId;
+				Context.Layovers.Add(layover);
+			}
+			foreach (var flight in ReturnRoute.Legs)
+			{
+				flight.FlightRouteId = ReturnRoute.RouteId;
+				Context.Flights.Add(flight);
+			}
+			foreach (var layover in ReturnRoute.Layovers)
+			{
+				layover.FlightRouteId = ReturnRoute.RouteId;
+				Context.Layovers.Add(layover);
+			}
 
-        if (OutwardRoute != null)
-        {
-            OutwardFlightBooking = new FlightBooking
-                {
-                    FlightRoute = OutwardRoute,
-                    Airline = string.Join(", ", OutwardRoute.Legs.Select(leg => leg.Airline)),
-                    DepartureTime = OutwardRoute.Legs.First().DepartureTime,
-                    VacationOfferId = vacationOffer.VacationOfferId,
-                    DepartureAirport = OutwardRoute.Legs.First().DepartureAirportName,
-                    ArrivalAirport = OutwardRoute.Legs.Last().ArrivalAirportName
-                };
-            Context.FlightBookings.Add(OutwardFlightBooking);
+			if (HotelBooking != null)
+			{
+				HotelBooking.VacationOfferId = VacationOffer.VacationOfferId;
+				Context.HotelBookings.Add(HotelBooking);
+			}
 
-            Context.FlightRoutes.Add(OutwardRoute);
+			VacationOffer.TotalPrice = FlightBooking!.TotalPrice + HotelBooking!.TotalPrice;
+			Context.VacationOffers.Add(VacationOffer);
+			Context.SaveChanges();
+			await transaction.CommitAsync();
+			NavigationManager.NavigateTo("/vacationrequests");
+		}
+		catch (Exception ex)
+		{
+			await transaction.RollbackAsync();
+			ErrorMessage = "An unexpected error occurred. Please try again.";
+			Logger.LogError(ex, ErrorMessage);
+		}
+	}
 
-            foreach (var flight in OutwardRoute.Legs)
-            {
-                flight.FlightRouteId = OutwardRoute.RouteId;
-                Context.Flights.Add(flight);
-            }
-            foreach (var layover in OutwardRoute.Layovers)
-            {
-                layover.FlightRouteId = OutwardRoute.RouteId;
-                Context.Layovers.Add(layover);
-            }
-        }
+	private void HandleFlightSelected((string ComponentId, FlightRoute Route) selection)
+	{
+		if (selection.ComponentId == "1")
+		{
+			OutwardRoute = selection.Route;
+		}
+		else if (selection.ComponentId == "2")
+		{
+			ReturnRoute = selection.Route;
+		}
+	}
 
-        if (ReturnRoute != null)
-        {
-            ReturnFlightBooking = new FlightBooking
-                {
-                    FlightRoute = ReturnRoute,
-                    Airline = string.Join(", ", ReturnRoute.Legs.Select(leg => leg.Airline)),
-                    DepartureTime = ReturnRoute.Legs.First().DepartureTime,
-                    VacationOfferId = vacationOffer.VacationOfferId,
-                    DepartureAirport = ReturnRoute.Legs.First().DepartureAirportName,
-                    ArrivalAirport = ReturnRoute.Legs.Last().ArrivalAirportName
-                };
-            Context.FlightBookings.Add(ReturnFlightBooking);
-
-            Context.FlightRoutes.Add(ReturnRoute);
-
-            foreach (var flight in ReturnRoute.Legs)
-            {
-                flight.FlightRouteId = ReturnRoute.RouteId;
-                Context.Flights.Add(flight);
-            }
-            foreach (var layover in ReturnRoute.Layovers)
-            {
-                layover.FlightRouteId = ReturnRoute.RouteId;
-                Context.Layovers.Add(layover);
-            }
-        }
-
-        if (HotelBooking != null)
-        {
-            HotelBooking.VacationOfferId = vacationOffer.VacationOfferId;
-            Context.HotelBookings.Add(HotelBooking);
-        }
-        Context.SaveChanges();
-        NavigationManager.NavigateTo("/vacationrequests");
-    }
-
-    private void HandleFlightSelected((string ComponentId, FlightRoute Route) selection)
-    {
-        if (selection.ComponentId == "1")
-        {
-            OutwardRoute = selection.Route;
-        }
-        else if (selection.ComponentId == "2")
-        {
-            ReturnRoute = selection.Route;
-        }
-    }
-
-    private void HandleHotelSelected(Hotel selectedHotel)
-    {
-        try
-        {
-            HotelBooking = Mapper.Map<HotelBooking>(selectedHotel);
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError($"Mapping error: {ex}");
-        }
-    }
+	private void HandleHotelSelected(Hotel selectedHotel)
+	{
+		try
+		{
+			HotelBooking = Mapper.Map<HotelBooking>(selectedHotel);
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError($"Mapping error: {ex}");
+		}
+	}
 
 
 }
