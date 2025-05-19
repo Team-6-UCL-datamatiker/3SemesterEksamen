@@ -78,7 +78,7 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
         return _accessToken;
     }
 
-    public async Task SearchHotelsAsync(AmadeusHotelListInputModel listParameters, AmadeusHotelOffersParameters offerParameters)
+    public async Task SearchHotelsAsync(AmadeusHotelListInputModel listParameters, AmadeusHotelOfferInputModel offerParameters)
     {
         try
         {
@@ -294,7 +294,7 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
         }
     }
 
-    public string BuildOffersQueryAsync(AmadeusHotelOffersParameters p, List<string> hotelIds)
+    public string BuildOffersQueryAsync(AmadeusHotelOfferInputModel p, List<string> hotelIds)
     {
         try
         {
@@ -303,7 +303,7 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
             // Sæt hotelId'er
             query["hotelIds"] = string.Join(",", hotelIds);
 
-            foreach (var prop in typeof(AmadeusHotelOffersParameters).GetProperties())
+            foreach (var prop in typeof(AmadeusHotelOfferInputModel).GetProperties())
             {
                 var attribute = prop.GetCustomAttribute<JsonPropertyNameAttribute>();
 

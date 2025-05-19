@@ -2532,14 +2532,6 @@ public class CityLookupService : ICityLookupService
         { "Zurich (ZRH)", ("ZRH", "ZRH") }
     };
 
-    // Search method for autocomplete: returns a collection of up to {max} results where input matches the beginning of a list item.
-    public IEnumerable<string> Search(string input, int max = 10)
-    {
-        if (string.IsNullOrWhiteSpace(input)) return Enumerable.Empty<string>();
-        return Cities.Where(l => l.StartsWith(input, StringComparison.OrdinalIgnoreCase))
-                      .Take(max);
-    }
-
 	public IEnumerable<string> SearchContains(string input, int max = 10)
 	{
 		if (string.IsNullOrWhiteSpace(input))

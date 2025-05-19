@@ -10,7 +10,7 @@ public interface IAmadeusHotelAPIService
     public List<string> HotelIds { get; set; }
 
     Task<string> GetAccessTokenAsync();
-    Task SearchHotelsAsync(AmadeusHotelListInputModel listParameters, AmadeusHotelOffersParameters offersParameters);
+    Task SearchHotelsAsync(AmadeusHotelListInputModel listParameters, AmadeusHotelOfferInputModel offersParameters);
     string BuildListQueryAsync(AmadeusHotelListInputModel listParameters);
-    string BuildOffersQueryAsync(AmadeusHotelOffersParameters parameters, List<string> hotelIds);
+    string BuildOffersQueryAsync(AmadeusHotelOfferInputModel parameters, List<string> hotelIds);
 }

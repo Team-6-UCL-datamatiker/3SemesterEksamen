@@ -9,7 +9,7 @@ using System.Text.Json.Serialization;
 /// /shopping/hotel-offers (getMultiHotelOffers) endpoint so the UI can bind
 /// directly to this object. Every field is optional except "HotelIds"/>; 
 
-public class AmadeusHotelOffersParameters
+public class AmadeusHotelOfferInputModel
 {
     /// **Required.** List of 8‑character Amadeus property codes that identify the
     /// hotels to search (e.g. "TILONCHR").
