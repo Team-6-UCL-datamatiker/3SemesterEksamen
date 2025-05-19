@@ -14,15 +14,15 @@
 
 <details>
 	<summary class="summary-heading">Flight Search 1</summary><br />
-	<FlightComponent ComponentId="1" OnFlightSelected="HandleFlightSelected" />
+	<SearchFlightComponent ComponentId="1" OnFlightSelected="HandleFlightSelected" />
 </details>
 <details>
 	<summary class="summary-heading">Flight Search 2</summary><br />
-	<FlightComponent ComponentId="2" OnFlightSelected="HandleFlightSelected" />
+	<SearchFlightComponent ComponentId="2" OnFlightSelected="HandleFlightSelected" />
 </details>
 <details>
 	<summary class="summary-heading">Hotel Search</summary><br />
-	<SearchHotels OnHotelSelected="HandleHotelSelected" />
+	<SearchHotelComponent OnHotelSelected="HandleHotelSelected" />
 </details>
 
 @if (!string.IsNullOrWhiteSpace(ErrorMessage))
