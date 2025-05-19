@@ -1,7 +1,79 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<!-- Forside template for GodTur Blazor-app -->
+<!-- Hero sektion med baggrundsbillede og gradient overlay -->
+<section class="hero position-relative text-white mb-5" style="background-image: url('images/hero.jpg'); background-size: cover; background-position: center; height: 400px;">
+    <!-- Mørk overlay for kontrast -->
+    <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(to right, rgba(0, 0, 0, 0.6) 30%, rgba(0,0,0,0.2) 70%);"></div>
 
-<h1>Hello, world!</h1>
+    <div class="container position-relative h-100 d-flex align-items-center">
+        <div class="w-100">
+            <!-- Logo og velkomsttekst -->
+            <img src="images/logo.png" alt="GodTur Logo" class="img-fluid mb-3" style="max-width: 200px;" />
+            <h1 class="display-4">Velkommen til GodTur</h1>
+            <p class="lead">
+                Oplev verden med vores skræddersyede rejsepakker. Book nemt fly og hotel samlet i én reservation.
+            </p>
+            <AuthorizeView>
+                <Authorized>
+                    <a href="/Account/Manage" class="btn btn-light btn-lg me-2">Min Profil</a>
+                    <a href="/vacationrequests" class="btn btn-primary btn-lg">Mine Rejser</a>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="/Account/Login" class="btn btn-primary btn-lg me-2">Login</a>
+                    <a href="/Account/RegisterCustomer" class="btn btn-outline-light btn-lg">Bliv Kunde</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+    </div>
+</section>
 
-Welcome to your new app.
+<!-- Yderligere info sektion med kort -->
+<div class="container mb-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Nem Booking</h5>
+                    <p class="card-text">
+                        Book dine rejser gennem hjemmesiden –
+                        få e-billetter og hotelbekræftelser direkte på mail.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Sikre Betalinger</h5>
+                    <p class="card-text">
+                        Betal trygt med kreditkort gennem Stripe,
+                        og gem dine data til senere brug.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Personlig Service</h5>
+                    <p class="card-text">
+                        Få digitale rejseguider med
+                        attraktioner, restauranter og praktiske tips.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chat funktion sektion -->
+<section class="bg-light py-5">
+    <div class="container text-center">
+        <h2 class="mb-3">Global Chat</h2>
+        <p class="mb-4">
+            Deltag i vores globale chat for at tale med andre rejsende, dele tips og få inspiration til din næste tur.
+        </p>
+        <a href="/chat" class="btn btn-primary btn-lg">Gå til Chat</a>
+    </div>
+</section>
