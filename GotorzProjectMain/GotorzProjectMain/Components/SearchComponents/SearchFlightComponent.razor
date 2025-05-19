@@ -5,129 +5,138 @@
 
 @inject IFlightService FlightService
 @inject ICityLookupService CityLookupService
+@inject ILogger<SearchFlightComponent> Logger
 
 @rendermode InteractiveServer
 
 @* Inputs *@
 <div style="display:flex; gap:1rem; align-items:flex-start; margin-bottom:1rem; height:4rem">
-   <div>
-    <AutoCompleteInputComponent
-      Id="fromCity"
-      Label="Departure City"
-      Value="@fromCity"
-      ValueChanged="@(val => fromCity = val)"
-      Placeholder="Type a city"
-      SearchSuggestions="SearchCitySuggestions" />
-  </div>
+	<div>
+		<AutoCompleteInputComponent Id="fromCity"
+									Label="Departure City"
+									Value="@fromCity"
+									ValueChanged="@(val => fromCity = val)"
+									Placeholder="Type a city"
+									SearchSuggestions="SearchCitySuggestions" />
+	</div>
 
-  <div>
-    <AutoCompleteInputComponent
-      Id="toCity"
-      Label="Arrival City"
-      Value="@toCity"
-      ValueChanged="@(val => toCity = val)"
-      Placeholder="Type a city"
-      SearchSuggestions="SearchCitySuggestions" />
-  </div>
+	<div>
+		<AutoCompleteInputComponent Id="toCity"
+									Label="Arrival City"
+									Value="@toCity"
+									ValueChanged="@(val => toCity = val)"
+									Placeholder="Type a city"
+									SearchSuggestions="SearchCitySuggestions" />
+	</div>
 
-    <div>
-        <label for="outbound">Outbound Date</label><br />
-        <input id="outbound"
-               type="date"
-               @bind="outbound"
-               min="@DateTime.Today.ToString("yyyy-MM-dd")"
-               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
-    </div>
+	<div>
+		<label for="outbound">Outbound Date</label><br />
+		<input id="outbound"
+			   type="date"
+			   @bind="outbound"
+			   min="@DateTime.Today.ToString("yyyy-MM-dd")"
+			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
+	</div>
 
-    <div>
-        <label for="adults">Adults</label><br />
-        <input id="adults"
-               type="number" min="1"
-               @bind="adultCount"
-               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
-    </div>
+	<div>
+		<label for="adults">Adults</label><br />
+		<input id="adults"
+			   type="number" min="1"
+			   @bind="adultCount"
+			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
+	</div>
 
-    <div>
-        <label for="children">Children</label><br />
-        <input id="children"
-               type="number" min="0"
-               @bind="childCount"
-               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
-    </div>
-    <div>
-        <label /><br />
-        <button @onclick="Search" class="btn btn-primary" style="padding: 0.4rem 1rem; padding-top: 0.6rem">Search</button>
+	<div>
+		<label for="children">Children</label><br />
+		<input id="children"
+			   type="number" min="0"
+			   @bind="childCount"
+			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
+	</div>
+	<div>
+		<label /><br />
+		<button @onclick="Search" class="btn btn-primary" disabled="@isLoading" style="padding: 0.4rem 1rem; padding-top: 0.6rem">
+			@if (isLoading)
+			{
+				<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+				<span>Retrieving flights…</span>
+			}
+			else
+			{
+				<span>Search</span>
+			}
+		</button>
 
-    </div>
+	</div>
 
 </div>
 
 @* Error message *@
 @if (!string.IsNullOrEmpty(ErrorMessage))
 {
-    <div class="alert alert-warning">
-        @ErrorMessage
-    </div>
+	<div class="alert alert-warning">
+		@ErrorMessage
+	</div>
 }
 
 @if (FlightRoutes != null)
 {
-    <div style="display: flex; flex-direction: column;">
-        @for (int i = 0; i < FlightRoutes.Count; i++)
-        {
-            var route = FlightRoutes[i];
-            var routeSummary = string.Join(" → ",
-            route.Legs.Select(s => s.DepartureAirportCode)
-            .Concat(new[] { route.Legs.Last().ArrivalAirportCode }));
+	<div style="display: flex; flex-direction: column;">
+		@for (int i = 0; i < FlightRoutes.Count; i++)
+		{
+			var route = FlightRoutes[i];
+			var routeSummary = string.Join(" → ",
+			route.Legs.Select(s => s.DepartureAirportCode)
+			.Concat(new[] { route.Legs.Last().ArrivalAirportCode }));
 
-            <details class="details-row">
-                <summary>
-                    <span>@routeSummary</span>
-                    <span>@route.Legs.Count legs</span>
-                    <span>@route.TotalPrice DKK</span>
-                </summary>
-                <br />
-                <div style="padding: 1rem; background: #fff; border-radius: 6px; border: 1px solid #ccc">
-
-                    
-
-                    @for (int j = 0; j < route.Legs.Count; j++)
-                    {
-                        var leg = route.Legs[j];
-                        <div style="margin-bottom: 0.5rem; padding-bottom: 0.5rem;">
-                            <div><strong>Route:</strong> @leg.DepartureAirportCode → @leg.ArrivalAirportCode</div>
-                            <div><strong>Departure:</strong> @leg.DepartureTime.ToString("dd/MM/yyyy HH:mm")</div>
-                            <div><strong>Arrival:</strong> @leg.ArrivalTime.ToString("dd/MM/yyyy HH:mm")</div>
-                            <div><strong>Airline:</strong> @leg.Airline</div>
-                        </div>
+			<details class="details-row">
+				<summary>
+					<span>@routeSummary</span>
+					<span>@route.Legs.Count legs</span>
+					<span>@route.TotalPrice DKK</span>
+				</summary>
+				<br />
+				<div style="padding: 1rem; background: #fff; border-radius: 6px; border: 1px solid #ccc">
 
 
-                        @if (j < route.Layovers.Count)
-                        {
-                            var layover = route.Layovers[j];
-                            <div style="margin-bottom: 1rem; background: #f0f0f0; padding: 0.5rem; border-left: 4px solid #ccc;">
-                                <strong>Layover at @layover.Name:</strong> @layover.DurationDisplay
-                            </div>
-                        }
 
-                    }
-                    
+					@for (int j = 0; j < route.Legs.Count; j++)
+					{
+						var leg = route.Legs[j];
+						<div style="margin-bottom: 0.5rem; padding-bottom: 0.5rem;">
+							<div><strong>Route:</strong> @leg.DepartureAirportCode → @leg.ArrivalAirportCode</div>
+							<div><strong>Departure:</strong> @leg.DepartureTime.ToString("dd/MM/yyyy HH:mm")</div>
+							<div><strong>Arrival:</strong> @leg.ArrivalTime.ToString("dd/MM/yyyy HH:mm")</div>
+							<div><strong>Airline:</strong> @leg.Airline</div>
+						</div>
 
-                    <div style="margin-top: 0.5rem; border-top: 1px solid #ddd; padding-top: 1rem;">
-                        <div><strong>Total duration:</strong> @route.TotalTravelTimeDisplay</div>
-                        <div><strong>Total price:</strong> @route.TotalPrice DKK</div>
-                    </div>
-                    <br/>
-                    <button @onclick="() => SelectFlight(route)"
-                            class="btn @(selectedFlightRoute == route ? "btn-success" : "btn-outline-primary")"
-                            style="margin-bottom: 0.5rem;">
-                        @(selectedFlightRoute == route ? "Selected" : "Select this flight")
-                    </button>
 
-                </div>
-            </details>
-        }
-    </div>
+						@if (j < route.Layovers.Count)
+						{
+							var layover = route.Layovers[j];
+							<div style="margin-bottom: 1rem; background: #f0f0f0; padding: 0.5rem; border-left: 4px solid #ccc;">
+								<strong>Layover at @layover.Name:</strong> @layover.DurationDisplay
+							</div>
+						}
+
+					}
+
+
+					<div style="margin-top: 0.5rem; border-top: 1px solid #ddd; padding-top: 1rem;">
+						<div><strong>Total duration:</strong> @route.TotalTravelTimeDisplay</div>
+						<div><strong>Total price:</strong> @route.TotalPrice DKK</div>
+					</div>
+					<br />
+					<button @onclick="() => SelectFlight(route)"
+							class="btn @(selectedFlightRoute == route ? "btn-success" : "btn-outline-primary")"
+							style="margin-bottom: 0.5rem;">
+						@(selectedFlightRoute == route ? "Selected" : "Select this flight")
+					</button>
+
+				</div>
+			</details>
+		}
+	</div>
 }
 
 
@@ -135,98 +144,115 @@
 
 @code {
 
-    [Parameter]
-    public string ComponentId { get; set; } = Guid.NewGuid().ToString();
+	private bool isLoading;
 
-    [Parameter]
-    public EventCallback<(string ComponentId, FlightRoute Route)> OnFlightSelected { get; set; }
+	[Parameter]
+	public string ComponentId { get; set; } = Guid.NewGuid().ToString();
 
-
-    private string fromCity = "Copenhagen (CPH)";
-    private string toCity = "London, Heathrow (LHR)";
+	[Parameter]
+	public EventCallback<(string ComponentId, FlightRoute Route)> OnFlightSelected { get; set; }
 
 
-    private DateTime outbound = DateTime.Today.AddDays(7);
-    private int adultCount = 1;
-    private int childCount = 0;
-
-    private List<FlightRoute>? FlightRoutes;
-    private string? ErrorMessage;
-
-    // cant bind <select> to object, so we use an index
-    private int? selectedFlightRouteIndex;
-
-    private FlightRoute? selectedFlightRoute;
+	private string fromCity = "Copenhagen (CPH)";
+	private string toCity = "London, Heathrow (LHR)";
 
 
-    // Selected flight route based on the index
-    public FlightRoute? SelectedFlightRoute =>
-        selectedFlightRouteIndex.HasValue
-                ? FlightRoutes[selectedFlightRouteIndex.Value]
-                : null;
+	private DateTime outbound = DateTime.Today.AddDays(7);
+	private int adultCount = 1;
+	private int childCount = 0;
+
+	private List<FlightRoute>? FlightRoutes;
+	private string? ErrorMessage;
+
+	// cant bind <select> to object, so we use an index
+	private int? selectedFlightRouteIndex;
+
+	private FlightRoute? selectedFlightRoute;
+
+
+	// Selected flight route based on the index
+	public FlightRoute? SelectedFlightRoute =>
+		selectedFlightRouteIndex.HasValue
+				? FlightRoutes[selectedFlightRouteIndex.Value]
+				: null;
 
 
 	// Autocomplete suggestions for departure city
-    private Task<List<string>> SearchCitySuggestions(string city)
-      => Task.FromResult(CityLookupService.SearchContains(city, 10).ToList());
-
-  
-
-    // Performs a flight search using city names
-    async Task Search()
-    {
-        // Reset state before search
-        ErrorMessage = null;
-        FlightRoutes = null;
-        selectedFlightRouteIndex = null; // Reset selection on each new search
-
-        if (outbound == DateTime.MinValue)
-        {
-            ErrorMessage = "Please select a valid outbound date.";
-            return;
-        }
-
-		// Lookup airport codes for the given cities
-        var fromMatch = CityLookupService.GetCodes(fromCity);
-        if (fromMatch == null)
-        {
-            ErrorMessage = $"Depature “{fromCity}” not found.";
-            return;
-        }
-
-        var toMatch = CityLookupService.GetCodes(toCity);
-        if (toMatch == null)
-        {
-            ErrorMessage = $"Destination “{toCity}” not found.";
-            return;
-        }
+	private Task<List<string>> SearchCitySuggestions(string city)
+			=> Task.FromResult(CityLookupService.SearchContains(city, 10).ToList());
 
 
-        // CityLookupService.GetCodes returns (CityCode, AirportCode)
-        string fromAirportCode = fromMatch.Value.AirportCode;
-        string toAirportCode = toMatch.Value.AirportCode;
 
-        // Request flight offers from the external API
-        FlightRoutes = await FlightService.SearchAsync(
-            fromAirportCode,
-            toAirportCode,
-            outbound,
-            adultCount,
-            childCount);
+	// Performs a flight search using city names
+	async Task Search()
+	{
+		// Reset state before search
+		isLoading = true;
+		ErrorMessage = null;
+		FlightRoutes = null;
+		selectedFlightRouteIndex = null; // Reset selection on each new search
 
-        // Post-search, empty result
-        if (!FlightRoutes.Any())
-        {
-            ErrorMessage = "No flights found. Either you picked an unsupported code " +
-                           "(eg “London (LON)”) or there simply aren’t any offers " +
-                           "for that date and passenger count. Please try one of the suggestions above.";
-        }
-    }
+		if (outbound == DateTime.MinValue)
+		{
+			ErrorMessage = "Please select a valid outbound date.";
+			return;
+		}
 
-    private async Task SelectFlight(FlightRoute route)
-    {
-        selectedFlightRoute = route;
-        Console.WriteLine($"Selected route: {route.TotalPrice} DKK in component {ComponentId}");
-        await OnFlightSelected.InvokeAsync((ComponentId, route));
-    }
+		try
+		{
+
+			// Lookup airport codes for the given cities
+			var fromMatch = CityLookupService.GetCodes(fromCity);
+			if (fromMatch == null)
+			{
+				ErrorMessage = $"Depature “{fromCity}” not found.";
+				return;
+			}
+
+			var toMatch = CityLookupService.GetCodes(toCity);
+			if (toMatch == null)
+			{
+				ErrorMessage = $"Destination “{toCity}” not found.";
+				return;
+			}
+
+
+			// CityLookupService.GetCodes returns (CityCode, AirportCode)
+			string fromAirportCode = fromMatch.Value.AirportCode;
+			string toAirportCode = toMatch.Value.AirportCode;
+
+			// Request flight offers from the external API
+			FlightRoutes = await FlightService.SearchAsync(
+				fromAirportCode,
+				toAirportCode,
+				outbound,
+				adultCount,
+				childCount);
+
+			// Post-search, empty result
+			if (!FlightRoutes.Any())
+			{
+				ErrorMessage = "No flights found. Either you picked an unsupported code " +
+										"(eg “London (LON)”) or there simply aren’t any offers " +
+										"for that date and passenger count. Please try one of the suggestions above.";
+			}
+		}
+		catch (Exception ex)
+		{
+			ErrorMessage = "Der skete en fejl under forespørgslen.";
+			Logger.LogError(ex, "Error during flight search");
+		}
+		finally
+		{
+			isLoading = false;
+		}
+
+	}
+
+	private async Task SelectFlight(FlightRoute route)
+	{
+		selectedFlightRoute = route;
+		Console.WriteLine($"Selected route: {route.TotalPrice} DKK in component {ComponentId}");
+		await OnFlightSelected.InvokeAsync((ComponentId, route));
+	}
 }
