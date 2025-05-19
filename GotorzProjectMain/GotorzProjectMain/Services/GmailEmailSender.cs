@@ -5,7 +5,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
 
-namespace GotorzProjectMain.Components.Account
+namespace GotorzProjectMain.Services
 {
     internal sealed class GmailEmailSender : IEmailSender<ApplicationUser>
     {

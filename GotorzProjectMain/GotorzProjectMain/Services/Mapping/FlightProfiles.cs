@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using GotorzProjectMain.Models;
-using GotorzProjectMain.Models.DTOs;
+using GotorzProjectMain.Services.APIs.FlightAPI.DTO;
 using System.Globalization;
 
 namespace GotorzProjectMain.Services.Mapping

@@ -7,10 +7,10 @@ using Moq;
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Bunit.TestDoubles;
-using GotorzProjectMain.Components.Account.Pages.CRUD.EmployeePages;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using GotorzProjectMain.Components.Pages.EmployeePages;
 
 namespace TestProject.UnitTests;
 

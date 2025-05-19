@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace GotorzProjectMain.Models.DTOs
+namespace GotorzProjectMain.Services.APIs.FlightAPI.DTO
 {
 	public class FlightResponseDTO
 	{

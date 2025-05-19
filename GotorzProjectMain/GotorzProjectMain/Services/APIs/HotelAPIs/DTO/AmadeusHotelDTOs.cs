@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace GotorzProjectMain.Services.APIs.HotelAPIs;
+namespace GotorzProjectMain.Services.APIs.HotelAPIs.DTO;
 
 // LIST API DTO's
 //-----------------------------------------------------------------------------------------------------------------------------------------

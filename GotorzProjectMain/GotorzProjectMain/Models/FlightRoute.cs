@@ -1,5 +1,4 @@
-﻿using GotorzProjectMain.Models.DTOs;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GotorzProjectMain.Models

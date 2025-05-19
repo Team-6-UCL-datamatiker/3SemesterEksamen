@@ -2,7 +2,7 @@
 using AutoMapper;
 using GotorzProjectMain.InputModels.Users;
 using GotorzProjectMain.Models;
-using GotorzProjectMain.Services.APIs.HotelAPIs;
+using GotorzProjectMain.Services.APIs.HotelAPIs.DTO;
 
 namespace GotorzProjectMain.Services.Mapping;
 
