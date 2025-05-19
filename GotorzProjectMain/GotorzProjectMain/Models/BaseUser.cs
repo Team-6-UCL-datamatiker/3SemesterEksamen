@@ -5,11 +5,9 @@ namespace GotorzProjectMain.Models;
 
 public abstract class BaseUser
 {
-    [Key]
-    [ForeignKey("User")]
     public string Id { get; set; }
 
-	public string CustomUserName { get; set; }
+	public string? CustomUserName { get; set; }
 
 	public ApplicationUser User { get; set; }
 

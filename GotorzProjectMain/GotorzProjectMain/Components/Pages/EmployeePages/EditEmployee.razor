@@ -105,7 +105,6 @@ else
 @code {
 	[SupplyParameterFromQuery]
 	private string? Id { get; set; }
-
 	private EmployeeBaseInputModel Input { get; set; } = new();
 	private Employee? Employee { get; set; }
 	private string? ErrorMessage { get; set; }
@@ -142,11 +141,9 @@ else
 	// For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
 	private async Task UpdateEmployee()
 	{
-		await using var transaction = await Context.Database.BeginTransactionAsync();
-
 		try
 		{
-			if (Input.Email != Employee.User.Email)
+			if (Input.Email != Employee!.User.Email)
 			{
 				var oldEmail = Employee.User.Email;
 				var newEmail = Input.Email;
@@ -162,13 +159,13 @@ else
 
 			if (Input.ProfilePictureFile != null)
 			{
-				string newPath = await SaveProfilePicture(Input.ProfilePictureFile);
+
+				string? newPath = await SaveProfilePicture(Input.ProfilePictureFile);
 				Employee.ProfilePicture = newPath;
 				_imageSavedToFile = true;
 			}
 
 			await Context.SaveChangesAsync();
-			await transaction.CommitAsync();
 
 			if (_oldProfilePicturePath != "/images/DefaultProfilePicture.jpg")
 			{
@@ -179,15 +176,14 @@ else
 		}
 		catch (DbUpdateConcurrencyException ex)
 		{
-			await transaction.RollbackAsync();
 
 			if (_imageSavedToFile == true)
 			{
-				Employee.ProfilePicture = _oldProfilePicturePath;
+				Employee!.ProfilePicture = _oldProfilePicturePath;
 
 				if (_oldProfilePicturePath != "/images/DefaultProfilePicture.jpg")
 				{
-					await File.WriteAllBytesAsync(_oldProfilePicturePath, _oldProfilePicture);
+					await File.WriteAllBytesAsync(_oldProfilePicturePath!, _oldProfilePicture!);
 				}				
 			}
 
@@ -196,15 +192,14 @@ else
 		}
 		catch (Exception ex)
 		{
-			await transaction.RollbackAsync();
 
 			if (_imageSavedToFile == true)
 			{
-				Employee.ProfilePicture = _oldProfilePicturePath;
+				Employee!.ProfilePicture = _oldProfilePicturePath;
 
 				if (_oldProfilePicturePath != "/images/DefaultProfilePicture.jpg")
 				{
-					await File.WriteAllBytesAsync(_oldProfilePicturePath, _oldProfilePicture);
+					await File.WriteAllBytesAsync(_oldProfilePicturePath!, _oldProfilePicture!);
 				}
 			}
 
