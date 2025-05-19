@@ -1,0 +1,41 @@
+﻿@using GotorzProjectMain.Models
+@using GotorzProjectMain.Components
+
+@inject GotorzProjectMain.Services.IExtendedUserService ExtendedUserService
+
+<!-- EmployeesList.razor: Viser en horisontal liste af Employee-kort -->
+<div class="container my-5">
+    <h2 class="mb-4">Mød vores medarbejdere</h2>
+
+    @if (employees == null)
+    {
+        <p>Indlæser medarbejdere...</p>
+    }
+    else if (!employees.Any())
+    {
+        <p>Ingen medarbejdere fundet.</p>
+    }
+    else
+    {
+        <!-- Horisontal scrollbar ved overflow, fixed card bredde for ensartethed -->
+        <div class="d-flex flex-row overflow-auto">
+            @foreach (var emp in employees)
+            {
+                <div class="me-3" style="min-width: 18rem;">
+                    <EmployeeCardComponent Employee="emp" />
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<Employee>? employees;
+
+    protected override async Task OnInitializedAsync()
+    {
+        employees = await ExtendedUserService.GetEmployeesWithUsersAsync();
+    }
+}
+
+
