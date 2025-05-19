@@ -22,8 +22,8 @@
                     <a href="/vacationrequests" class="btn btn-primary btn-lg">Mine Rejser</a>
                 </Authorized>
                 <NotAuthorized>
+                    <a href="/Account/RegisterCustomer" class="btn btn-light btn-lg me-2">Bliv Kunde</a>
                     <a href="/Account/Login" class="btn btn-primary btn-lg me-2">Login</a>
-                    <a href="/Account/RegisterCustomer" class="btn btn-outline-light btn-lg">Bliv Kunde</a>
                 </NotAuthorized>
             </AuthorizeView>
         </div>
@@ -72,12 +72,19 @@
 <EmployeeListComponent />
 
 <!-- Chat funktion sektion -->
-<section class="bg-light py-5">
-    <div class="container text-center">
-        <h2 class="mb-3">Global Chat</h2>
-        <p class="mb-4">
-            Deltag i vores globale chat for at tale med andre rejsende, dele tips og få inspiration til din næste tur.
-        </p>
-        <a href="/chat" class="btn btn-primary btn-lg">Gå til Chat</a>
+<section class="py-5 bg-primary bg-opacity-10">
+    <div class="container d-flex justify-content-center">
+        <div class="card border-0 shadow-sm rounded-4 p-4 text-center" style="max-width: 500px; background-color: white;">
+            <div class="mb-3">
+                <i class="bi bi-chat-dots-fill fs-1 text-primary"></i>
+            </div>
+            <h4 class="mb-2 text-primary">Global Chat</h4>
+            <p class="text-secondary mb-4" style="font-size: 1rem;">
+                Deltag i chatten for at møde andre rejsende og få tips til din næste tur.
+            </p>
+            <a href="/chat" class="btn btn-primary btn-lg px-5 rounded-pill shadow-sm">
+                Gå til Chat
+            </a>
+        </div>
     </div>
 </section>
