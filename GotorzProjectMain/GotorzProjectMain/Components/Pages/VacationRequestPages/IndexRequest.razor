@@ -30,7 +30,7 @@
     <TemplateColumn Context="vacationrequest" Title="User Email">
         @{
             var email = customers
-            .FirstOrDefault(c => c.User?.Id == vacationrequest.UserId)
+            .FirstOrDefault(c => c.User?.Id == vacationrequest.CustomerId)
             ?.User?.Email ?? "Unknown";
         }
         @email
@@ -104,7 +104,7 @@
         else
         {
             vacationRequests = await Context.VacationRequests
-                .Where(v => v.UserId == userId)
+                .Where(v => v.CustomerId == userId)
                 .ToListAsync();
         }
 

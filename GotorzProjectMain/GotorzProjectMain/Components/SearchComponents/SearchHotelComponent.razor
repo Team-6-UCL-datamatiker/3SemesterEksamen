@@ -8,6 +8,7 @@
 
 @inject IAmadeusHotelAPIService Service
 @inject ICityLookupService CityLookupService
+@inject ILogger<SearchHotelComponent> Logger
 
 <PageTitle>Search Hotels</PageTitle>
 
@@ -162,7 +163,18 @@
 		</EditForm>
 	</div>
 	<div class="mt-3"></div>
-	<button @onclick="SubmitAll" class="w-100 btn btn-lg btn-primary" disabled="@((Destination == null || !CityLookupService.Cities.Contains(Destination)) || (!string.IsNullOrWhiteSpace(_inputOffer.PriceRange) && string.IsNullOrWhiteSpace(_inputOffer.Currency)))">Search</button>
+
+	<button @onclick="SubmitAll" class="w-100 btn btn-lg btn-primary" disabled="@((_destination == null || !CityLookupService.Cities.Contains(_destination)) || (!string.IsNullOrWhiteSpace(_inputOffer.PriceRange) && string.IsNullOrWhiteSpace(_inputOffer.Currency)) || isLoading)">
+		@if (isLoading)
+		{
+			<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+			<span>Retriving hotels…</span>
+		}
+		else
+		{
+			<span>Search</span>
+		}
+	</button>
 
 	@if (!string.IsNullOrWhiteSpace(Service.ErrorMessage))
 	{
@@ -285,7 +297,17 @@
 				</details>
 			}
 		}
-		<button @onclick="GetHotels" disabled="@(!Service.HotelIds.Any())" class="w-100 btn btn-lg btn-primary">Get more offers</button>
+		<button @onclick="GetHotels" disabled="@(!Service.HotelIds.Any() || isLoadingMore)" class="w-100 btn btn-lg btn-primary">
+			@if (isLoadingMore)
+			{
+				<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+				<span class="ms-2">Loading more…</span>
+			}
+			else
+			{
+				<span>Get more offers</span>
+			}
+		</button>
 
 		<details style="margin-bottom: 1em;">
 			<summary class="fw-bold fs-5">Complete hotel list (@Service.Hotels.Count())</summary>
@@ -325,6 +347,11 @@
 
 
 @code {
+	private bool isLoading;
+
+	// for loading more hotels
+	private bool isLoadingMore;
+
 	// Component Binding
 	public Hotel? SelectedHotel { get; set; }
 	[Parameter]
@@ -383,12 +410,32 @@
 		Service.Hotels = Enumerable.Empty<Hotel>();
 		Service.HotelIds.Clear();
 
-		await GetHotels();
+		isLoading = true;
+		try
+		{
+			await GetHotels();
+		}
+		finally
+		{
+			isLoading = false;
+		}
 	}
 
 	private async Task GetHotels()
 	{
-		await Service.SearchHotelsAsync(_validatedInputList!, _validatedInputOffer!);
+		isLoadingMore = true;
+		try
+		{
+			await Service.SearchHotelsAsync(_validatedInputList!, _validatedInputOffer!);
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "Error while searching hotels");
+		}
+		finally
+		{
+			isLoadingMore = false;
+		}
 	}
 
 	private void SelectDestination()

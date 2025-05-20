@@ -77,7 +77,8 @@
                 <ValidationMessage For="() => Input.Phone" class="alert alert-danger mt-3" />
             </div>
 
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
+			<button type="submit" disabled="@(string.IsNullOrWhiteSpace(Input.ConfirmPassword) && !_ec!.Validate())" class="w-100 btn btn-lg btn-primary">Register</button>
+
         </EditForm>
         <StatusMessage Message="@_message" />
     </div>
@@ -117,9 +118,13 @@
 			var emailStore = (IUserEmailStore<ApplicationUser>)UserStore;
 			await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
 
-			// Giver identityErrors en værdi hvis metoden ikke returnerer succes. identityErrors bliver vist i browseren i så fald.			
+			// Giver identityErrors en værdi hvis metoden ikke returnerer succes. identityErrors bliver vist i browseren i så fald.
 			var result = await UserManager.CreateAsync(user, Input.Password);
 			_identityErrors = _identityErrors.Concat(result.Succeeded ? Enumerable.Empty<IdentityError>() : result.Errors);
+			if (!result.Succeeded)
+			{
+				return;
+			}
 
 			result = await UserManager.AddToRoleAsync(user, "Customer");
 			_identityErrors = _identityErrors.Concat(result.Succeeded ? Enumerable.Empty<IdentityError>() : result.Errors);
@@ -131,7 +136,6 @@
 				};
 
 			Mapper.Map(Input, customer);
-
 			Context.Customers.Add(customer);
 			await Context.SaveChangesAsync();
 
