@@ -14,7 +14,6 @@
 
 <div class="row">
 	<div class="col-md-4">
-		@* fjernet valid *@
 		<EditForm EditContext="_ecList" FormName="listHotels">
 			<DataAnnotationsValidator />
 			<h2>Search for hotels</h2>
@@ -24,22 +23,13 @@
 				<label for="isAirport" class="form-check-label">Airport code</label>
 			</div>
 
-			<div data-role="Destination" class="mb-3 form-floating position-relative">
-				<InputText id="destination" placeholder="City" autocomplete="off" class="form-control" @bind-Value="_destination" oninput="@(async (ChangeEventArgs e) => await OnDestinationInput(e))" @onkeydown="HandleDestinationKeyPress" />
-				<label for="destination">Destination:</label>
-				@* 				<ValidationMessage For="() => Input." class="alert alert-danger mt-3" /> *@
-
-				@if (DestinationSuggestions.Any() && _destination != "")
-				{
-					<ul class="list-group position-absolute mt-1 w-100" style="z-index:1000;">
-						@foreach (string suggestion in DestinationSuggestions)
-						{
-							<li class="list-group-item list-group-item-action" @onclick="() => SelectDestination(suggestion)">
-								@suggestion
-							</li>
-						}
-					</ul>
-				}
+			<div>
+				<AutoCompleteInputComponent Id="destination"
+											Label="Destination"
+											Value="@Destination"
+											ValueChanged="@(val => Destination = val)"
+											Placeholder="Type a city" 
+											SelectionMethod="SelectDestination" />
 
 				@if (!string.IsNullOrWhiteSpace(_selectedDestination))
 				{
@@ -48,13 +38,9 @@
 					</div>
 				}
 
-				@if (!string.IsNullOrWhiteSpace(_matchAlertMessage))
-				{
-					<div class="alert alert-danger mt-3" role="alert">
-						@_matchAlertMessage
-					</div>
-				}
 			</div>
+
+			<div class="mt-3"></div>
 
 			<div data-role="Radius" class="form-floating mb-3">
 				<InputNumber id="radius" @bind-Value="_inputList.Radius" class="form-control" placeholder="Radius" />
@@ -69,24 +55,14 @@
 				</select>
 			</div>
 
-			@* Har ikke tilføjet Chaincodes endnu - Hvis man vil søge på hotelkæder, skal det tilføjes *@
-
-			<div data-role="Amenities" class="form-floating mb-3 position-relative">
-				<InputText id="amenities" @bind-Value="AmenityInput" oninput="@(async (ChangeEventArgs e) => await OnAmenitiesInput(e))" @onkeydown="HandleAmenityKeyPress" class="form-control" autocomplete="off" placeholder="Amenities" />
-				<label for="amenities">Add Amenities</label>
-				@* 				<ValidationMessage For="() => Input.Amenities" class="alert alert-danger mt-3" /> *@
-
-				@if (AmenitiesSuggestions.Any() && AmenityInput != "")
-				{
-					<ul class="list-group position-absolute mt-1 w-100" style="z-index:1000;">
-						@foreach (string suggestion in AmenitiesSuggestions)
-						{
-							<li class="list-group-item list-group-item-action" @onclick="() => SelectAmenity(suggestion)">
-								@suggestion
-							</li>
-						}
-					</ul>
-				}
+			<div>
+				<AutoCompleteInputComponent Id="amenities"
+											Label="Amenities"
+											Value="@AmenityInput"
+											ValueChanged="@(val => AmenityInput = val)"
+											Placeholder=" Amenities"
+											SearchSuggestions="SearchAmenitiesSuggestions"
+											SelectionMethod="SelectAmenity" />
 
 				@if (_inputList.Amenities.Any())
 				{
@@ -119,8 +95,6 @@
 				</div>
 			</div>
 
-			@* Man kan bestemme hvilken kilde man vil søge i - har ikke taget det med endnu.
-			   Ved ikke helt hvad det er for noget, men hvis man vil det, skal det tilføjes *@
 		</EditForm>
 	</div>
 	<div class="col-md-4">
@@ -189,6 +163,7 @@
 		</EditForm>
 	</div>
 	<div class="mt-3"></div>
+
 	<button @onclick="SubmitAll" class="w-100 btn btn-lg btn-primary" disabled="@((_destination == null || !CityLookupService.Cities.Contains(_destination)) || (!string.IsNullOrWhiteSpace(_inputOffer.PriceRange) && string.IsNullOrWhiteSpace(_inputOffer.Currency)) || isLoading)">
 		@if (isLoading)
 		{
@@ -385,8 +360,8 @@
 
 	// Offer API
 	private EditContext? _ecOffer;
-	private AmadeusHotelOffersParameters _inputOffer = new();
-	private AmadeusHotelOffersParameters? _validatedInputOffer;
+	private AmadeusHotelOfferInputModel _inputOffer = new();
+	private AmadeusHotelOfferInputModel? _validatedInputOffer;
 
 	// List API
 	private EditContext? _ecList;
@@ -395,8 +370,7 @@
 
 	//Destination autocomplete
 	private bool _airport = false;
-	private string? _destination;
-	private List<string> DestinationSuggestions { get; set; } = new();
+	private string? Destination { get; set; }
 
 	//Amenities autocomplete (BAR or LOUNGE virker vist ikke.................?????????)
 	private List<string> AllAmenities = new()
@@ -406,7 +380,6 @@
 	  "MASSAGE","VALET_PARKING","BAR or LOUNGE","KIDS_WELCOME","NO_PORN_FILMS","MINIBAR","TELEVISION",
 	  "WI-FI_IN_ROOM","ROOM_SERVICE","GUARDED_PARKG","SERV_SPEC_MENU"
 	};
-	private List<string> AmenitiesSuggestions { get; set; } = new();
 	private string? _amenitiesMessage;
 	public string? AmenityInput { get; set; }
 
@@ -414,7 +387,6 @@
 	private CancellationTokenSource? _debounceCts;
 
 	// Fejlinfo
-	private string? _matchAlertMessage;
 	private string? _selectedDestination;
 
 	protected override void OnInitialized()
@@ -466,62 +438,9 @@
 		}
 	}
 
-	private async Task OnDestinationInput(ChangeEventArgs e)
+	private void SelectDestination()
 	{
-		_debounceCts?.Cancel();
-		_debounceCts?.Dispose();
-		_debounceCts = new CancellationTokenSource();
-		_matchAlertMessage = "";
-		_selectedDestination = "";
-
-		if (e.Value is not null)
-		{
-			await Task.Delay(300, _debounceCts.Token);
-			DestinationSuggestions = CityLookupService.Search(e.Value.ToString()!).ToList();
-		}
-	}
-
-	private void HandleDestinationKeyPress(KeyboardEventArgs e)
-	{
-		if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(_destination))
-		{
-			string trimmed = _destination.Trim();
-			string? match = null;
-
-			if (DestinationSuggestions.Any())
-			{
-				match = DestinationSuggestions.FirstOrDefault(d => d.Contains(trimmed, StringComparison.OrdinalIgnoreCase));
-			}
-
-			if (match != null)
-			{
-				(string CityCode, string AirportCode)? codes = CityLookupService.GetCodes(match);
-
-				if (!_airport)
-				{
-					_inputList.CityOrAirportCode = codes.Value.CityCode;
-				}
-				else
-				{
-					_inputList.CityOrAirportCode = codes.Value.AirportCode;
-				}
-
-				_selectedDestination = $"{match}, Code: {_inputList.CityOrAirportCode}";
-
-				_destination = match;
-			}
-			else
-			{
-				_matchAlertMessage = "No such match";
-			}
-			DestinationSuggestions.Clear();
-		}
-	}
-
-	private void SelectDestination(string suggestion)
-	{
-		_destination = suggestion;
-		(string CityCode, string AirportCode)? codes = CityLookupService.GetCodes(suggestion);
+		(string CityCode, string AirportCode)? codes = CityLookupService.GetCodes(Destination!);
 
 		if (!_airport)
 		{
@@ -532,66 +451,27 @@
 			_inputList.CityOrAirportCode = codes!.Value.AirportCode;
 		}
 
-		_selectedDestination = $"{suggestion}, Code: {_inputList.CityOrAirportCode}";
-		DestinationSuggestions.Clear();
+		_selectedDestination = $"{Destination!}, Code: {_inputList.CityOrAirportCode}";
 	}
 
-	private async Task OnAmenitiesInput(ChangeEventArgs e)
+	// Autocomplete suggestions for departure city
+	private Task<List<string>> SearchAmenitiesSuggestions(string Value)
 	{
-		_debounceCts?.Cancel();
-		_debounceCts?.Dispose();
-		_debounceCts = new CancellationTokenSource();
-		_amenitiesMessage = "";
-
-		if (e.Value is not null)
-		{
-			await Task.Delay(200, _debounceCts.Token);
-			AmenitiesSuggestions = AllAmenities.Where(a => a.StartsWith(e.Value.ToString()!.Trim(), StringComparison.OrdinalIgnoreCase))
-								.Take(10).ToList();
-		}
+		return Task.FromResult(AllAmenities.Where(a => a.Contains(Value.ToString()!.Trim(), StringComparison.OrdinalIgnoreCase))
+							.Take(10).ToList());
 	}
 
-	private void HandleAmenityKeyPress(KeyboardEventArgs e)
+	private void SelectAmenity()
 	{
-		if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(AmenityInput))
+		if (_inputList.Amenities.Contains(AmenityInput!))
 		{
-			string trimmed = AmenityInput.Trim();
-			string? match = null;
-
-			if (AmenitiesSuggestions.Any())
-			{
-				match = AmenitiesSuggestions.FirstOrDefault(a => a.Contains(trimmed, StringComparison.OrdinalIgnoreCase));
-			}
-
-			if (match != null)
-			{
-				if (_inputList.Amenities.Contains(match))
-				{
-					_inputList.Amenities.Remove(match);
-				}
-				else
-				{
-					_inputList.Amenities.Add(match);
-				}
-				AmenityInput = "";
-			}
-		}
-	}
-
-	private void SelectAmenity(string suggestion)
-	{
-		AmenityInput = suggestion;
-
-		if (_inputList.Amenities.Contains(AmenityInput))
-		{
-			_inputList.Amenities.Remove(AmenityInput);
+			_inputList.Amenities.Remove(AmenityInput!);
 		}
 		else
 		{
-			_inputList.Amenities.Add(AmenityInput);
+			_inputList.Amenities.Add(AmenityInput!);
 		}
-
-		AmenitiesSuggestions.Clear();
+		AmenityInput = "";
 	}
 
 	private void ToggleRating(string starValue, object? isChecked)
@@ -606,6 +486,7 @@
 			_inputList.Ratings.Remove(starValue);
 		}
 	}
+
 	private async Task SelectHotel(Hotel hotel, HotelOffer offer)
 	{
 		hotel.Offers = new[] { offer };

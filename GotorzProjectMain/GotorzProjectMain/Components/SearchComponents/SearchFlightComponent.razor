@@ -11,48 +11,49 @@
 
 @* Inputs *@
 <div style="display:flex; gap:1rem; align-items:flex-start; margin-bottom:1rem; height:4rem">
-	<div>
-		<AutoCompleteInputComponent Id="fromCity"
-									Label="Departure City"
-									Value="@fromCity"
-									ValueChanged="@(val => fromCity = val)"
-									Placeholder="Type a city"
-									SearchSuggestions="SearchCitySuggestions" />
-	</div>
+   <div>
+    <AutoCompleteInputComponent
+      Id="fromCity"
+      Label="Departure City"
+      Value="@fromCity"
+      ValueChanged="@(val => fromCity = val)"
+      Placeholder="Type a city" />
+  </div>
 
-	<div>
-		<AutoCompleteInputComponent Id="toCity"
-									Label="Arrival City"
-									Value="@toCity"
-									ValueChanged="@(val => toCity = val)"
-									Placeholder="Type a city"
-									SearchSuggestions="SearchCitySuggestions" />
-	</div>
+  <div>
+    <AutoCompleteInputComponent
+      Id="toCity"
+      Label="Arrival City"
+      Value="@toCity"
+      ValueChanged="@(val => toCity = val)"
+      Placeholder="Type a city" />
+  </div>
 
-	<div>
-		<label for="outbound">Outbound Date</label><br />
-		<input id="outbound"
-			   type="date"
-			   @bind="outbound"
-			   min="@DateTime.Today.ToString("yyyy-MM-dd")"
-			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
-	</div>
+    <div>
+        <label for="outbound">Outbound Date</label><br />
+        <input id="outbound"
+               type="date"
+               @bind="outbound"
+               min="@DateTime.Today.ToString("yyyy-MM-dd")"
+               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
+    </div>
 
-	<div>
-		<label for="adults">Adults</label><br />
-		<input id="adults"
-			   type="number" min="1"
-			   @bind="adultCount"
-			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
-	</div>
+    <div>
+        <label for="adults">Adults</label><br />
+        <input id="adults"
+               type="number" min="1"
+               @bind="adultCount"
+               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
+    </div>
 
-	<div>
-		<label for="children">Children</label><br />
-		<input id="children"
-			   type="number" min="0"
-			   @bind="childCount"
-			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
-	</div>
+    <div>
+        <label for="children">Children</label><br />
+        <input id="children"
+               type="number" min="0"
+               @bind="childCount"
+               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
+    </div>
+   
 	<div>
 		<label /><br />
 		<button @onclick="Search" class="btn btn-primary" disabled="@isLoading" style="padding: 0.4rem 1rem; padding-top: 0.6rem">
@@ -68,7 +69,6 @@
 		</button>
 
 	</div>
-
 </div>
 
 @* Error message *@
@@ -139,9 +139,6 @@
 	</div>
 }
 
-
-
-
 @code {
 
 	private bool isLoading;
@@ -175,13 +172,6 @@
 		selectedFlightRouteIndex.HasValue
 				? FlightRoutes[selectedFlightRouteIndex.Value]
 				: null;
-
-
-	// Autocomplete suggestions for departure city
-	private Task<List<string>> SearchCitySuggestions(string city)
-			=> Task.FromResult(CityLookupService.SearchContains(city, 10).ToList());
-
-
 
 	// Performs a flight search using city names
 	async Task Search()
