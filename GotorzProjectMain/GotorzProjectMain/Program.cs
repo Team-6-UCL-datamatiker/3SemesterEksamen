@@ -90,6 +90,13 @@ builder.Services.AddHttpClient<IFlightService, FlightService>(client =>
 builder.Services
 	.AddScoped<ICurrentUserService, CurrentUserService>();
 
+// Service to lockout users
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.Lockout.MaxFailedAccessAttempts = 10;
+    options.Lockout.AllowedForNewUsers = true;
+});
 
 // Authorization policies
 builder.Services.AddAuthorization(options =>

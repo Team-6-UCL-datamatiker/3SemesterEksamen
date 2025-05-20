@@ -94,11 +94,19 @@
         var ipAddress = HttpContext.Connection?.RemoteIpAddress?.ToString();
         var timestamp = DateTime.UtcNow;
 
+        var user = await SignInManager.UserManager.FindByEmailAsync(Input.Email);
+        if (user != null && await SignInManager.UserManager.IsLockedOutAsync(user))
+        {
+            RedirectManager.RedirectTo("Account/Lockout");
+            return;
+        }
+
+
         var result = await SignInManager.PasswordSignInAsync(
             Input.Email,
             Input.Password,
             Input.RememberMe,
-            lockoutOnFailure: false
+            lockoutOnFailure: true
         );
 
         var failureReason = result.IsLockedOut ? "Locked out" :
@@ -118,7 +126,7 @@
 
         if (result.Succeeded)
         {
-            Logger.LogInformation("User {Email} logged in successfully from IP {IP} at {Time}.",
+            Logger.LogInformation("User {Email} logged in successfully from IP {IP} - Date: {Time}.",
                 Input.Email, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
             RedirectManager.RedirectTo(ReturnUrl);
             return;
@@ -126,7 +134,7 @@
 
         if (result.RequiresTwoFactor)
         {
-            Logger.LogInformation("User {Email} requires 2FA from IP {IP} at {Time}.",
+            Logger.LogInformation("User {Email} requires 2FA from IP {IP} - Date: {Time}.",
                 Input.Email, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
             RedirectManager.RedirectTo("Account/LoginWith2fa",
                 new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
@@ -135,30 +143,48 @@
 
         if (result.IsLockedOut)
         {
-            Logger.LogWarning("User {Email} locked out from IP {IP} at {Time}.",
-                Input.Email, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
-
             var failedCount = await CountFailedLoginsAsync(Input.Email);
-            if (failedCount >= 5)
+            var foundUser = await SignInManager.UserManager.FindByEmailAsync(Input.Email);
+            DateTimeOffset? lockoutEnd = null;
+
+            if (foundUser != null)
             {
-                Logger.LogWarning("Multiple failed login attempts for user {Email} - Count: {Count}.",
-                    Input.Email, failedCount);
+                lockoutEnd = await SignInManager.UserManager.GetLockoutEndDateAsync(foundUser);
             }
+
+            Logger.LogWarning("LOCKOUT: User '{Email}' has been locked out due to {Count} failed login attempts from IP {IP} at {Time}. Lockout ends at {LockoutEnd}.",
+                Input.Email, failedCount, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"), lockoutEnd?.LocalDateTime.ToString("dd/MM/yyyy HH:mm:ss") ?? "unknown");
 
             RedirectManager.RedirectTo("Account/Lockout");
             return;
         }
 
-        Logger.LogWarning("Invalid login attempt for user {Email} from IP {IP} at {Time}.",
-            Input.Email, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
 
-        errorMessage = "Error: Invalid login attempt.";
+        if (!result.Succeeded)
+        {
+            var failedCount = await CountFailedLoginsAsync(Input.Email);
+            
+            errorMessage = "Error:The Username or Password is Incorrect. Try again.";
+
+            if (failedCount >= 5)
+            {
+                Logger.LogWarning("Multiple failed login attempts for user {Email} - Number of failed tries the last hour: {Count} - Latest attempt: {Time}.",
+                    Input.Email, failedCount, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
+                return;
+            }
+
+            Logger.LogWarning("Invalid login attempt for user {Email} from IP {IP} - Date: {Time}.",
+            Input.Email, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
+            
+        }
     }
 
     private async Task<int> CountFailedLoginsAsync(string email)
     {
+        var since = DateTime.UtcNow.AddHours(-1);
+
         return await DbContext.LoginAttempts
-            .Where(x => x.Username == email && !x.IsSuccessful)
+            .Where(x => x.Username == email && !x.IsSuccessful && x.TimeOfAttempt >= since)
             .CountAsync();
     }
 

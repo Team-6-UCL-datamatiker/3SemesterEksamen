@@ -80,6 +80,10 @@ summary {
 {
     font-weight: 900;
 }
+.attempts-scroll {
+    max-height: 300px;
+    overflow-y: auto;
+}
 
 
 
