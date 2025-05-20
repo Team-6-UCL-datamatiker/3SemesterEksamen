@@ -124,7 +124,7 @@ namespace GotorzProjectMain.Migrations
 
                     b.HasKey("MessageId");
 
-                    b.ToTable("ChatMessages", (string)null);
+                    b.ToTable("ChatMessages");
                 });
 
             modelBuilder.Entity("GotorzProjectMain.Models.Customer", b =>
@@ -144,7 +144,7 @@ namespace GotorzProjectMain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Customers", (string)null);
+                    b.ToTable("Customers");
                 });
 
             modelBuilder.Entity("GotorzProjectMain.Models.Employee", b =>
@@ -170,7 +170,7 @@ namespace GotorzProjectMain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Employees", (string)null);
+                    b.ToTable("Employees");
                 });
 
             modelBuilder.Entity("GotorzProjectMain.Models.Flight", b =>
@@ -214,7 +214,7 @@ namespace GotorzProjectMain.Migrations
 
                     b.HasIndex("FlightRouteId");
 
-                    b.ToTable("Flights", (string)null);
+                    b.ToTable("Flights");
                 });
 
             modelBuilder.Entity("GotorzProjectMain.Models.FlightBooking", b =>
@@ -254,7 +254,7 @@ namespace GotorzProjectMain.Migrations
                     b.HasIndex("VacationOfferId")
                         .IsUnique();
 
-                    b.ToTable("FlightBookings", (string)null);
+                    b.ToTable("FlightBookings");
                 });
 
             modelBuilder.Entity("GotorzProjectMain.Models.FlightRoute", b =>
@@ -275,7 +275,7 @@ namespace GotorzProjectMain.Migrations
 
                     b.HasIndex("FlightBookingId");
 
-                    b.ToTable("FlightRoutes", (string)null);
+                    b.ToTable("FlightRoutes");
                 });
 
             modelBuilder.Entity("GotorzProjectMain.Models.HotelBooking", b =>
@@ -334,7 +334,7 @@ namespace GotorzProjectMain.Migrations
                         .IsUnique()
                         .HasFilter("[VacationOfferId] IS NOT NULL");
 
-                    b.ToTable("HotelBookings", (string)null);
+                    b.ToTable("HotelBookings");
                 });
 
             modelBuilder.Entity("GotorzProjectMain.Models.Layover", b =>
@@ -359,7 +359,7 @@ namespace GotorzProjectMain.Migrations
 
                     b.HasIndex("FlightRouteId");
 
-                    b.ToTable("Layovers", (string)null);
+                    b.ToTable("Layovers");
                 });
 
             modelBuilder.Entity("GotorzProjectMain.Models.VacationOffer", b =>
@@ -399,7 +399,7 @@ namespace GotorzProjectMain.Migrations
 
                     b.HasIndex("VacationRequestId");
 
-                    b.ToTable("VacationOffers", (string)null);
+                    b.ToTable("VacationOffers");
                 });
 
             modelBuilder.Entity("GotorzProjectMain.Models.VacationRequest", b =>
@@ -469,7 +469,7 @@ namespace GotorzProjectMain.Migrations
 
                     b.HasKey("VacationRequestId");
 
-                    b.ToTable("VacationRequests", (string)null);
+                    b.ToTable("VacationRequests");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

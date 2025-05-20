@@ -24,19 +24,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(modelBuilder);
 
-        // MAP TO TABLES
-        // modelBuilder.Entity<User>().ToTable("Users");
-        modelBuilder.Entity<Customer>().ToTable("Customers");
-        modelBuilder.Entity<Employee>().ToTable("Employees");
-        modelBuilder.Entity<VacationRequest>().ToTable("VacationRequests");
-        modelBuilder.Entity<VacationOffer>().ToTable("VacationOffers");
-        modelBuilder.Entity<FlightBooking>().ToTable("FlightBookings");
-        modelBuilder.Entity<HotelBooking>().ToTable("HotelBookings");
-        modelBuilder.Entity<ChatMessage>().ToTable("ChatMessages");
-        modelBuilder.Entity<FlightRoute>().ToTable("FlightRoutes");
-        modelBuilder.Entity<Flight>().ToTable("Flights");
-        modelBuilder.Entity<Layover>().ToTable("Layovers");
-
         // PRIMARY KEYS
         modelBuilder.Entity<Customer>().HasKey(c => c.Id);
         modelBuilder.Entity<Customer>().Property(c => c.Id).ValueGeneratedOnAdd();
