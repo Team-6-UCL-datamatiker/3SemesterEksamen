@@ -164,7 +164,7 @@
 	</div>
 	<div class="mt-3"></div>
 
-	<button @onclick="SubmitAll" class="w-100 btn btn-lg btn-primary" disabled="@((_destination == null || !CityLookupService.Cities.Contains(_destination)) || (!string.IsNullOrWhiteSpace(_inputOffer.PriceRange) && string.IsNullOrWhiteSpace(_inputOffer.Currency)) || isLoading)">
+	<button @onclick="SubmitAll" class="w-100 btn btn-lg btn-primary" disabled="@((Destination == null || !CityLookupService.Cities.Contains(Destination)) || (!string.IsNullOrWhiteSpace(_inputOffer.PriceRange) && string.IsNullOrWhiteSpace(_inputOffer.Currency)) || isLoading)">
 		@if (isLoading)
 		{
 			<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
