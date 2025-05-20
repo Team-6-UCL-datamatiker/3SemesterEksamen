@@ -1,0 +1,27 @@
+﻿@using GotorzProjectMain.Models
+
+<div class="list-group-item mb-3 shadow-sm rounded">
+    <div class="row align-items-center">
+        <div class="col-auto">
+            <img src="@(Employee.ProfilePicture ?? "images/DefaultProfilePicture.jpg")" alt="ProfilePicture" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover;" />
+        </div>
+        <div class="col ms-3">
+            <h5 class="mb-1">  @Employee.User.FirstName @Employee.User.LastName</h5>
+            <p class="mb-0 text-muted">
+                @if (Employee.IsAdmin)
+                {
+                    <span class="badge bg-primary">Admin</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Medarbejder</span>
+                }
+            </p>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Employee Employee { get; set; } = default!;
+}
