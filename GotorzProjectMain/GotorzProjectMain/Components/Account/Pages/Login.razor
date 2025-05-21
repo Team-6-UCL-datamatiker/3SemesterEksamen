@@ -5,11 +5,13 @@
 @using GotorzProjectMain.Models
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
 
 @inject SignInManager<ApplicationUser> SignInManager
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+@inject ApplicationDbContext DbContext
 
 <PageTitle>Log in</PageTitle>
 
@@ -67,6 +69,7 @@
 
 @code {
     private string? errorMessage;
+    string? failureReason = null;
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
@@ -88,29 +91,101 @@
 
     public async Task LoginUser()
     {
-        // This doesn't count login failures towards account lockout
-        // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+        var ipAddress = HttpContext.Connection?.RemoteIpAddress?.ToString();
+        var timestamp = DateTime.UtcNow;
+
+        var user = await SignInManager.UserManager.FindByEmailAsync(Input.Email);
+        if (user != null && await SignInManager.UserManager.IsLockedOutAsync(user))
+        {
+            RedirectManager.RedirectTo("Account/Lockout");
+            return;
+        }
+
+
+        var result = await SignInManager.PasswordSignInAsync(
+            Input.Email,
+            Input.Password,
+            Input.RememberMe,
+            lockoutOnFailure: true
+        );
+
+        var failureReason = result.IsLockedOut ? "Locked out" :
+                            result.RequiresTwoFactor ? "Requires 2FA" :
+                            result.Succeeded ? null : "Login failed";
+
+        DbContext.LoginAttempts.Add(new LoginAttempt
+            {
+                Username = Input.Email,
+                IsSuccessful = result.Succeeded,
+                TimeOfAttempt = timestamp,
+                IPAddress = ipAddress,
+                FailureReason = failureReason
+            });
+
+        await DbContext.SaveChangesAsync();
+
         if (result.Succeeded)
         {
-            Logger.LogInformation("User logged in.");
+            Logger.LogInformation("User {Email} logged in successfully from IP {IP} - Date: {Time}.",
+                Input.Email, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
             RedirectManager.RedirectTo(ReturnUrl);
+            return;
         }
-        else if (result.RequiresTwoFactor)
+
+        if (result.RequiresTwoFactor)
         {
-            RedirectManager.RedirectTo(
-                "Account/LoginWith2fa",
+            Logger.LogInformation("User {Email} requires 2FA from IP {IP} - Date: {Time}.",
+                Input.Email, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
+            RedirectManager.RedirectTo("Account/LoginWith2fa",
                 new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
+            return;
         }
-        else if (result.IsLockedOut)
+
+        if (result.IsLockedOut)
         {
-            Logger.LogWarning("User account locked out.");
+            var failedCount = await CountFailedLoginsAsync(Input.Email);
+            var foundUser = await SignInManager.UserManager.FindByEmailAsync(Input.Email);
+            DateTimeOffset? lockoutEnd = null;
+
+            if (foundUser != null)
+            {
+                lockoutEnd = await SignInManager.UserManager.GetLockoutEndDateAsync(foundUser);
+            }
+
+            Logger.LogWarning("LOCKOUT: User '{Email}' has been locked out due to {Count} failed login attempts from IP {IP} at {Time}. Lockout ends at {LockoutEnd}.",
+                Input.Email, failedCount, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"), lockoutEnd?.LocalDateTime.ToString("dd/MM/yyyy HH:mm:ss") ?? "unknown");
+
             RedirectManager.RedirectTo("Account/Lockout");
+            return;
         }
-        else
+
+
+        if (!result.Succeeded)
         {
-            errorMessage = "Error: Invalid login attempt.";
+            var failedCount = await CountFailedLoginsAsync(Input.Email);
+            
+            errorMessage = "Error:The Username or Password is Incorrect. Try again.";
+
+            if (failedCount >= 5)
+            {
+                Logger.LogWarning("Multiple failed login attempts for user {Email} - Number of failed tries the last hour: {Count} - Latest attempt: {Time}.",
+                    Input.Email, failedCount, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
+                return;
+            }
+
+            Logger.LogWarning("Invalid login attempt for user {Email} from IP {IP} - Date: {Time}.",
+            Input.Email, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
+            
         }
+    }
+
+    private async Task<int> CountFailedLoginsAsync(string email)
+    {
+        var since = DateTime.UtcNow.AddHours(-1);
+
+        return await DbContext.LoginAttempts
+            .Where(x => x.Username == email && !x.IsSuccessful && x.TimeOfAttempt >= since)
+            .CountAsync();
     }
 
     private sealed class InputModel

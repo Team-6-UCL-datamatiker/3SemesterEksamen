@@ -72,61 +72,62 @@
 </div>
 
 @code {
-	private Employee? employee;
+    private Employee? employee;
 
-	[SupplyParameterFromQuery]
-	private string Id { get; set; }
-	private string? _errorMessage;
+    [SupplyParameterFromQuery]
+    private string Id { get; set; }
+    private string? _errorMessage;
 
-	protected override async Task OnInitializedAsync()
-	{
-		employee = await UserService.GetEmployeeByIdAsync(Id);
+    protected override async Task OnInitializedAsync()
+    {
+        employee = await UserService.GetEmployeeByIdAsync(Id);
 
-		if (employee is null)
-		{
-			NavigationManager.NavigateTo("notfound");
-		}
-	}
+        if (employee is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
 
-	private async Task DeleteEmployee()
-	{
-		try
-		{
-			// Get the current user
-			string? userId = await CurrentUserService.GetUserIdAsync()
-											?? throw new InvalidOperationException("User not authenticated");
+    private async Task DeleteEmployee()
+    {
+        try
+        {
+            // Get the current user
+            string? userId = await CurrentUserService.GetUserIdAsync()
+                                            ?? throw new InvalidOperationException("User not authenticated");
 
-			// Check if admin is trying to selfdestruct.
-			if (Id == userId)
-			{
-				_errorMessage = "Admin can't delete own profile. Delete from another admin profile";
-				return;
-			}
+            // Check if admin is trying to selfdestruct.
+            if (Id == userId)
+            {
+                _errorMessage = "Admin can't delete own profile. Delete from another admin profile";
+                return;
+            }
 
-			if (employee is not null)
-			{
-				// 🔥 Load the ApplicationUser
-				var user = await Context.Users.FirstOrDefaultAsync(u => u.Id == employee.Id);
+            if (employee is not null)
+            {
+                // Load the ApplicationUser
+                var user = await Context.Users.FirstOrDefaultAsync(u => u.Id == employee.Id);
 
-				if (user is not null)
-				{
-					Context.Users.Remove(user); // Delete the Identity user
-				}
+                if (user is not null)
+                {
+                    Context.Users.Remove(user); // Delete the Identity user
+                }
 
-				Context.Employees.Remove(employee); // Delete the Customer
-				await Context.SaveChangesAsync();
-			}
-		}
-		catch (DbUpdateConcurrencyException ex)
-		{
-			_errorMessage = "Another user has modified this data since you started editing. Your changes were not saved. Please reload and try again.";
-			Logger.LogWarning(ex, _errorMessage);
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine($"Error deleting employee: {ex.Message}");
-		}
+                Context.Employees.Remove(employee); // Delete the Customer
+                await Context.SaveChangesAsync();
+            }
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            _errorMessage = "Another user has modified this data since you started editing. Your changes were not saved. Please reload and try again.";
+            Logger.LogWarning(ex, _errorMessage);
+        }
+        catch (Exception ex)
+        {
+			_errorMessage = "An error occurred while deleting the employee.";
+			Logger.LogError(ex, _errorMessage);
+        }
 
-		NavigationManager.NavigateTo("/employees");
-	}
+        NavigationManager.NavigateTo("/employees");
+    }
 }

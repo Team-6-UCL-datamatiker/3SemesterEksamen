@@ -7,7 +7,6 @@ namespace GotorzProjectMain.Models
 	{
         public int LayoverId { get; set; }
         public int FlightRouteId { get; set; }
-        //public string Id { get; set; }
 		public string Name { get; set; }
 		public int Duration { get; set; }  // minutes
 		public string DurationDisplay

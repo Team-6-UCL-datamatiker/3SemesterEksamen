@@ -10,7 +10,8 @@
 @inject NavigationManager NavigationManager
 @inject Services.IExtendedUserService UserService
 @inject ILogger<DeleteRequest> Logger
-@inject VacationRequestSignalRService SignalRService
+@inject ICurrentUserService CurrentUserService
+@inject IVacationRequestNotifier VCNotifier
 
 <PageTitle>Delete Vacation Request</PageTitle>
 
@@ -184,9 +185,8 @@ else
             _errorMessage = $"An error occurred while trying to delete: {ex.Message}";
         }
 
-        await SignalRService.InitializeAsync();
-        await Task.Delay(500);
-        await SignalRService.SendVacationRequestAsync();
+        // Hub notification
+        await VCNotifier.BroadcastAsync();
 
         NavigationManager.NavigateTo("/vacationrequests");
     }
