@@ -77,9 +77,9 @@
 				<ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
 			</div>
 
-			<div class="mb-3">
-				<InputText id="phone" @bind-Value="Input.Phone" class="form-control" aria-required="true" onblur="@((FocusEventArgs e) => { if (string.IsNullOrWhiteSpace(Input.Phone)) { Input.Phone = null; _ec.Validate(); }})" />
-				<label for="phone" class="form-label">Phone:</label>
+			<div class="form-floating mb-3">
+				<InputText id="phone" @bind-Value="Input.Phone" class="form-control" aria-required="true" placeholder="phone number" onblur="@((FocusEventArgs e) => { if (string.IsNullOrWhiteSpace(Input.Phone)) { Input.Phone = null; _ec.Validate(); }})" />
+				<label for="phone" class="form-label">Phone Number (optional)</label>
 				<ValidationMessage For="() => Input.Phone" class="text-danger" />
 			</div>
 
@@ -96,8 +96,8 @@
 
 		<StatusMessage Message="@_message" />
 	</div>
-	@* // <ExternalLoginPicker /> can be used to add third party authentications systems such as Google*@
 </div>
+@* // <ExternalLoginPicker /> can be used to add third party authentications systems such as Google*@
 <!--
 <div class="col-md-6 col-md-offset-2">
 <section>
@@ -124,8 +124,6 @@
 	{
 		_ec = new EditContext(Input);
 	}
-
-	// private Uri? profilePictureUri = null;
 
 	public async Task RegisterUser()
 	{
