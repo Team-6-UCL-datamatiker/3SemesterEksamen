@@ -33,7 +33,6 @@
             <DataAnnotationsValidator />
             <h2>Create a new account.</h2>
             <hr />
-            @* 			<ValidationSummary class="text-danger" role="alert" /> *@
 
             <div class="form-floating mb-3">
                 <InputText id="first-name" @bind-Value="Input.FirstName" class="form-control" autocomplete="given-name" aria-required="true" />
@@ -82,7 +81,6 @@
         </EditForm>
         <StatusMessage Message="@_message" />
     </div>
-    @* // <ExternalLoginPicker /> can be used to add third party authentications systems such as Google*@
 </div>
 
 @code {

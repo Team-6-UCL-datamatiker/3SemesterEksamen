@@ -109,8 +109,7 @@
                 .Where(v => v.CustomerId == userId)
                 .ToListAsync();
         }
-
-        Console.WriteLine("📦 Starting LoadDataAsync()");
+		// Load customers
         customers = await ExtendedUserService.GetCustomersWithUsersAsync();
     }
 

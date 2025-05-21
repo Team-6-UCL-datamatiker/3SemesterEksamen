@@ -36,20 +36,34 @@ builder.Services.AddQuickGridEntityFrameworkAdapter();
 
 builder.Services.AddScoped<IRateLimiter, RateLimiter>();
 builder.Services.AddSingleton<ICityLookupService, CityLookupService>();
+
+//Used for getting the user data everytime an employee or customer is loaded
+builder.Services.AddScoped<IExtendedUserService, ExtendedUserService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+
+// Service to handle hotel API
 builder.Services.AddHttpClient<IAmadeusHotelAPIService, AmadeusHotelAPIService>(client =>
 {
 	client.BaseAddress = new Uri("https://api.amadeus.com/");
 });
 
-//Used for getting the user data everytime an employee or customer is loaded
-builder.Services.AddScoped<IExtendedUserService, ExtendedUserService>();
+// Service to handle flight API
+builder.Services.AddHttpClient<IFlightService, FlightService>(client =>
+{
+	client.BaseAddress = new Uri("https://serpapi.com/");
+});
+
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+// Identity
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
+
+
 
 builder.Services.AddAuthentication(options =>
 	{
@@ -77,15 +91,6 @@ else
 	builder.Services.AddScoped<IEmailSender<ApplicationUser>, GmailEmailSender>();
 }
 
-// Service to handle flight API
-builder.Services.AddHttpClient<IFlightService, FlightService>(client =>
-{
-	client.BaseAddress = new Uri("https://serpapi.com/");
-});
-
-// Service to see who is logged in
-builder.Services
-	.AddScoped<ICurrentUserService, CurrentUserService>();
 
 // Service to lockout users
 builder.Services.Configure<IdentityOptions>(options =>
