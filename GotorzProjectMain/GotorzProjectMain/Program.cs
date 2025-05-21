@@ -93,6 +93,13 @@ else
 }
 
 
+// Service to lockout users
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.Lockout.MaxFailedAccessAttempts = 10;
+    options.Lockout.AllowedForNewUsers = true;
+});
 
 // Authorization policies
 builder.Services.AddAuthorization(options =>
@@ -111,8 +118,7 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddSignalR();
-
-
+builder.Services.AddSingleton<IVacationRequestNotifier, VacationRequestNotifier>();
 
 builder.Services.AddResponseCompression(opts =>
 {

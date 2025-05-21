@@ -5,7 +5,7 @@
 @using System.Text
 @using System.Text.Encodings.Web
 @using AutoMapper
-@using GotorzProjectMain.Client.Components
+@using GotorzProjectMain.Components.UserComponents
 @using GotorzProjectMain.Components.Account
 @using GotorzProjectMain.InputModels.Users.EmployeeInputModels
 @using GotorzProjectMain.Models
@@ -39,49 +39,49 @@
 			<DataAnnotationsValidator />
 			<h2>Create a new employee account.</h2>
 			<hr />
-			<ValidationSummary class="text-danger" role="alert" />
-
+@* 			<ValidationSummary class="text-danger" role="alert" />
+ *@
 			<div class="form-floating mb-3">
 				<InputText id="first-name" @bind-Value="Input.FirstName" class="form-control" autocomplete="given-name" aria-required="true" placeholder="john" />
 				<label for="first-name">First Name</label>
-				<ValidationMessage For="() => Input.FirstName" class="text-danger" />
-			</div>
+@* 				<ValidationMessage For="() => Input.FirstName" class="text-danger" />
+ *@			</div>
 
 			<div class="form-floating mb-3">
 				<InputText id="last-name" @bind-Value="Input.LastName" class="form-control" autocomplete="family-name" aria-required="true" placeholder="doe" />
 				<label for="last-name">Last Name</label>
-				<ValidationMessage For="() => Input.LastName" class="text-danger" />
-			</div>
+@* 				<ValidationMessage For="() => Input.LastName" class="text-danger" />
+ *@			</div>
 
 			<div class="form-floating mb-3">
 				<InputText id="username" @bind-Value="Input.CustomUsername" class="form-control" autocomplete="family-name" aria-required="true" placeholder="doe" />
 				<label for="username">Username</label>
-				<ValidationMessage For="() => Input.CustomUsername" class="text-danger" />
-			</div>
+@* 				<ValidationMessage For="() => Input.CustomUsername" class="text-danger" />
+ *@			</div>
 
 			<div class="form-floating mb-3">
 				<InputText id="email" @bind-Value="Input.Email" class="form-control" autocomplete="email" aria-required="true" placeholder="name@example.com" />
 				<label for="email">Email</label>
-				<ValidationMessage For="() => Input.Email" class="text-danger" />
-			</div>
+@* 				<ValidationMessage For="() => Input.Email" class="text-danger" />
+ *@			</div>
 
 			<div class="form-floating mb-3">
 				<InputText id="password" type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
 				<label for="password">Password</label>
-				<ValidationMessage For="() => Input.Password" class="text-danger" />
-			</div>
+@* 				<ValidationMessage For="() => Input.Password" class="text-danger" />
+ *@			</div>
 
 			<div class="form-floating mb-3">
 				<InputText id="confirm-password" type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
 				<label for="confirm-password">Confirm Password</label>
-				<ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
-			</div>
+@* 				<ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+ *@			</div>
 
 			<div class="form-floating mb-3">
 				<InputText id="phone" @bind-Value="Input.Phone" class="form-control" aria-required="true" placeholder="phone number" onblur="@((FocusEventArgs e) => { if (string.IsNullOrWhiteSpace(Input.Phone)) { Input.Phone = null; _ec.Validate(); }})" />
 				<label for="phone" class="form-label">Phone Number (optional)</label>
-				<ValidationMessage For="() => Input.Phone" class="text-danger" />
-			</div>
+@* 				<ValidationMessage For="() => Input.Phone" class="text-danger" />
+ *@			</div>
 
 			<EmployeeProfilePicturePreview @bind-ProfilePictureFile="Input.ProfilePictureFile" />
 
@@ -91,7 +91,7 @@
 				<label class="form-check-label" for="isAdmin">Is Admin?</label>
 			</div>
 
-			<button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
+			<button type="submit" disabled="@(string.IsNullOrWhiteSpace(Input.ConfirmPassword) || Input.ConfirmPassword != Input.Password)" class="w-100 btn btn-lg btn-primary">Register</button>
 		</EditForm>
 
 		<StatusMessage Message="@_message" />
