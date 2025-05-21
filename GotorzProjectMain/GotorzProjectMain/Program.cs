@@ -43,6 +43,7 @@ builder.Services.AddHttpClient<IAmadeusHotelAPIService, AmadeusHotelAPIService>(
 
 //Used for getting the user data everytime an employee or customer is loaded
 builder.Services.AddScoped<IExtendedUserService, ExtendedUserService>();
+builder.Services.AddScoped<IVacationRequestTreeService, VacationRequestTreeService>();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 

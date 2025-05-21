@@ -8,6 +8,7 @@
 @inject NavigationManager NavigationManager
 @inject IExtendedUserService UserService
 @inject ApplicationDbContext Context
+@inject IVacationRequestTreeService VacationRequestTreeService
 
 @rendermode InteractiveServer
 
@@ -76,16 +77,46 @@
         </div>
     }
 </div>
-<br/>
-@if (VacationOffer != null)
+<br />
+
+@if (ApprovedVacationOffer != null)
 {
     <details>
-        <summary class="summary-heading">Offer 1</summary><br />
-        <DetailsOfferComponent VacationOfferId="VacationOffer.VacationOfferId" />
+        <summary class="summary-heading">Accepted offer</summary><br />
+        <DetailsOfferComponent VacationOffer="ApprovedVacationOffer" VacationRequest="vacationrequest" />
     </details>
 }
 
-@if (vacationrequest != null && Employee?.User != null)
+@if (WaitingVacationOffers != null && WaitingVacationOffers.Count > 0 && ApprovedVacationOffer == null)
+{
+    <details>
+        <summary>Offers waiting for response</summary><br/>
+        @foreach (var waitingVacationOffer in WaitingVacationOffers)
+        {
+            <details>
+                <summary class="summary-heading">Offer @(WaitingVacationOffers.IndexOf(waitingVacationOffer) + 1)</summary><br />
+                <DetailsOfferComponent VacationOffer="waitingVacationOffer" VacationRequest="vacationrequest" />
+            </details>
+        }
+    </details>
+}
+
+@if (DeniedVacationOffers != null && DeniedVacationOffers.Count > 0 && ApprovedVacationOffer == null)
+{
+    <details>
+        <summary>Denied Offers</summary><br/>
+        @foreach (var deniedVacationOffer in DeniedVacationOffers)
+        {
+            <details>
+                <summary class="summary-heading">Denied Offer @(DeniedVacationOffers.IndexOf(deniedVacationOffer) + 1)</summary><br />
+                <DetailsOfferComponent VacationOffer="deniedVacationOffer" VacationRequest="vacationrequest" />
+            </details>
+        }
+    </details>
+}
+
+
+@if (vacationrequest != null && Employee?.User != null && ApprovedVacationOffer == null)
 {
     <br />
     <CreateOfferComponent Employee="Employee" VacationRequest="vacationrequest" />
@@ -97,6 +128,10 @@
     private Customer? Customer { get; set; }
     private Employee? Employee { get; set; }
     private VacationOffer? VacationOffer { get; set; }
+    private List<VacationOffer> WaitingVacationOffers { get; set; }
+    private List<VacationOffer> DeniedVacationOffers { get; set; }
+    private VacationOffer? ApprovedVacationOffer { get; set; }
+
 
     [SupplyParameterFromQuery]
     private int VacationRequestId { get; set; }
@@ -108,11 +143,14 @@
     {
         try
         {
-            vacationrequest = await Context.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
+            vacationrequest = await VacationRequestTreeService.LoadVacationRequestTreeByIdAsync(VacationRequestId);
 
             Employee = await UserService.GetEmployeeByIdAsync(EmployeeId);
 
-            VacationOffer = await Context.VacationOffers.FirstOrDefaultAsync(o => o.VacationRequestId == VacationRequestId);
+            ApprovedVacationOffer = vacationrequest.Offers.FirstOrDefault(dvo => dvo.OfferStatus == OfferStatus.Approved);
+            WaitingVacationOffers = vacationrequest.Offers.Where(dvo => dvo.OfferStatus == OfferStatus.Waiting).ToList();
+            DeniedVacationOffers = vacationrequest.Offers.Where(dvo => dvo.OfferStatus == OfferStatus.Denied).ToList();
+
         }
         catch (Exception ex)
         {
