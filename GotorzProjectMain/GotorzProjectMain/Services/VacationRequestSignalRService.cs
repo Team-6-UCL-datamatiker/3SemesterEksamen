@@ -59,11 +59,18 @@ public class VacationRequestSignalRService : IAsyncDisposable
     
     public async Task SendVacationRequestAsync()
     {
-        if (_hubConnection is not null && _hubConnection.State == HubConnectionState.Connected)
+        if (_hubConnection is not null) 
         {
+           if (_hubConnection.State == HubConnectionState.Connected)
+            {
             _logger.LogInformation("Sending vacation request to SignalR hub.");
 			await _hubConnection.SendAsync("SendVacationRequest");
-        }
+            }
+			else
+			{
+				_logger.LogWarning("Cannot send vacation request. Hub connection is not in a connected state.");
+			}
+		}
         else
         {
 			_logger.LogWarning("Cannot send vacation request. Hub connection is not established or is null.");
