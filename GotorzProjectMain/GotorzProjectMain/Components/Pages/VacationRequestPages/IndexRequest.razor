@@ -1,6 +1,8 @@
 ﻿@page "/vacationrequests"
 @rendermode InteractiveServer
 
+@implements IAsyncDisposable
+
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
@@ -13,8 +15,9 @@
 @inject ApplicationDbContext Context
 @inject IExtendedUserService ExtendedUserService
 @inject NavigationManager NavigationManager
-@inject VacationRequestSignalRService SignalRService
 @inject ICurrentUserService CurrentUserService
+@inject IVacationRequestNotifier VCNotifier
+
 
 @attribute [Authorize]
 
@@ -64,12 +67,11 @@
 </QuickGrid>
 @code {
 
-    private DateTime lastUpdated = DateTime.Now;
-
     private List<VacationRequest> vacationRequests = new();
     private List<Customer> customers = new();
     private bool isEmployee;
     private string? userId;
+    private HubConnection? hubConnection;
 
     protected override async Task OnInitializedAsync()
     {
@@ -79,19 +81,19 @@
 
         await LoadDataAsync();
 
-        await SignalRService.InitializeAsync();
+        // Create the SignalR connection (on the browser)
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/vacationrequesthub"))
+            .WithAutomaticReconnect()
+            .Build();
 
-        SignalRService.OnVacationRequestReceived += async () =>
+        hubConnection.On("ReceiveVacationRequest", async () =>
         {
-            Console.WriteLine("🔥 Handler started");
             await LoadDataAsync();
-            Console.WriteLine("✅ Handler finished LoadDataAsync()");
-            lastUpdated = DateTime.Now;
             await InvokeAsync(StateHasChanged);
-        };
+        });
 
-        Console.WriteLine("🔗 SignalR event handler attached in Index.razor");
-
+        await hubConnection.StartAsync();
     }
 
     private async Task LoadDataAsync()
@@ -110,10 +112,11 @@
 
         Console.WriteLine("📦 Starting LoadDataAsync()");
         customers = await ExtendedUserService.GetCustomersWithUsersAsync();
-
-        lastUpdated = DateTime.Now;
-        Console.WriteLine("Data reloaded at " + lastUpdated);
     }
 
-
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+            await hubConnection.DisposeAsync();
+    }
 }
