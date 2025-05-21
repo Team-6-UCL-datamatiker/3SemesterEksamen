@@ -1,15 +1,18 @@
 ﻿@page "/vacationrequests/edit"
+
 @using AutoMapper
 @using GotorzProjectMain.InputModels.VacationRequestInputModels
 @using Microsoft.EntityFrameworkCore
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Services
+
 @inject GotorzProjectMain.Data.ApplicationDbContext Context
 @inject NavigationManager NavigationManager
 @inject IExtendedUserService ExtendedUserService
 @inject IMapper Mapper
-@rendermode InteractiveServer
+@inject IVacationRequestNotifier VCNotifier
 
+@rendermode InteractiveServer
 
 <PageTitle>Edit</PageTitle>
 
@@ -140,6 +143,10 @@ else
 		{
 			Mapper.Map(InputModel, VacationRequest);
 			await Context.SaveChangesAsync();
+
+			// Hub notification
+			await VCNotifier.BroadcastAsync();
+
 			NavigationManager.NavigateTo("/vacationrequests");
 
 		}

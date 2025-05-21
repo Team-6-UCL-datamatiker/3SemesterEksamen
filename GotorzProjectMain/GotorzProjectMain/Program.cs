@@ -51,9 +51,6 @@ builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
 
-
-builder.Services.AddScoped<VacationRequestSignalRService>();
-
 builder.Services.AddAuthentication(options =>
 	{
 		options.DefaultScheme = IdentityConstants.ApplicationScheme;
@@ -108,8 +105,7 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddSignalR();
-
-
+builder.Services.AddSingleton<IVacationRequestNotifier, VacationRequestNotifier>();
 
 builder.Services.AddResponseCompression(opts =>
 {
