@@ -9,12 +9,20 @@
 @inject IExtendedUserService UserService
 @inject ApplicationDbContext Context
 @inject IVacationRequestTreeService VacationRequestTreeService
+@inject ILogger<DetailsRequest> Logger
 
 @rendermode InteractiveServer
 
 <PageTitle>Details</PageTitle>
 
 <h1>Details</h1>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger mt-3" role="alert">
+        @errorMessage
+    </div>
+}
 
 <div>
     <h2>Vacation Request</h2>
@@ -124,6 +132,7 @@
 
 
 @code {
+	private string? errorMessage;
     private VacationRequest? vacationrequest;
     private Customer? Customer { get; set; }
     private Employee? Employee { get; set; }
@@ -151,7 +160,7 @@
             WaitingVacationOffers = vacationrequest.Offers.Where(waitingVacationOffer => waitingVacationOffer.OfferStatus == OfferStatus.Waiting).ToList();
             DeniedVacationOffers = vacationrequest.Offers.Where(deniedVacationOffer => deniedVacationOffer.OfferStatus == OfferStatus.Denied).ToList();
 
-            // TODO: Skal lige snakke om det her. er ikke sikker på det er en god implementering, men det virker. Der er lignende implementering på DetailsOfferComponent, denne her tjekker bare når man går ind på en request også.
+            // TODO: Skal lige snakke om det her. er ikke sikker pï¿½ det er en god implementering, men det virker. Der er lignende implementering pï¿½ DetailsOfferComponent, denne her tjekker bare nï¿½r man gï¿½r ind pï¿½ en request ogsï¿½.
             if (WaitingVacationOffers.Count() > 0)
             {
                 vacationrequest.Status = RequestStatus.WaitingApproval;
@@ -166,8 +175,8 @@
         }
         catch (Exception ex)
         {
-            // Handle the exception (e.g., log it, show a message, etc.)
-            Console.WriteLine($"Error fetching vacation request: {ex.Message}");
+			errorMessage = "An error occurred while loading the vacation request details.";
+			Logger.LogError(ex, errorMessage);
         }
 
 
@@ -182,8 +191,8 @@
         }
         catch (Exception ex)
         {
-            // Handle the exception (e.g., log it, show a message, etc.)
-            Console.WriteLine($"Error fetching customer details: {ex.Message}");
+			errorMessage = "An error occurred while loading the customer details.";
+			Logger.LogError(ex, errorMessage);
         }
 
     }

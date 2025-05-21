@@ -32,40 +32,38 @@ else
 {
 	<div class="row">
 		<div class="col-md-4">
-			<!-- Had to change the EditForm to this from what it was originally -->
 			<EditForm EditContext="_ec" OnValidSubmit="UpdateCustomer" FormName="edit">
 				<DataAnnotationsValidator />
-				@*                 <ValidationSummary role="alert" /> *@
 
 				<div class="mb-3">
 					<label for="username" class="form-label">CustomUserName:</label>
 					<InputText id="username" @bind-Value="Input.CustomUsername" class="form-control" autocomplete="username" aria-required="true" oninput="@(async (ChangeEventArgs e) => await DebounceUsernameCheck(e))" />
-					<ValidationMessage For="() => Input.CustomUsername" class="alert alert-danger mt-3" />
-				</div>
+@* 					<ValidationMessage For="() => Input.CustomUsername" class="alert alert-danger mt-3" />
+ *@				</div>
 
 				<div class="mb-3">
 					<label for="first-name" class="form-label">First Name:</label>
 					<InputText id="first-name" @bind-Value="Input.FirstName" class="form-control" aria-required="true" />
-					<ValidationMessage For="() => Input.FirstName" class="alert alert-danger mt-3" />
-				</div>
+@* 					<ValidationMessage For="() => Input.FirstName" class="alert alert-danger mt-3" />
+ *@				</div>
 
 				<div class="mb-3">
 					<label for="last-name" class="form-label">Last Name:</label>
 					<InputText id="last-name" @bind-Value="Input.LastName" class="form-control" aria-required="true" />
-					<ValidationMessage For="() => Input.LastName" class="alert alert-danger mt-3" />
-				</div>
+@* 					<ValidationMessage For="() => Input.LastName" class="alert alert-danger mt-3" />
+ *@				</div>
 
 				<div class="mb-3">
 					<label for="email" class="form-label">Email:</label>
 					<InputText id="email" @bind-Value="Input.Email" class="form-control" aria-required="true" />
-					<ValidationMessage For="() => Input.Email" class="alert alert-danger mt-3" />
-				</div>
+@* 					<ValidationMessage For="() => Input.Email" class="alert alert-danger mt-3" />
+ *@				</div>
 
 				<div class="mb-3">
 					<label for="phone" class="form-label">Phone:</label>
 					<InputText id="phone" @bind-Value="Input.Phone" class="form-control" aria-required="true" onblur="@(() => { if (string.IsNullOrWhiteSpace(Input.Phone)) { Input.Phone = null; _ec.Validate(); }})" />
-					<ValidationMessage For="() => Input.Phone" class="alert alert-danger mt-3" />
-				</div>
+@* 					<ValidationMessage For="() => Input.Phone" class="alert alert-danger mt-3" />
+ *@				</div>
 
 				<button type="submit" class="btn btn-primary">Save</button>
 

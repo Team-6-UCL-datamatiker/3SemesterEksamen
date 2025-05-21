@@ -61,8 +61,5 @@ namespace GotorzProjectMain.Services
                                     .FirstOrDefaultAsync(c => c.Id == id);
             }
         }
-
-        // (Optional) You could add more helper methods here, like:
-        // public async Task<User> GetUserByIdAsync(string userId) { ... }
     }
 }

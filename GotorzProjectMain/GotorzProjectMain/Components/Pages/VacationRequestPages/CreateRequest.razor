@@ -1,4 +1,5 @@
 ﻿@page "/vacationrequests/create"
+
 @using GotorzProjectMain.Data
 @using GotorzProjectMain.InputModels.VacationRequestInputModels
 @using Microsoft.AspNetCore.Authorization
@@ -11,10 +12,9 @@
 
 @inject ApplicationDbContext Context
 @inject NavigationManager NavigationManager
-@inject VacationRequestSignalRService SignalRService
+@inject IVacationRequestNotifier VCNotifier
 @inject AutoMapper.IMapper Mapper
 @inject ICurrentUserService CurrentUserService
-
 
 @attribute [Authorize]
 
@@ -169,10 +169,13 @@
 		Context.VacationRequests.Add(vacationRequest);
 		await Context.SaveChangesAsync();
 
-		// SignalR notification
-		await SignalRService.InitializeAsync();
-		await Task.Delay(500);
-		await SignalRService.SendVacationRequestAsync();
+		// Hub notification
+		await VCNotifier.BroadcastAsync();
+
+		// // SignalR notification
+		// await SignalRService.InitializeAsync();
+		// await Task.Delay(500);
+		// await SignalRService.SendVacationRequestAsync();
 
 		NavigationManager.NavigateTo("/vacationrequests");
 	}
