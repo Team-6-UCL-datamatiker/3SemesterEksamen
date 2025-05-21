@@ -15,6 +15,7 @@
 @inject NavigationManager NavigationManager
 @inject VacationRequestSignalRService SignalRService
 @inject ICurrentUserService CurrentUserService
+@inject ILogger<IndexRequest> Logger
 
 @attribute [Authorize]
 
@@ -83,15 +84,12 @@
 
         SignalRService.OnVacationRequestReceived += async () =>
         {
-            Console.WriteLine("🔥 Handler started");
+			// Handle the event when a new vacation request is received
             await LoadDataAsync();
-            Console.WriteLine("✅ Handler finished LoadDataAsync()");
             lastUpdated = DateTime.Now;
+			// Update the UI
             await InvokeAsync(StateHasChanged);
         };
-
-        Console.WriteLine("🔗 SignalR event handler attached in Index.razor");
-
     }
 
     private async Task LoadDataAsync()
@@ -107,12 +105,11 @@
                 .Where(v => v.CustomerId == userId)
                 .ToListAsync();
         }
-
-        Console.WriteLine("📦 Starting LoadDataAsync()");
+		// Load customers
         customers = await ExtendedUserService.GetCustomersWithUsersAsync();
 
         lastUpdated = DateTime.Now;
-        Console.WriteLine("Data reloaded at " + lastUpdated);
+		Logger.LogInformation("Data loaded at " + lastUpdated);
     }
 
 

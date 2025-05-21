@@ -35,7 +35,7 @@ namespace GotorzProjectMain.Services
 			string? userId = await GetUserIdAsync();
 			if (userId == null) return false;
 
-			// EF Core’s AnyAsync returns Task<bool>, which you await
+			// returns true if the user is an employee
 			return await _db.Employees.AnyAsync(e => e.Id == userId);
 		}
 	}

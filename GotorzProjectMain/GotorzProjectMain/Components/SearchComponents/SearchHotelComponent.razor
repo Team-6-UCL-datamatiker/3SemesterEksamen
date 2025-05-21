@@ -120,8 +120,6 @@
 				<ValidationMessage For="() => _inputOffer.CheckOutDate" class="text-danger" />
 			</div>
 
-			@* Skipped country of residence *@
-
 			<div data-role="Rooms" class="form-check mb-3">
 				<label for="rooms">Rooms</label>
 				<InputNumber id="rooms" @bind-Value="_inputOffer.RoomQuantity" class="form-control" placeholder="Rooms" />
@@ -145,8 +143,6 @@
 				<label for="bestOffer" class="form-check-label">Only best offer</label>
 			</div>
 
-			@* Skipped paymentPolicy *@
-
 			<div data-role="Food" class=" mb-3">
 				<select id="food" @bind="_inputOffer.BoardType" class="form-select">
 					<option value=""></option>
@@ -157,8 +153,6 @@
 					<option value="ALL_INCLUSIVE">All inclusive</option>
 				</select>
 			</div>
-
-			@* Skipped 'include sold out, language of api descriptions' *@
 
 		</EditForm>
 	</div>

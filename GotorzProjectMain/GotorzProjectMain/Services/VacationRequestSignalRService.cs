@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 
+
+
 namespace GotorzProjectMain.Services;
 
 public class VacationRequestSignalRService : IAsyncDisposable
 {
     private readonly NavigationManager _navigationManager;
+    private readonly ILogger<VacationRequestSignalRService> _logger;
     private HubConnection? _hubConnection;
     private bool _isConnected = false;
 
@@ -13,10 +16,11 @@ public class VacationRequestSignalRService : IAsyncDisposable
     
     private bool _missedUpdate = false;
 
-    public VacationRequestSignalRService(NavigationManager navigationManager)
+    public VacationRequestSignalRService(NavigationManager navigationManager, ILogger<VacationRequestSignalRService> logger)
     {
         _navigationManager = navigationManager;
-    }
+        _logger = logger;
+	}
 
     public async Task InitializeAsync()
     {
@@ -27,56 +31,42 @@ public class VacationRequestSignalRService : IAsyncDisposable
             .WithAutomaticReconnect()
             .Build();
 
-        _hubConnection.On("ReceiveVacationRequest", async () =>
+		_hubConnection.On("ReceiveVacationRequest", async () =>
         {
-            Console.WriteLine("📥 Signal received: ReceiveVacationRequest");
+            _logger.LogInformation("Signal received: ReceiveVacationRequest");
 
             if (OnVacationRequestReceived is null)
             {
-                Console.WriteLine("⚠️ No handler attached — deferring.");
                 _missedUpdate = true;
             }
             else
             {
-                Console.WriteLine("🔥 Invoking handler.");
                 await OnVacationRequestReceived.Invoke();
-                Console.WriteLine("✅ Handler done.");
             }
         });
 
         try
         {
-            await _hubConnection.StartAsync();
+			// Start the connection
+			await _hubConnection.StartAsync();
             _isConnected = true;
-            Console.WriteLine("✅ SignalR connected (service).");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Failed to start SignalR: {ex.Message}");
+            _logger.LogError(ex, "Failed to start SignalR connection.");
         }
     }
-
+    
     public async Task SendVacationRequestAsync()
     {
-        Console.WriteLine("📤 Attempting to send vacation request update via SignalR...");
-    
-        if (_hubConnection is not null)
+        if (_hubConnection is not null && _hubConnection.State == HubConnectionState.Connected)
         {
-            Console.WriteLine($"📡 Connection state: {_hubConnection.State}");
-
-            if (_hubConnection.State == HubConnectionState.Connected)
-            {
-                await _hubConnection.SendAsync("SendVacationRequest");
-                Console.WriteLine("📤 SignalR message sent.");
-            }
-            else
-            {
-                Console.WriteLine("⚠️ SignalR hub connection is not in 'Connected' state.");
-            }
+            _logger.LogInformation("Sending vacation request to SignalR hub.");
+			await _hubConnection.SendAsync("SendVacationRequest");
         }
         else
         {
-            Console.WriteLine("❌ hubConnection is null.");
+			_logger.LogWarning("Cannot send vacation request. Hub connection is not established or is null.");
         }
     }
 

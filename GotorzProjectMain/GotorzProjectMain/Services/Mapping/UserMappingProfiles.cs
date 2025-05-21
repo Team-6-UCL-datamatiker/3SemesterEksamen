@@ -40,7 +40,6 @@ public class UserMappingProfiles : Profile
 
 		CreateMap<RegisterEmployeeInputModel, Employee>()
 			.ForMember(user => user.IsAdmin, opt => opt.MapFrom(inputModel => inputModel.IsAdmin))
-			//.ForMember(user => user.ProfilePicture, opt => opt.MapFrom(inputModel => inputModel.ProfilePictureFile))
 			.IncludeBase<UserBaseInputModel, BaseUser>();
 	}
 }

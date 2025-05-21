@@ -90,7 +90,7 @@
 		catch (Exception ex)
 		{
 			await transaction.RollbackAsync();
-			Console.WriteLine($"Error deleting customer: {ex.Message}");
+			Logger.LogError(ex, ex.Message);
 		}
 
 		NavigationManager.NavigateTo("/customers");

@@ -6,10 +6,7 @@ public class VacationRequestHub : Hub
 {
     public async Task SendVacationRequest()
     {
-        Console.WriteLine($"[INBOUND] Hub received vacation request.");
-
-        await Clients.All.SendAsync("ReceiveVacationRequest");
-
-        Console.WriteLine($"[OUTBOUND] Hub broadcasted vacation request.");
+		// Notify all connected clients about the vacation request
+		await Clients.All.SendAsync("ReceiveVacationRequest");
     }
 }

@@ -99,7 +99,7 @@
 
             if (employee is not null)
             {
-                // 🔥 Load the ApplicationUser
+                // Load the ApplicationUser
                 var user = await Context.Users.FirstOrDefaultAsync(u => u.Id == employee.Id);
 
                 if (user is not null)
@@ -118,7 +118,8 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error deleting employee: {ex.Message}");
+			_errorMessage = "An error occurred while deleting the employee.";
+			Logger.LogError(ex, _errorMessage);
         }
 
         NavigationManager.NavigateTo("/employees");
