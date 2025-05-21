@@ -79,7 +79,15 @@
     public async Task OfferDeclined()
     {
         VacationOffer.OfferStatus = OfferStatus.Denied;
-        VacationRequest.Status = RequestStatus.PendingRequest;
+        if (VacationRequest.Offers.Where(waitingVacationOffer => waitingVacationOffer.OfferStatus == OfferStatus.Waiting).Count() == 0)
+        {
+            VacationRequest.Status = RequestStatus.PendingRequest;
+        }
+        else
+        {
+            VacationRequest.Status = RequestStatus.WaitingApproval;
+        }
+        
         await Context.SaveChangesAsync();
 
         NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
