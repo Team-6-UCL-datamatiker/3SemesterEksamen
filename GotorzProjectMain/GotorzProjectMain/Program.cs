@@ -41,7 +41,6 @@ builder.Services.AddSingleton<ICityLookupService, CityLookupService>();
 builder.Services.AddScoped<IExtendedUserService, ExtendedUserService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
-builder.Services.AddScoped<VacationRequestSignalRService>();
 
 // Service to handle hotel API
 builder.Services.AddHttpClient<IAmadeusHotelAPIService, AmadeusHotelAPIService>(client =>
