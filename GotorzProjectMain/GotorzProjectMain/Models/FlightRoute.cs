@@ -8,7 +8,9 @@ namespace GotorzProjectMain.Models
 	{
         public int RouteId { get; set; }
         public int FlightBookingId { get; set; }
-        public List<Flight> Legs { get; set; }
+		// All legs in this route, in order
+		public List<Flight> Legs { get; set; }
+		// Layover info between legs
 		public List<Layover> Layovers { get; set; }
 		public float TotalPrice { get; set; }
 		// Total traveltime (across all legs and layovers)

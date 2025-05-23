@@ -10,47 +10,84 @@
 
 <div>
     <hr />
-    @if (vacationoffer is null)
+    @if (VacationOffer is null)
     {
         <p><em>Loading...</em></p>
     }
-    else {
+    else
+    {
         <dl class="row">
             <dt class="col-sm-2">EmployeeEmail</dt>
-            <dd class="col-sm-10">@vacationoffer.EmployeeEmail</dd>
+            <dd class="col-sm-10">@VacationOffer.EmployeeEmail</dd>
             <dt class="col-sm-2">TotalPrice</dt>
-            <dd class="col-sm-10">@vacationoffer.TotalPrice</dd>
+            <dd class="col-sm-10">@VacationOffer.TotalPrice</dd>
             <dt class="col-sm-2">StartDate</dt>
-            <dd class="col-sm-10">@vacationoffer.StartDate</dd>
+            <dd class="col-sm-10">@VacationOffer.StartDate</dd>
             <dt class="col-sm-2">EndDate</dt>
-            <dd class="col-sm-10">@vacationoffer.EndDate</dd>
+            <dd class="col-sm-10">@VacationOffer.EndDate</dd>
             <dt class="col-sm-2">Misc</dt>
-            <dd class="col-sm-10">@vacationoffer.Misc</dd>
+            <dd class="col-sm-10">@VacationOffer.Misc</dd>
             <dt class="col-sm-2">OfferStatus</dt>
-            <dd class="col-sm-10">@vacationoffer.OfferStatus</dd>
+            <dd class="col-sm-10">@VacationOffer.OfferStatus</dd>
             <dt class="col-sm-2">ExpirationDate</dt>
-            <dd class="col-sm-10">@vacationoffer.ExpirationDate</dd>
+            <dd class="col-sm-10">@VacationOffer.ExpirationDate</dd>
+
         </dl>
-        <div>
-            <button class="btn btn-primary">Accept Offer</button>
-            <button class="btn btn-danger">Decline Offer</button>
-        </div>
+        @if (VacationOffer.OfferStatus == OfferStatus.Waiting)
+        {
+            <div>
+                <button @onclick="OfferAccepted" class="btn btn-primary">Accept Offer</button>
+                <button @onclick="OfferDeclined" class="btn btn-danger">Decline Offer</button>
+            </div>
+        }
+        else
+        {
+
+        }
+
     }
 </div>
 
 @code {
-    private VacationOffer? vacationoffer;
 
     [Parameter]
-    public int VacationOfferId { get; set; }
+    public VacationOffer? VacationOffer { get; set; }
+
+    [Parameter]
+    public VacationRequest? VacationRequest { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        vacationoffer = await Context.VacationOffers.FirstOrDefaultAsync(m => m.VacationOfferId == VacationOfferId);
 
-        if (vacationoffer is null)
+        if (VacationOffer is null)
         {
             NavigationManager.NavigateTo("notfound");
         }
+    }
+
+    public async Task OfferAccepted()
+    {
+        VacationOffer.OfferStatus = OfferStatus.Approved;
+        VacationRequest.Status = RequestStatus.BookingUnderway;
+
+        await Context.SaveChangesAsync();
+
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+    }
+    public async Task OfferDeclined()
+    {
+        VacationOffer.OfferStatus = OfferStatus.Denied;
+        if (VacationRequest.Offers.Where(waitingVacationOffer => waitingVacationOffer.OfferStatus == OfferStatus.Waiting).Count() == 0)
+        {
+            VacationRequest.Status = RequestStatus.PendingRequest;
+        }
+        else
+        {
+            VacationRequest.Status = RequestStatus.WaitingApproval;
+        }
+        
+        await Context.SaveChangesAsync();
+
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
     }
 }
