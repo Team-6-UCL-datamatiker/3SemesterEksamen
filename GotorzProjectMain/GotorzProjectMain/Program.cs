@@ -40,17 +40,13 @@ builder.Services.AddSingleton<ICityLookupService, CityLookupService>();
 //Used for getting the user data everytime an employee or customer is loaded
 builder.Services.AddScoped<IExtendedUserService, ExtendedUserService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-
+builder.Services.AddScoped<IVacationRequestTreeService, VacationRequestTreeService>();
 
 // Service to handle hotel API
 builder.Services.AddHttpClient<IAmadeusHotelAPIService, AmadeusHotelAPIService>(client =>
 {
 	client.BaseAddress = new Uri("https://api.amadeus.com/");
 });
-
-//Used for getting the user data everytime an employee or customer is loaded
-builder.Services.AddScoped<IExtendedUserService, ExtendedUserService>();
-builder.Services.AddScoped<IVacationRequestTreeService, VacationRequestTreeService>();
 
 // Service to handle flight API
 builder.Services.AddHttpClient<IFlightService, FlightService>(client =>
