@@ -9,12 +9,20 @@
 @inject IExtendedUserService UserService
 @inject ApplicationDbContext Context
 @inject IVacationRequestTreeService VacationRequestTreeService
+@inject ILogger<DetailsRequest> Logger
 
 @rendermode InteractiveServer
 
 <PageTitle>Details</PageTitle>
 
 <h1>Details</h1>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger mt-3" role="alert">
+        @errorMessage
+    </div>
+}
 
 <div>
     <h2>Vacation Request</h2>
@@ -124,6 +132,7 @@
 
 
 @code {
+	private string? errorMessage;
     private VacationRequest? vacationrequest;
     private Customer? Customer { get; set; }
     private Employee? Employee { get; set; }
@@ -170,8 +179,8 @@
         }
         catch (Exception ex)
         {
-            // Handle the exception (e.g., log it, show a message, etc.)
-            Console.WriteLine($"Error fetching vacation request: {ex.Message}");
+			errorMessage = "An error occurred while loading the vacation request details.";
+			Logger.LogError(ex, errorMessage);
         }
 
 
@@ -186,8 +195,8 @@
         }
         catch (Exception ex)
         {
-            // Handle the exception (e.g., log it, show a message, etc.)
-            Console.WriteLine($"Error fetching customer details: {ex.Message}");
+			errorMessage = "An error occurred while loading the customer details.";
+			Logger.LogError(ex, errorMessage);
         }
 
     }

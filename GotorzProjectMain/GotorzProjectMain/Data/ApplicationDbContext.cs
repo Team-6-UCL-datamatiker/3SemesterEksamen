@@ -19,6 +19,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<FlightRoute> FlightRoutes { get; set; }
     public DbSet<Flight> Flights { get; set; }
     public DbSet<Layover> Layovers { get; set; }
+    public DbSet<LoginAttempt> LoginAttempts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

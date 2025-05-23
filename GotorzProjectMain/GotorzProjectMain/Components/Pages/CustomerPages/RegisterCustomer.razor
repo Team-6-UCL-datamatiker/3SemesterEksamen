@@ -33,56 +33,54 @@
             <DataAnnotationsValidator />
             <h2>Create a new account.</h2>
             <hr />
-            @* 			<ValidationSummary class="text-danger" role="alert" /> *@
 
             <div class="form-floating mb-3">
                 <InputText id="first-name" @bind-Value="Input.FirstName" class="form-control" autocomplete="given-name" aria-required="true" />
                 <label for="first-name">First Name</label>
-                <ValidationMessage For="() => Input.FirstName" class="alert alert-danger mt-3" />
-            </div>
+@*                 <ValidationMessage For="() => Input.FirstName" class="alert alert-danger mt-3" />
+ *@            </div>
 
             <div class="form-floating mb-3">
                 <InputText id="last-name" @bind-Value="Input.LastName" class="form-control" autocomplete="family-name" aria-required="true" />
                 <label for="last-name">Last Name</label>
-                <ValidationMessage For="() => Input.LastName" class="alert alert-danger mt-3" />
-            </div>
+@*                 <ValidationMessage For="() => Input.LastName" class="alert alert-danger mt-3" />
+ *@            </div>
 
             <div class="form-floating mb-3">
                 <InputText id="email" @bind-Value="Input.Email" class="form-control" autocomplete="email" aria-required="true" />
                 <label for="email">Email</label>
-                <ValidationMessage For="() => Input.Email" class="alert alert-danger mt-3" />
-            </div>
+@*                 <ValidationMessage For="() => Input.Email" class="alert alert-danger mt-3" />
+ *@            </div>
 
             <div class="form-floating mb-3">
                 <InputText id="username" @bind-Value="Input.CustomUsername" class="form-control" autocomplete="username" aria-required="true" oninput="@(async (ChangeEventArgs e) => await DebounceUsernameCheck(e))" />
                 <label for="username">Username</label>
-                <ValidationMessage For="() => Input.CustomUsername" class="alert alert-danger mt-3" />
-            </div>
+ @*                <ValidationMessage For="() => Input.CustomUsername" class="alert alert-danger mt-3" />
+  *@           </div>
 
             <div class="form-floating mb-3">
                 <InputText id="password" type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" />
                 <label for="password">Password</label>
-                <ValidationMessage For="() => Input.Password" class="alert alert-danger mt-3" />
-            </div>
+    @*             <ValidationMessage For="() => Input.Password" class="alert alert-danger mt-3" />
+     *@        </div>
 
             <div class="form-floating mb-3">
                 <InputText id="confirm-password" type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" />
                 <label for="confirm-password">Confirm Password</label>
-                <ValidationMessage For="() => Input.ConfirmPassword" class="alert alert-danger mt-3" />
-            </div>
+       @*          <ValidationMessage For="() => Input.ConfirmPassword" class="alert alert-danger mt-3" />
+        *@     </div>
 
             <div class="form-floating mb-3">
                 <InputText id="phone" @bind-Value="Input.Phone" class="form-control" aria-required="true" onblur="@(() => { if (string.IsNullOrWhiteSpace(Input.Phone)) { Input.Phone = null; _ec.Validate(); }})" />
                 <label for="phone">Phone Number (optional)</label>
-                <ValidationMessage For="() => Input.Phone" class="alert alert-danger mt-3" />
-            </div>
+          @*       <ValidationMessage For="() => Input.Phone" class="alert alert-danger mt-3" />
+           *@  </div>
 
-			<button type="submit" disabled="@(string.IsNullOrWhiteSpace(Input.ConfirmPassword) && !_ec!.Validate())" class="w-100 btn btn-lg btn-primary">Register</button>
+			<button type="submit" disabled="@(string.IsNullOrWhiteSpace(Input.ConfirmPassword) || Input.ConfirmPassword != Input.Password)" class="w-100 btn btn-lg btn-primary">Register</button>
 
         </EditForm>
         <StatusMessage Message="@_message" />
     </div>
-    @* // <ExternalLoginPicker /> can be used to add third party authentications systems such as Google*@
 </div>
 
 @code {

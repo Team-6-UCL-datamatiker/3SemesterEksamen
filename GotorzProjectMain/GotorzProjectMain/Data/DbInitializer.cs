@@ -70,7 +70,8 @@ public static class DbInitializer
             {
                 IsAdmin = true,
                 User = user,
-                CustomUserName = "admin"
+                CustomUserName = "admin",
+                ProfilePicture = "images/admindefault.jpg"
             };
 
             context.Employees.Add(employee);

@@ -1,15 +1,19 @@
 ﻿@page "/vacationrequests/edit"
+
 @using AutoMapper
 @using GotorzProjectMain.InputModels.VacationRequestInputModels
 @using Microsoft.EntityFrameworkCore
 @using GotorzProjectMain.Models
 @using GotorzProjectMain.Services
+
 @inject GotorzProjectMain.Data.ApplicationDbContext Context
 @inject NavigationManager NavigationManager
 @inject IExtendedUserService ExtendedUserService
 @inject IMapper Mapper
-@rendermode InteractiveServer
+@inject IVacationRequestNotifier VCNotifier
 
+@inject ILogger<EditRequest> Logger
+@rendermode InteractiveServer
 
 <PageTitle>Edit</PageTitle>
 
@@ -104,6 +108,7 @@ else
 </div>
 
 @code {
+	private string? errorMessage;
 	private Customer? Customer { get; set; }
 
 	[SupplyParameterFromQuery(Name = "vacationrequestid")]
@@ -129,7 +134,8 @@ else
 		}
 		catch (Exception ex)
 		{
-			Console.Error.WriteLine($"Error loading vacation request: {ex.Message}");
+			errorMessage = "An error occurred while loading the vacation request details.";
+			Logger.LogError(ex, errorMessage);
 			NavigationManager.NavigateTo("error");
 		}
 	}
@@ -140,6 +146,10 @@ else
 		{
 			Mapper.Map(InputModel, VacationRequest);
 			await Context.SaveChangesAsync();
+
+			// Hub notification
+			await VCNotifier.BroadcastAsync();
+
 			NavigationManager.NavigateTo("/vacationrequests");
 
 		}
@@ -156,7 +166,8 @@ else
 		}
 		catch (Exception ex)
 		{
-			Console.Error.WriteLine($"Error updating vacation request: {ex.Message}");
+			errorMessage = "An error occurred while updating the vacation request.";
+			Logger.LogError(ex, errorMessage);
 			NavigationManager.NavigateTo("error");
 		}
 
@@ -170,7 +181,8 @@ else
 		}
 		catch (Exception ex)
 		{
-			Console.Error.WriteLine($"Error checking vacation request existence: {ex.Message}");
+			errorMessage = "An error occurred while checking the vacation request existence.";
+			Logger.LogError(ex, errorMessage);
 			return false;
 		}
 	}

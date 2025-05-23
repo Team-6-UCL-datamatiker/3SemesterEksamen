@@ -14,6 +14,7 @@
 
 <div class="row">
 	<div class="col-md-4">
+		@*Inputform to search for hotels, tied to first API-call*@
 		<EditForm EditContext="_ecList" FormName="listHotels">
 			<DataAnnotationsValidator />
 			<h2>Search for hotels</h2>
@@ -37,9 +38,9 @@
 						@_selectedDestination
 					</div>
 				}
-
 			</div>
 
+			@*Spacing div*@
 			<div class="mt-3"></div>
 
 			<div data-role="Radius" class="form-floating mb-3">
@@ -97,6 +98,8 @@
 
 		</EditForm>
 	</div>
+
+	@*Inputform to search for hotels, tied to second API-call*@
 	<div class="col-md-4">
 		<EditForm EditContext="_ecOffer" FormName="searchHotels">
 			<DataAnnotationsValidator />
@@ -119,8 +122,6 @@
 				<InputDate id="checkOutDate" @bind-Value="_inputOffer.CheckOutDate" class="form-control" />
 				<ValidationMessage For="() => _inputOffer.CheckOutDate" class="text-danger" />
 			</div>
-
-			@* Skipped country of residence *@
 
 			<div data-role="Rooms" class="form-check mb-3">
 				<label for="rooms">Rooms</label>
@@ -145,8 +146,6 @@
 				<label for="bestOffer" class="form-check-label">Only best offer</label>
 			</div>
 
-			@* Skipped paymentPolicy *@
-
 			<div data-role="Food" class=" mb-3">
 				<select id="food" @bind="_inputOffer.BoardType" class="form-select">
 					<option value=""></option>
@@ -158,12 +157,13 @@
 				</select>
 			</div>
 
-			@* Skipped 'include sold out, language of api descriptions' *@
-
 		</EditForm>
 	</div>
+
+	@*Spacing div*@
 	<div class="mt-3"></div>
 
+	@*Button to submit both forms*@
 	<button @onclick="SubmitAll" class="w-100 btn btn-lg btn-primary" disabled="@((Destination == null || !CityLookupService.Cities.Contains(Destination)) || (!string.IsNullOrWhiteSpace(_inputOffer.PriceRange) && string.IsNullOrWhiteSpace(_inputOffer.Currency)) || isLoading)">
 		@if (isLoading)
 		{
@@ -176,6 +176,7 @@
 		}
 	</button>
 
+	@*Error/infomessages*@
 	@if (!string.IsNullOrWhiteSpace(Service.ErrorMessage))
 	{
 		<div class="alert alert-danger mt-3">
@@ -190,9 +191,7 @@
 	}
 </div>
 
-<div class="row">
-</div>
-
+@*Show results from API calls*@
 @if (Service.Hotels!.Any())
 {
 	<div class="mt-3"></div>
@@ -200,6 +199,7 @@
 		<h2>Hotels</h2>
 		<hr />
 
+		@*Foreach hotel with offers*@
 		@foreach (Hotel hotel in Service.Hotels!.Where(h => h.Offers is not null && h.Offers.Any()))
 		{
 			<details style="margin-bottom: 1em;">
@@ -230,6 +230,7 @@
 				</dl>
 			</details>
 
+			@*Foreach offer inside the precious foreach*@
 			@foreach (HotelOffer offer in hotel.Offers!)
 			{
 				<details style="margin-bottom: 1em;">
@@ -297,6 +298,8 @@
 				</details>
 			}
 		}
+
+		@*Get more offers if the first API-call returned more than 50 hotels*@
 		<button @onclick="GetHotels" disabled="@(!Service.HotelIds.Any() || isLoadingMore)" class="w-100 btn btn-lg btn-primary">
 			@if (isLoadingMore)
 			{
@@ -309,6 +312,7 @@
 			}
 		</button>
 
+		@*List of all returned hotels from first API-call and a count stat to show how many were returned*@
 		<details style="margin-bottom: 1em;">
 			<summary class="fw-bold fs-5">Complete hotel list (@Service.Hotels.Count())</summary>
 			@foreach (Hotel hotel in Service.Hotels)
@@ -349,7 +353,7 @@
 @code {
 	private bool isLoading;
 
-	// for loading more hotels
+	// For loading more hotels
 	private bool isLoadingMore;
 
 	// Component Binding
@@ -368,11 +372,12 @@
 	private AmadeusHotelListInputModel _inputList = new();
 	private AmadeusHotelListInputModel? _validatedInputList;
 
-	//Destination autocomplete
+	// Destination autocomplete
 	private bool _airport = false;
 	private string? Destination { get; set; }
+	private string? _selectedDestination;
 
-	//Amenities autocomplete (BAR or LOUNGE virker vist ikke.................?????????)
+	// Amenities autocomplete (BAR or LOUNGE doesn't seem to work because of whitespaces???)
 	private List<string> AllAmenities = new()
 	{ "SWIMMING_POOL","SPA","FITNESS_CENTER","AIR_CONDITIONING","RESTAURANT","PARKING","PETS_ALLOWED",
 	  "AIRPORT_SHUTTLE","BUSINESS_CENTER","DISABLED_FACILITIES","WIFI","MEETING_ROOMS","NO_KID_ALLOWED",
@@ -382,12 +387,6 @@
 	};
 	private string? _amenitiesMessage;
 	public string? AmenityInput { get; set; }
-
-	//Debouncer
-	private CancellationTokenSource? _debounceCts;
-
-	// Fejlinfo
-	private string? _selectedDestination;
 
 	protected override void OnInitialized()
 	{
@@ -402,11 +401,11 @@
 			return;
 		}
 
-		// noter validerede værdier til brug ved indhentning af yderligere tilbud på samme liste
+		// Note validated values for getting more offers on the hotels already found
 		_validatedInputList = _inputList;
 		_validatedInputOffer = _inputOffer;
 
-		// Fjern eventuelle værdier fra tidligere søgning
+		// Remove values from earlier searches
 		Service.Hotels = Enumerable.Empty<Hotel>();
 		Service.HotelIds.Clear();
 
@@ -438,6 +437,7 @@
 		}
 	}
 
+	// Based on autocomplete and airport/city checkbox, get the correct IATA code for API call, and set _selectedDestination for confirmation
 	private void SelectDestination()
 	{
 		(string CityCode, string AirportCode)? codes = CityLookupService.GetCodes(Destination!);
@@ -454,13 +454,14 @@
 		_selectedDestination = $"{Destination!}, Code: {_inputList.CityOrAirportCode}";
 	}
 
-	// Autocomplete suggestions for departure city
+	// Autocomplete amenities method to specify where and how to look for results
 	private Task<List<string>> SearchAmenitiesSuggestions(string Value)
 	{
 		return Task.FromResult(AllAmenities.Where(a => a.Contains(Value.ToString()!.Trim(), StringComparison.OrdinalIgnoreCase))
 							.Take(10).ToList());
 	}
 
+	// Add/remove elements to amenities list for API-call
 	private void SelectAmenity()
 	{
 		if (_inputList.Amenities.Contains(AmenityInput!))
@@ -474,6 +475,7 @@
 		AmenityInput = "";
 	}
 
+	// Helper method for selected hotel stars for API-call
 	private void ToggleRating(string starValue, object? isChecked)
 	{
 
@@ -487,6 +489,7 @@
 		}
 	}
 
+	// Set selected info and return correct value to parent component
 	private async Task SelectHotel(Hotel hotel, HotelOffer offer)
 	{
 		hotel.Offers = new[] { offer };

@@ -7,8 +7,6 @@ namespace GotorzProjectMain.Models
     {
         public int FlightBookingId { get; set; }
         public ICollection<FlightRoute> FlightRoutes { get; set; } = [];
-        //public string? Airline { get; set; }
-        //public int? SeatNumber { get; set; }
         public float? TotalPrice { get; set; }
         public string? BookingInformationLink { get; set; }
         public DateTime? DepartureTime { get; set; }

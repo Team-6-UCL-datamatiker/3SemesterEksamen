@@ -2543,7 +2543,7 @@ public class CityLookupService : ICityLookupService
 			.Take(max);
 	}
 
-	// Returns both airport and city codes of a specific match - used after a match is found via Search()
+	// Returns both airport and city codes of a specific match - used after a match is found via SearchContains()
 	public (string, string)? GetCodes(string input)
         => _cityToIata.TryGetValue(input, out var codes) ? codes : null;
 }
