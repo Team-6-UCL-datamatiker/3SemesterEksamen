@@ -152,7 +152,12 @@
             DeniedVacationOffers = vacationrequest.Offers.Where(deniedVacationOffer => deniedVacationOffer.OfferStatus == OfferStatus.Denied).ToList();
 
             // TODO: Skal lige snakke om det her. er ikke sikker på det er en god implementering, men det virker. Der er lignende implementering på DetailsOfferComponent, denne her tjekker bare når man går ind på en request også.
-            if (WaitingVacationOffers.Count() > 0)
+            if (ApprovedVacationOffer != null)
+            {
+                vacationrequest.Status = RequestStatus.BookingUnderway;
+                await Context.SaveChangesAsync();
+            }
+            else if (WaitingVacationOffers.Count() > 0)
             {
                 vacationrequest.Status = RequestStatus.WaitingApproval;
                 await Context.SaveChangesAsync();
