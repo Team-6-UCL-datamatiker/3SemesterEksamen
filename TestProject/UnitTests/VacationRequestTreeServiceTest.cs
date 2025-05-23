@@ -79,7 +79,7 @@ namespace TestProject.UnitTests
         }
 
         [TestMethod]
-        public void PositiveLoadVacationRequestTreeByIdAsyncTest()
+        public void LoadVacationRequestTreeByIdAsync_WhenIdIsValid_ReturnsVacationRequest()
         {
             // Arrange
             int requestId = 1;
@@ -97,7 +97,7 @@ namespace TestProject.UnitTests
         }
 
         [TestMethod]
-        public void NegativeLoadVacationRequestTreeByIdAsyncTest()
+        public void LoadVacationRequestTreeByIdAsync_WhenIdIsInvalid_ThrowsInvalidOperationException()
         {
             // Arrange
             int invalidRequestId = 999;
