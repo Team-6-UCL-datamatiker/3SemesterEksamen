@@ -12,9 +12,9 @@
 
 @inject ApplicationDbContext Context
 @inject NavigationManager NavigationManager
-@inject IVacationRequestNotifier VCNotifier
 @inject AutoMapper.IMapper Mapper
 @inject ICurrentUserService CurrentUserService
+@inject IVRNotifierService VrNotifier
 
 @attribute [Authorize]
 
@@ -169,8 +169,8 @@
 		Context.VacationRequests.Add(vacationRequest);
 		await Context.SaveChangesAsync();
 
-		// Hub notification
-		await VCNotifier.BroadcastAsync();
+		// Index notification
+		await VrNotifier.NotifyChangedAsync();
 
 		// // SignalR notification
 		// await SignalRService.InitializeAsync();

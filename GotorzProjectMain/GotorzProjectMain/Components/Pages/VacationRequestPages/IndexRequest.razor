@@ -1,7 +1,7 @@
 ﻿@page "/vacationrequests"
 @rendermode InteractiveServer
 
-@implements IAsyncDisposable
+@implements IDisposable
 
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
@@ -16,7 +16,7 @@
 @inject IExtendedUserService ExtendedUserService
 @inject NavigationManager NavigationManager
 @inject ICurrentUserService CurrentUserService
-@inject IVacationRequestNotifier VCNotifier
+@inject IVRNotifierService VrNotifier
 
 
 @attribute [Authorize]
@@ -81,19 +81,14 @@
 
         await LoadDataAsync();
 
-        // Create the SignalR connection (on the browser)
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl(NavigationManager.ToAbsoluteUri("/vacationrequesthub"))
-            .WithAutomaticReconnect()
-            .Build();
+        // Add a delegate to the event/multicast delegate (list of delegates)
+        VrNotifier.OnChanged += HandleChanged;
+    }
 
-        hubConnection.On("ReceiveVacationRequest", async () =>
-        {
-            await LoadDataAsync();
-            await InvokeAsync(StateHasChanged);
-        });
-
-        await hubConnection.StartAsync();
+    private async Task HandleChanged()
+    {
+        await LoadDataAsync();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task LoadDataAsync()
@@ -113,9 +108,8 @@
         customers = await ExtendedUserService.GetCustomersWithUsersAsync();
     }
 
-    public async ValueTask DisposeAsync()
+    public void Dispose()
     {
-        if (hubConnection is not null)
-            await hubConnection.DisposeAsync();
+        VrNotifier.OnChanged -= HandleChanged;
     }
 }

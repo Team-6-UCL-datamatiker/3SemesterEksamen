@@ -36,6 +36,7 @@ builder.Services.AddQuickGridEntityFrameworkAdapter();
 
 builder.Services.AddScoped<IRateLimiter, RateLimiter>();
 builder.Services.AddSingleton<ICityLookupService, CityLookupService>();
+builder.Services.AddSingleton<IVRNotifierService, VRNotifierService>();
 
 //Used for getting the user data everytime an employee or customer is loaded
 builder.Services.AddScoped<IExtendedUserService, ExtendedUserService>();
@@ -117,7 +118,6 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddSignalR();
-builder.Services.AddSingleton<IVacationRequestNotifier, VacationRequestNotifier>();
 
 builder.Services.AddResponseCompression(opts =>
 {
