@@ -10,7 +10,7 @@
 @inject NavigationManager NavigationManager
 @inject IExtendedUserService ExtendedUserService
 @inject IMapper Mapper
-@inject IVacationRequestNotifier VCNotifier
+@inject IVRNotifierService VrNotifier
 
 @inject ILogger<EditRequest> Logger
 @rendermode InteractiveServer
@@ -147,8 +147,8 @@ else
 			Mapper.Map(InputModel, VacationRequest);
 			await Context.SaveChangesAsync();
 
-			// Hub notification
-			await VCNotifier.BroadcastAsync();
+			// Index notification
+			await VrNotifier.NotifyChangedAsync();
 
 			NavigationManager.NavigateTo("/vacationrequests");
 

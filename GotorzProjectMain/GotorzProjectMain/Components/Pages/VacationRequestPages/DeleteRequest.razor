@@ -11,7 +11,7 @@
 @inject Services.IExtendedUserService UserService
 @inject ILogger<DeleteRequest> Logger
 @inject ICurrentUserService CurrentUserService
-@inject IVacationRequestNotifier VCNotifier
+@inject IVRNotifierService VrNotifier
 
 <PageTitle>Delete Vacation Request</PageTitle>
 
@@ -185,8 +185,8 @@ else
             _errorMessage = $"An error occurred while trying to delete: {ex.Message}";
         }
 
-        // Hub notification
-        await VCNotifier.BroadcastAsync();
+        // Index notification
+        await VrNotifier.NotifyChangedAsync();
 
         NavigationManager.NavigateTo("/vacationrequests");
     }
