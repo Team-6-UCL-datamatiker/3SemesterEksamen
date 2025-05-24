@@ -1,4 +1,8 @@
-﻿namespace GotorzProjectMain.Services;
+﻿using Microsoft.CodeAnalysis.Elfie.Serialization;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using static System.Net.Mime.MediaTypeNames;
+
+namespace GotorzProjectMain.Services;
 
 public class VRNotifierService : IVRNotifierService
 {
@@ -28,13 +32,16 @@ public class VRNotifierService : IVRNotifierService
 //
 // Multicast delegate:
 //
-// The event keyword is what turns a delegate into a multicast delegate—internally,
-// a list of handlers—enabling you to use += and -= to add or remove as many methods as you want.
-// Without event, a Func<Task> is just a variable that can hold one delegate (one method).
-// With event, event Func<Task> is a built-in “subscription list” (multicast delegate) that can notify any number of subscribers.
-// Think of event as the difference between one phone line (delegate) and a conference call(event with a list of delegates).
-// That’s why event is fundamental for patterns where you want multiple things to react to a change.
-// It’s what makes all the classic C# event/listener infrastructure work.
+// All delegates in C#—with or without the event keyword—are multicast by design.
+// That means you can always use += and -= to chain multiple methods together, and when you invoke the delegate, every subscribed method is called in order.
+// The event keyword does not make a delegate multicast.Instead, it restricts how outside code can interact with the delegate. With event,
+// external code can only subscribe (+=) or unsubscribe(-=); it can’t directly assign, clear, or invoke the delegate. Without event,
+// anyone with access to the field can overwrite it, nullify it, or invoke it directly, breaking encapsulation.
+// So, think of every delegate as having the conference-call feature built in.
+// The event keyword just locks the controls—only the class can start the call, hang up, or swap out everyone on the line.
+// Outsiders can only add or remove themselves from the attendee list.
+// This is why event is fundamental for safe publish/subscribe patterns:
+// it prevents outside code from hijacking or disrupting your notification system, while still letting multiple listeners subscribe and react.
 //
 // OnChanged.GetInvocationList():
 //
