@@ -19,7 +19,7 @@ public class VacationRequestModelValidationTests
 	}
 
 	[TestMethod]
-	public void ChildrenAmount_Negative_IsInvalid()
+	public void ChildrenAmount_WhenNegative_ReturnsValidationError()
 	{
 		// Arrange
 		var request = new CreateVacationRequestInputModel
@@ -44,7 +44,7 @@ public class VacationRequestModelValidationTests
 	}
 
 	[TestMethod]
-	public void AdultsAmount_Negative_IsInvalid()
+	public void AdultsAmount_WhenNegative_ReturnsValidationError()
 	{
 		// Arrange
 		var request = new CreateVacationRequestInputModel
@@ -69,7 +69,7 @@ public class VacationRequestModelValidationTests
 	}
 
 	[TestMethod]
-	public void RoomsAmount_Negative_IsInvalid()
+	public void RoomsAmount_WhenNegative_ReturnsValidationError()
 	{
 		// Arrange
 		var request = new CreateVacationRequestInputModel
@@ -94,7 +94,7 @@ public class VacationRequestModelValidationTests
 	}
 
 	[TestMethod]
-	public void AllAmounts_NonNegative_IsValid()
+	public void AllAmounts_WhenNonNegative_ReturnsNoValidationErrors()
 	{
 		// Arrange
 		var request = new CreateVacationRequestInputModel

@@ -4,7 +4,10 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.SignalR.Client
 @using System.Security.Claims
+
+
 @inject NavigationManager Navigation
+
 @implements IAsyncDisposable
 
 @attribute [Authorize]
@@ -13,26 +16,58 @@
 
 @if (!_isReady)
 {
-	<div>Loading...</div>
-}
-
-else {
-	<div class="form-group">
-		<label>
-			Message:
-			<input @bind="messageInput" size="50" />
-		</label>
+	<div class="d-flex justify-content-center align-items-center" style="height: 60vh;">
+		<div class="d-flex align-items-center gap-2">
+			<span>Loading...</span>
+			<div class="spinner-border text-primary" role="status"></div>
+		</div>
 	</div>
-	<button @onclick="Send" disabled="@(!IsConnected)">Send</button>
-
-	<hr>
-
-	<ul id="messagesList">
-		@foreach (var message in messages)
-		{
-			<li>@message</li>
-		}
-	</ul>
+}
+else
+{
+	<div class="container py-4">
+		<div class="row justify-content-center">
+			<div class="col-12 col-md-8">
+				<div class="card shadow-sm">
+					<!-- Header -->
+					<div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+						<h5 class="mb-0">Global Chat</h5>
+						<span class="badge bg-light text-primary">@messages.Count</span>
+					</div>
+					<!-- Beskedliste -->
+					<div class="card-body p-0">
+						<ul class="list-group list-group-flush overflow-auto" style="max-height: 400px;">
+							@foreach (var msg in messages)
+							{
+								<li class="list-group-item">@msg</li>
+							}
+						</ul>
+					</div>
+					<!-- Input -->
+					<div class="card-footer bg-light">
+						<div class="input-group">
+							<input @bind="messageInput"
+							@bind:event="oninput"
+							class="form-control"
+							placeholder="Skriv en besked…"
+							@onkeypress='@(async (KeyboardEventArgs e) => {
+           if (e.Key == "Enter" && IsConnected)
+           {
+               await Send();
+           }
+       })' />
+							<button class="btn btn-primary"
+							type="button"
+							@onclick="Send"
+							disabled="@( !IsConnected )">
+								Send
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 }
 
 @code {
@@ -51,10 +86,10 @@ else {
 		// Get the current user
 		var user = (await AuthenticationStateTask).User;
 
-		 username = user.FindFirst(ClaimTypes.GivenName)?.Value
-					?? "‹unknown›";
-		 userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
-					?? throw new InvalidOperationException("User not authenticated");
+		username = user.FindFirst(ClaimTypes.GivenName)?.Value
+							?? "‹unknown›";
+		userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+							?? throw new InvalidOperationException("User not authenticated");
 
 		hubConnection = new HubConnectionBuilder()
 			.WithUrl(Navigation.ToAbsoluteUri("/chathub"))
@@ -66,7 +101,7 @@ else {
 			messages.Add(encodedMsg);
 			InvokeAsync(StateHasChanged);
 		});
-			
+
 		await hubConnection.StartAsync();
 
 		// Load history
@@ -91,6 +126,7 @@ else {
 		if (hubConnection is not null)
 		{
 			await hubConnection.SendAsync("SendMessage", messageInput, userId, username);
+			messageInput = string.Empty;
 		}
 	}
 

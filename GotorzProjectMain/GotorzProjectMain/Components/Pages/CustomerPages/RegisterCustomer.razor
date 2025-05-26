@@ -1,0 +1,205 @@
+﻿@page "/Account/RegisterCustomer"
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+@using System.Text.Encodings.Web
+@using AutoMapper
+@using GotorzProjectMain.InputModels.Users.CustomerInputModels
+@using GotorzProjectMain.Models
+@using GotorzProjectMain.Services
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using GotorzProjectMain.Data
+@using Microsoft.EntityFrameworkCore;
+@using System.Net
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IUserStore<ApplicationUser> UserStore
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IEmailSender<ApplicationUser> EmailSender
+@inject ILogger<RegisterCustomer> Logger
+@inject NavigationManager NavigationManager
+@inject ApplicationDbContext Context
+@inject IMapper Mapper
+
+<PageTitle>Register</PageTitle>
+
+<h1>Register</h1>
+
+<div class="row">
+    <div class="col-md-4">
+        <EditForm EditContext="_ec" OnValidSubmit="RegisterUser" FormName="register">
+            <DataAnnotationsValidator />
+            <h2>Create a new account.</h2>
+            <hr />
+
+            <div class="form-floating mb-3">
+                <InputText id="first-name" @bind-Value="Input.FirstName" class="form-control" autocomplete="given-name" aria-required="true" />
+                <label for="first-name">First Name</label>
+@*                 <ValidationMessage For="() => Input.FirstName" class="alert alert-danger mt-3" />
+ *@            </div>
+
+            <div class="form-floating mb-3">
+                <InputText id="last-name" @bind-Value="Input.LastName" class="form-control" autocomplete="family-name" aria-required="true" />
+                <label for="last-name">Last Name</label>
+@*                 <ValidationMessage For="() => Input.LastName" class="alert alert-danger mt-3" />
+ *@            </div>
+
+            <div class="form-floating mb-3">
+                <InputText id="email" @bind-Value="Input.Email" class="form-control" autocomplete="email" aria-required="true" />
+                <label for="email">Email</label>
+@*                 <ValidationMessage For="() => Input.Email" class="alert alert-danger mt-3" />
+ *@            </div>
+
+            <div class="form-floating mb-3">
+                <InputText id="username" @bind-Value="Input.CustomUsername" class="form-control" autocomplete="username" aria-required="true" oninput="@(async (ChangeEventArgs e) => await DebounceUsernameCheck(e))" />
+                <label for="username">Username</label>
+ @*                <ValidationMessage For="() => Input.CustomUsername" class="alert alert-danger mt-3" />
+  *@           </div>
+
+            <div class="form-floating mb-3">
+                <InputText id="password" type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" />
+                <label for="password">Password</label>
+    @*             <ValidationMessage For="() => Input.Password" class="alert alert-danger mt-3" />
+     *@        </div>
+
+            <div class="form-floating mb-3">
+                <InputText id="confirm-password" type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" />
+                <label for="confirm-password">Confirm Password</label>
+       @*          <ValidationMessage For="() => Input.ConfirmPassword" class="alert alert-danger mt-3" />
+        *@     </div>
+
+            <div class="form-floating mb-3">
+                <InputText id="phone" @bind-Value="Input.Phone" class="form-control" aria-required="true" onblur="@(() => { if (string.IsNullOrWhiteSpace(Input.Phone)) { Input.Phone = null; _ec.Validate(); }})" />
+                <label for="phone">Phone Number (optional)</label>
+          @*       <ValidationMessage For="() => Input.Phone" class="alert alert-danger mt-3" />
+           *@  </div>
+
+			<button type="submit" disabled="@(string.IsNullOrWhiteSpace(Input.ConfirmPassword) || Input.ConfirmPassword != Input.Password)" class="w-100 btn btn-lg btn-primary">Register</button>
+
+        </EditForm>
+        <StatusMessage Message="@_message" />
+    </div>
+</div>
+
+@code {
+	[SupplyParameterFromForm]
+	private RegisterCustomerInputModel Input { get; set; } = new();
+	[SupplyParameterFromQuery]
+	private string? ReturnUrl { get; set; }
+	private IEnumerable<IdentityError> _identityErrors = Enumerable.Empty<IdentityError>();
+	private string? _message => !_identityErrors.Any() ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
+	private EditContext? _ec;
+	private string? _userNameErrorMessage;
+	private CancellationTokenSource? _debounceCts;
+	private ValidationMessageStore? _messageStore;
+	private FieldIdentifier _inputUserNameField;
+
+	protected override void OnInitialized()
+	{
+		_ec = new EditContext(Input);
+		_messageStore = new ValidationMessageStore(_ec);
+		_inputUserNameField = new FieldIdentifier(Input, nameof(Input.CustomUsername));
+	}
+
+	public async Task RegisterUser()
+	{
+		try
+		{
+			var user = new ApplicationUser();
+
+			// UserStore = The object that actually knows how to create, read, update, delete users from your database.
+			await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+
+			// Casts userstore to an IUserEmailStore<ApplicationUser>. Meaning: it forces the underlying database / user - store thing to support email operations like setting, getting, verifying emails for users.
+			var emailStore = (IUserEmailStore<ApplicationUser>)UserStore;
+			await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
+			// Giver identityErrors en værdi hvis metoden ikke returnerer succes. identityErrors bliver vist i browseren i så fald.
+			var result = await UserManager.CreateAsync(user, Input.Password);
+			_identityErrors = _identityErrors.Concat(result.Succeeded ? Enumerable.Empty<IdentityError>() : result.Errors);
+			if (!result.Succeeded)
+			{
+				return;
+			}
+
+			result = await UserManager.AddToRoleAsync(user, "Customer");
+			_identityErrors = _identityErrors.Concat(result.Succeeded ? Enumerable.Empty<IdentityError>() : result.Errors);
+
+			var customer = new Customer
+				{
+					Id = user.Id,
+					User = user
+				};
+
+			Mapper.Map(Input, customer);
+			Context.Customers.Add(customer);
+			await Context.SaveChangesAsync();
+
+			// Er det her noget vi bruger?
+			Logger.LogInformation($"User ({user.Id}) created a new account with password.");
+
+			await SendConfirmationEmailAndRedirect(user);
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "An unexpected error occurred.");
+			throw;
+		}
+
+	}
+
+	private async Task DebounceUsernameCheck(ChangeEventArgs e)
+	{
+		_messageStore.Clear(_inputUserNameField); // wipe old errors
+		_debounceCts?.Cancel();
+		_debounceCts?.Dispose();
+		_debounceCts = new CancellationTokenSource();
+
+		try
+		{
+			if (e.Value is null)
+			{
+				return;
+			}
+
+			await Task.Delay(500, _debounceCts.Token); // 500ms debounce
+			_userNameErrorMessage = await Context.Customers.AnyAsync(c => c.CustomUserName.ToLower() == e.Value.ToString().ToLowerInvariant()) ? "Sorry, that username is already in use. Please try a different one." : null;
+
+			if (_userNameErrorMessage is not null)
+			{
+				_messageStore.Add(_inputUserNameField, _userNameErrorMessage); // add new error
+				_ec.NotifyValidationStateChanged();
+			}
+		}
+		catch (TaskCanceledException)
+		{
+			// Ignore, because it means user typed again before 500ms
+		}
+	}
+
+	private async Task SendConfirmationEmailAndRedirect(ApplicationUser user)
+	{
+		// Link til emailbekræftelse, tror jeg? Noget i den stil.
+		var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+		code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+		var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+			NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+			new Dictionary<string, object?> { ["userId"] = user.Id, ["code"] = code, ["returnUrl"] = ReturnUrl });
+
+		await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+		if (UserManager.Options.SignIn.RequireConfirmedAccount)
+		{
+			NavigationManager.NavigateTo(
+				$"/Account/RegisterConfirmation?email={WebUtility.UrlEncode(Input.Email)}&returnUrl={WebUtility.UrlEncode(ReturnUrl ?? "/")}",
+				forceLoad: false);
+		}
+		else
+		{
+			await SignInManager.SignInAsync(user, isPersistent: false);
+			NavigationManager.NavigateTo(ReturnUrl ?? "/");
+		}
+	}
+}

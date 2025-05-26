@@ -1,6 +1,8 @@
 ﻿@page "/vacationrequests"
 @rendermode InteractiveServer
 
+@implements IDisposable
+
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
@@ -13,7 +15,9 @@
 @inject ApplicationDbContext Context
 @inject IExtendedUserService ExtendedUserService
 @inject NavigationManager NavigationManager
-@inject VacationRequestSignalRService SignalRService
+@inject ICurrentUserService CurrentUserService
+@inject IVRNotifierService VrNotifier
+
 
 @attribute [Authorize]
 
@@ -29,8 +33,8 @@
     <TemplateColumn Context="vacationrequest" Title="User Email">
         @{
             var email = customers
-                .FirstOrDefault(c => c.User?.Id == vacationrequest.UserId)
-                ?.User?.Email ?? "Unknown";
+            .FirstOrDefault(c => c.User?.Id == vacationrequest.CustomerId)
+            ?.User?.Email ?? "Unknown";
         }
         @email
     </TemplateColumn>
@@ -38,8 +42,8 @@
     <PropertyColumn Property="vacationrequest => vacationrequest.DepartureCity" Title="Departure City" />
     <PropertyColumn Property="vacationrequest => vacationrequest.DepartureCountry" Title="Departure Country" />
     <PropertyColumn Property="vacationrequest => vacationrequest.ArrivalCity" Title="Arrival City" />
-    <PropertyColumn Property="vacationrequest => vacationrequest.ArrivalCountry" Title="Arrival Country" />    
-    
+    <PropertyColumn Property="vacationrequest => vacationrequest.ArrivalCountry" Title="Arrival Country" />
+
     <TemplateColumn Context="vacationrequest" Title="Start Date">
         @vacationrequest.StartDate.ToString("MMM dd, yyyy")
     </TemplateColumn>
@@ -47,54 +51,46 @@
     <TemplateColumn Context="vacationrequest" Title="End Date">
         @vacationrequest.EndDate.ToString("MMM dd, yyyy")
     </TemplateColumn>
-    <PropertyColumn Property="vacationrequest => vacationrequest.Status"/>
+    <PropertyColumn Property="vacationrequest => vacationrequest.Status" />
 
 
     <TemplateColumn Context="vacationrequest">
         <a href="@($"vacationrequests/edit?vacationrequestid={vacationrequest.VacationRequestId}")">Edit</a> |
         <a href="@($"vacationrequests/details?vacationrequestid={vacationrequest.VacationRequestId}")">Details</a> |
-        <a href="@($"vacationrequests/delete?vacationrequestid={vacationrequest.VacationRequestId}")">Delete</a>
+        <a href="@($"vacationrequests/delete?vacationrequestid={vacationrequest.VacationRequestId}")">Delete</a> |
+        @if (isEmployee)
+        {
+            <a href="@($"vacationrequests/details?vacationrequestid={vacationrequest.VacationRequestId}&employeeid={userId}")">Create Offer</a>
+
+        }
     </TemplateColumn>
 </QuickGrid>
 @code {
-
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
-
-    private DateTime lastUpdated = DateTime.Now;
 
     private List<VacationRequest> vacationRequests = new();
     private List<Customer> customers = new();
     private bool isEmployee;
     private string? userId;
+    private HubConnection? hubConnection;
 
     protected override async Task OnInitializedAsync()
     {
         // Determine current user and role
-        var authState = await AuthenticationStateTask;
-        var user = authState.User;
-        userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        // Check if logged in user is an employee
-        isEmployee = await Context.Employees.AnyAsync(e => e.Id == userId);
+        userId = await CurrentUserService.GetUserIdAsync();
+        isEmployee = await CurrentUserService.IsEmployeeAsync();
 
         await LoadDataAsync();
 
-        await SignalRService.InitializeAsync();
-        
-        SignalRService.OnVacationRequestReceived += async () =>
-        {
-            Console.WriteLine("🔥 Handler started");
-            await LoadDataAsync();
-            Console.WriteLine("✅ Handler finished LoadDataAsync()");
-            lastUpdated = DateTime.Now;
-            await InvokeAsync(StateHasChanged);
-        };
-
-        Console.WriteLine("🔗 SignalR event handler attached in Index.razor");
-
+        // Add a delegate to the event/multicast delegate (list of delegates)
+        VrNotifier.OnChanged += HandleChanged;
     }
-    
+
+    private async Task HandleChanged()
+    {
+        await LoadDataAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
     private async Task LoadDataAsync()
     {
         // Load requests -  all for employees, only own for customers
@@ -105,16 +101,15 @@
         else
         {
             vacationRequests = await Context.VacationRequests
-                .Where(v => v.UserId == userId)
+                .Where(v => v.CustomerId == userId)
                 .ToListAsync();
         }
-
-        Console.WriteLine("📦 Starting LoadDataAsync()");
+		// Load customers
         customers = await ExtendedUserService.GetCustomersWithUsersAsync();
-
-        lastUpdated = DateTime.Now;
-        Console.WriteLine("Data reloaded at " + lastUpdated);
     }
 
-    
+    public void Dispose()
+    {
+        VrNotifier.OnChanged -= HandleChanged;
+    }
 }

@@ -1,6 +1,8 @@
-﻿using AutoMapper;
+﻿using System.Globalization;
+using AutoMapper;
+using GotorzProjectMain.InputModels.Users;
 using GotorzProjectMain.Models;
-using GotorzProjectMain.Services.APIs.HotelAPIs;
+using GotorzProjectMain.Services.APIs.HotelAPIs.DTO;
 
 namespace GotorzProjectMain.Services.Mapping;
 
@@ -69,5 +71,22 @@ public class AmadeusMappingProfiles : Profile
                 context.Mapper.Map<PriceInfo?>(src.Price),
                 context.Mapper.Map<PolicySummary?>(src.Policies)
             ));
+
+        // Specifik addresse ikke tilgængelig gennem API, kun geoCode...
+        CreateMap<Hotel, HotelBooking>()
+            .ForMember(hb => hb.HotelName, opt => opt.MapFrom(h => h.Name))
+            .ForMember(hb => hb.TotalPrice, opt => opt.MapFrom(h => float.Parse(h.Offers!.First().Price!.TotalAmount!, CultureInfo.InvariantCulture)))
+            .ForMember(hb => hb.Currency, opt => opt.MapFrom(h => h.Offers!.First().Price!.Currency))
+            .ForMember(hb => hb.CheckInDate, opt => opt.MapFrom(h => DateTime.Parse(h.Offers!.First().CheckInDate!, CultureInfo.InvariantCulture)))
+            .ForMember(hb => hb.CheckOutDate, opt => opt.MapFrom(h => DateTime.Parse(h.Offers!.First().CheckOutDate!, CultureInfo.InvariantCulture)))
+            .ForMember(hb => hb.Adults, opt => opt.MapFrom(h => h.Offers!.First().Guests!.Adults))
+            .ForMember(hb => hb.HotelRating, opt => opt.MapFrom(h => h.Rating))
+            .ForMember(hb => hb.RoomDescription, opt => opt.MapFrom(h =>
+                $"Category: {h.Offers!.First().Room!.Category}\n" +
+                $"Type: {h.Offers!.First().Room!.Type}\n" +
+                $"Beds: {h.Offers!.First().Room!.Beds} {h.Offers!.First().Room!.BedType}\n" +
+                $"Description: {h.Offers!.First().Room!.DescriptionText}"))
+            .ForMember(hb => hb.Misc, opt => opt.MapFrom(h => h.Amenities != null ? string.Join(", ", h.Amenities.Select(a => a)) : null))
+            .ForMember(hb => hb.BoardType, opt => opt.MapFrom(h => h.Offers!.First().BoardType));
     }
 }

@@ -1,0 +1,59 @@
+﻿@page "/employees"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.AspNetCore.Authorization
+@using GotorzProjectMain.Models
+@using GotorzProjectMain.Data
+@inject Services.IExtendedUserService UserService
+@inject ILogger<IndexEmployee> Logger
+
+@attribute [Authorize(Policy = "Admin")]
+
+<PageTitle>Employees</PageTitle>
+
+<h1>Employees</h1>
+
+<p>
+    <a href="/Account/RegisterEmployee">Create New</a>
+</p>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger mt-3" role="alert">
+        @errorMessage
+    </div>
+}
+
+<QuickGrid Class="table" Items="employees.AsQueryable()">
+    <PropertyColumn Property="employee => employee.User.FirstName" Title="First Name" />
+    <PropertyColumn Property="employee => employee.User.LastName" Title="Last Name" />
+    <PropertyColumn Property="employee => employee.User.Email" />
+    <PropertyColumn Property="employee => employee.CustomUserName" />
+    <PropertyColumn Property="employee => employee.User.PhoneNumber" Title="Phone Number" />
+    <PropertyColumn Property="employee => employee.IsAdmin" Title="Admin"/>
+
+    <TemplateColumn Context="employee">
+        <a href="@($"employees/edit?id={employee.Id}")">Edit</a> |
+        <a href="@($"employees/details?id={employee.Id}")">Details</a> |
+        <a href="@($"employees/delete?id={employee.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private string? errorMessage;
+    private List<Employee> employees = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            employees = await UserService.GetEmployeesWithUsersAsync();
+        }
+        catch(Exception ex)
+        {
+            errorMessage = "Error fetching employees";
+			Logger.LogError(ex, errorMessage);
+        }
+
+    }
+}

@@ -7,10 +7,10 @@ using Moq;
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Bunit.TestDoubles;
-using GotorzProjectMain.Components.Account.Pages.CRUD.EmployeePages;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using GotorzProjectMain.Components.Pages.EmployeePages;
 
 namespace TestProject.UnitTests;
 
@@ -19,12 +19,14 @@ public class EmployeePagesTests : Bunit.TestContext
 {
     private Mock<IExtendedUserService> mockUserService;
     private Mock<UserManager<ApplicationUser>> mockUserManager;
+    private Mock<ICurrentUserService> mockCurrentUserService;
     private FakeNavigationManager navMan;
 
     [TestInitialize]
     public void Setup()
     {
         mockUserService = new Mock<IExtendedUserService>();
+        mockCurrentUserService = new Mock<ICurrentUserService>();
         mockUserManager = new Mock<UserManager<ApplicationUser>>(
             Mock.Of<IUserStore<ApplicationUser>>(),
             null, null, null, null, null, null, null, null
@@ -42,6 +44,7 @@ public class EmployeePagesTests : Bunit.TestContext
 
         Services.AddSingleton(mockUserService.Object);
         Services.AddSingleton(mockUserManager.Object);
+        Services.AddSingleton(mockCurrentUserService.Object);
 
         navMan = Services.GetRequiredService<NavigationManager>() as FakeNavigationManager;
     }
@@ -73,74 +76,13 @@ public class EmployeePagesTests : Bunit.TestContext
             .Setup(x => x.GetEmployeeByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((Employee)null);
 
-        navMan.NavigateTo("http://localhost/employees/details?id=nonexistent-id");
+        navMan.NavigateTo("http://localhost/employees/edit?id=nonexistent-id");
 
         // Act
         var cut = RenderComponent<EditEmployee>();
 
         // Assert
         Assert.AreEqual("http://localhost/employees", navMan.Uri);
-    }
-
-    [TestMethod]
-    public void EditEmployee_EmployeeExists_ShouldReturnTrue_WhenEmployeeExists()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [TestMethod]
-    public void EditEmployee_EmployeeExists_ShouldReturnFalse_WhenEmployeeDoesNotExist()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [TestMethod]
-    public async Task EditEmployee_UpdateEmployee_ShouldRedirectToNotFound_WhenConcurrencyExceptionAndEmployeeMissing()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    // --------- RegisterEmployee Tests ---------
-    [TestMethod]
-    public async Task RegisterEmployee_RegisterUser_ShouldSetIdentityErrors_WhenCreateUserFails()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [TestMethod]
-    public async Task RegisterEmployee_RegisterUser_ShouldSetIdentityErrors_WhenAddToRoleFails()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [TestMethod]
-    public void RegisterEmployee_Message_ShouldFormatErrorMessagesCorrectly()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
     }
 
     // --------- RemoveEmployee Tests ---------
@@ -161,13 +103,4 @@ public class EmployeePagesTests : Bunit.TestContext
         Assert.AreEqual("http://localhost/notfound", navMan.Uri);
     }
 
-    [TestMethod]
-    public async Task RemoveEmployee_DeleteEmployee_ShouldRedirectToEmployees_WhenDeleted()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
 }

@@ -1,0 +1,62 @@
+﻿@page "/customers"
+@rendermode InteractiveServer
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.AspNetCore.Authorization
+@using GotorzProjectMain.Models
+@using GotorzProjectMain.Data
+@using System.Linq
+@inject Services.IExtendedUserService UserService
+@inject ILogger<IndexCustomer> Logger
+
+@attribute [Authorize(Policy = "Admin")]
+
+<PageTitle>Customers</PageTitle>
+
+<h1>Customers</h1>
+
+<p>
+    <a href="/Account/RegisterCustomer">Create New</a>
+</p>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger mt-3" role="alert">
+        @errorMessage
+    </div>
+}
+
+<QuickGrid Class="table" Items="customers.AsQueryable()">
+    <PropertyColumn Property="customer => customer.CustomUserName" Title="Username" />
+    <PropertyColumn Property="customer => customer.User.FirstName" Title="First Name" />
+    <PropertyColumn Property="customer => customer.User.LastName" Title="Last Name" />
+    <PropertyColumn Property="customer => customer.User.Email" Title="Email" />
+    <PropertyColumn Property="customer => customer.User.PhoneNumber" Title="Phone Number" />
+
+    <TemplateColumn Context="customer">
+        <a href="@($"customers/edit?id={customer.Id}")">Edit</a> |
+        <a href="@($"customers/details?id={customer.Id}")">Details</a> |
+        <a href="@($"customers/delete?id={customer.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private string? errorMessage;
+    private List<Customer> customers = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            customers = await UserService.GetCustomersWithUsersAsync();
+        }
+        catch(Exception ex)
+        {
+			errorMessage = "An error occurred while loading customers.";
+            Logger.LogError(ex, errorMessage);
+        }
+    
+
+    }
+
+}

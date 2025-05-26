@@ -7,10 +7,10 @@ using Moq;
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Bunit.TestDoubles;
-using GotorzProjectMain.Components.Account.Pages.CRUD.CustomerPages;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using GotorzProjectMain.Components.Pages.CustomerPages;
 
 namespace TestProject.UnitTests;
 
@@ -82,70 +82,6 @@ public class CustomerPagesTests : Bunit.TestContext
         Assert.AreEqual("http://localhost/customers", navMan.Uri);
     }
 
-    [TestMethod]
-    public void EditCustomer_CustomerExists_ShouldReturnTrue_WhenCustomerExists()
-    {
-        //// Arrange
-        //mockUserService
-        //    .Setup(x => x.GetCustomerByIdAsync(It.IsAny<string>()))
-        //    .ReturnsAsync(new Customer { Id = "existing-id" });
-        //// Act
-        //var cut = RenderComponent<EditCustomer>();
-        //// Assert
-        //Assert.IsTrue(cut.Instance.CustomerExists("existing-id"));
-    }
-
-    [TestMethod]
-    public void EditCustomer_CustomerExists_ShouldReturnFalse_WhenCustomerDoesNotExist()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [TestMethod]
-    public async Task EditCustomer_UpdateCustomer_ShouldRedirectToNotFound_WhenConcurrencyExceptionAndCustomerMissing()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    // --------- RegisterCustomer Tests ---------
-    [TestMethod]
-    public async Task RegisterCustomer_RegisterUser_ShouldSetIdentityErrors_WhenCreateUserFails()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [TestMethod]
-    public async Task RegisterCustomer_RegisterUser_ShouldSetIdentityErrors_WhenAddToRoleFails()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
-    [TestMethod]
-    public void RegisterCustomer_Message_ShouldFormatErrorMessagesCorrectly()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
-    }
-
     // --------- RemoveCustomer Tests ---------
     [TestMethod]
     public void RemoveCustomer_OnInitializedAsync_ShouldRedirectToNotFound_WhenCustomerIsNull()
@@ -162,15 +98,5 @@ public class CustomerPagesTests : Bunit.TestContext
 
         // Assert
         Assert.AreEqual("http://localhost/notfound", navMan.Uri);
-    }
-
-    [TestMethod]
-    public async Task RemoveCustomer_DeleteCustomer_ShouldRedirectToCustomers_WhenDeleted()
-    {
-        // Arrange
-
-        // Act
-
-        // Assert
     }
 }

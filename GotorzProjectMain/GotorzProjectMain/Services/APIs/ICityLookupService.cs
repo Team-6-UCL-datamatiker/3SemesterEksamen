@@ -3,6 +3,7 @@
 public interface ICityLookupService
 {
     public List<string> Cities { get; init; }
-    IEnumerable<string> Search(string input, int max = 10);
-    (string CityCode, string AirportCode)? GetCodes(string label);
+	IEnumerable<string> SearchContains(string input, int max = 10);
+	(string CityCode, string AirportCode)? GetCodes(string label);
+
 }

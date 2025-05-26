@@ -65,7 +65,7 @@ namespace TestProject.UnitTests
 
 
         [TestMethod]
-        public void PositiveGetCustomersWithUsersAsyncTest()
+        public void GetCustomersWithUsersAsync_WhenCustomersExist_ReturnsCorrectCount()
         {
             // Arrange
             int expectedCustomers = 2;
@@ -75,7 +75,7 @@ namespace TestProject.UnitTests
             Assert.AreEqual(expectedCustomers, result.Count);
         }
         [TestMethod]
-        public void NegativeGetCustomersWithUsersAsyncTest()
+        public void GetCustomersWithUsersAsync_WhenExpectedCountIsIncorrect_ReturnsMismatchedCount()
         {
             // Arrange
             int expectedCustomers = 99;
@@ -85,7 +85,7 @@ namespace TestProject.UnitTests
             Assert.AreNotEqual(expectedCustomers, result.Count);
         }
         [TestMethod]
-        public void PositiveGetEmployeesWithUsersAsyncTest()
+        public void GetEmployeesWithUsersAsync_WhenEmployeesExist_ReturnsCorrectCount()
         {
             // Arrange
             int expectedEmployees = 2;
@@ -95,7 +95,7 @@ namespace TestProject.UnitTests
             Assert.AreEqual(expectedEmployees, result.Count);
         }
         [TestMethod]
-        public void NegativeGetEmployeesWithUsersAsyncTest()
+        public void GetEmployeesWithUsersAsync_WhenExpectedCountIsIncorrect_ReturnsMismatchedCount()
         {
             // Arrange
             int expectedEmployees = 99;
@@ -105,7 +105,7 @@ namespace TestProject.UnitTests
             Assert.AreNotEqual(expectedEmployees, result.Count);
         }
         [TestMethod]
-        public void PositiveGetCustomerByIdAsyncTest()
+        public void GetCustomerByIdAsync_WhenCustomerIdExists_ReturnsCustomer()
         {
             // Arrange
             Customer expectedCustomer = new Customer
@@ -120,7 +120,7 @@ namespace TestProject.UnitTests
             Assert.AreEqual(expectedCustomer.Id, result?.Id);
         }
         [TestMethod]
-        public void NegativeGetCustomerByIdAsyncTest()
+        public void GetCustomerByIdAsync_WhenCustomerIdDoesNotExist_ReturnsNull()
         {
             // Arrange
             Customer expectedCustomer = new Customer
@@ -135,7 +135,7 @@ namespace TestProject.UnitTests
             Assert.AreNotEqual(expectedCustomer.Id, result?.Id);
         }
         [TestMethod]
-        public void PositiveGetEmployeeByIdAsyncTest()
+        public void GetEmployeeByIdAsync_WhenEmployeeIdExists_ReturnsEmployee()
         {
             // Arrange
             Employee expectedEmployee = new Employee
@@ -153,7 +153,7 @@ namespace TestProject.UnitTests
             Assert.AreEqual(expectedEmployee.Id, result?.Id);
         }
         [TestMethod]
-        public void NegativeGetEmployeeByIdAsyncTest()
+        public void GetEmployeeByIdAsync_WhenEmployeeIdDoesNotExist_ReturnsNull()
         {
             // Arrange
             Employee expectedEmployee = new Employee

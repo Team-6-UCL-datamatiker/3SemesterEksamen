@@ -1,0 +1,117 @@
+@using AutoMapper
+@using Microsoft.EntityFrameworkCore
+@using GotorzProjectMain.Components
+@using GotorzProjectMain.Components.SearchComponents
+@using GotorzProjectMain.Models
+@using GotorzProjectMain.Data
+
+@inject NavigationManager NavigationManager
+@inject ApplicationDbContext Context
+@inject IMapper Mapper
+@inject ILogger<CreateOfferComponent> Logger
+
+@rendermode InteractiveServer
+
+<details>
+	<summary class="summary-heading">Flight Search 1</summary><br />
+	<SearchFlightComponent ComponentId="1" OnFlightSelected="HandleFlightSelected" />
+</details>
+<details>
+	<summary class="summary-heading">Flight Search 2</summary><br />
+	<SearchFlightComponent ComponentId="2" OnFlightSelected="HandleFlightSelected" />
+</details>
+<details>
+	<summary class="summary-heading">Hotel Search</summary><br />
+	<SearchHotelComponent OnHotelSelected="HandleHotelSelected" />
+</details>
+
+@if (!string.IsNullOrWhiteSpace(ErrorMessage))
+{
+	<div class="alert alert-danger mt-3" role="alert">
+		@ErrorMessage
+	</div>
+}
+
+<button @onclick="CreateVacationOffer" disabled="@(OutwardRoute == null || ReturnRoute == null || HotelBooking == null)" class="btn btn-primary" style="padding: 0.4rem 1rem; padding-top: 0.6rem">Create Offer</button>
+
+@code
+{
+	string? ErrorMessage;
+	[Parameter]
+	public VacationRequest? VacationRequest { get; set; }
+	[Parameter]
+	public Employee? Employee { get; set; }
+	VacationOffer? VacationOffer { get; set; }
+	FlightBooking? FlightBooking { get; set; }
+	FlightBooking? ReturnFlightBooking { get; set; }
+	HotelBooking? HotelBooking { get; set; }
+	FlightRoute? OutwardRoute { get; set; }
+	FlightRoute? ReturnRoute { get; set; }
+
+	public async Task CreateVacationOffer()
+	{
+		try
+		{
+			VacationOffer = new VacationOffer
+				{
+					EmployeeEmail = Employee!.User.Email!,
+					StartDate = OutwardRoute!.Legs.First().DepartureTime,
+					EndDate = ReturnRoute!.Legs.Last().ArrivalTime,
+					Misc = "-",
+					OfferStatus = OfferStatus.Waiting,
+					ExpirationDate = DateTime.Now.AddDays(10),
+				};
+
+			VacationRequest!.Offers.Add(VacationOffer);
+			VacationOffer.HotelBooking = HotelBooking;
+
+			FlightBooking = new FlightBooking
+				{
+				// Airline = string.Join(", ", OutwardRoute.Legs.Select(leg => leg.Airline)),
+					TotalPrice = OutwardRoute.TotalPrice + ReturnRoute.TotalPrice,
+					DepartureTime = OutwardRoute.Legs.First().DepartureTime,
+					DepartureAirport = OutwardRoute.Legs.First().DepartureAirportName,
+				// ArrivalAirport = OutwardRoute.Legs.Last().ArrivalAirportName
+					ArrivalAirport = ReturnRoute.Legs.Last().ArrivalAirportName
+				};
+
+			VacationOffer.FlightBooking = FlightBooking;
+			FlightBooking.FlightRoutes.Add(OutwardRoute);
+			FlightBooking.FlightRoutes.Add(ReturnRoute);
+			VacationOffer.TotalPrice = FlightBooking!.TotalPrice + HotelBooking!.TotalPrice;
+			VacationRequest.Status = RequestStatus.WaitingApproval;
+
+			await Context.SaveChangesAsync();
+			NavigationManager.NavigateTo("/vacationrequests");
+		}
+		catch (Exception ex)
+		{
+			ErrorMessage = "An unexpected error occurred. Please try again.";
+			Logger.LogError(ex, ErrorMessage);
+		}
+	}
+
+	private void HandleFlightSelected((string ComponentId, FlightRoute Route) selection)
+	{
+		if (selection.ComponentId == "1")
+		{
+			OutwardRoute = selection.Route;
+		}
+		else if (selection.ComponentId == "2")
+		{
+			ReturnRoute = selection.Route;
+		}
+	}
+
+	private void HandleHotelSelected(Hotel selectedHotel)
+	{
+		try
+		{
+			HotelBooking = Mapper.Map<HotelBooking>(selectedHotel);
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError($"Mapping error: {ex}");
+		}
+	}
+}

@@ -1,4 +1,5 @@
 ﻿@page "/vacationrequests/create"
+
 @using GotorzProjectMain.Data
 @using GotorzProjectMain.InputModels.VacationRequestInputModels
 @using Microsoft.AspNetCore.Authorization
@@ -11,9 +12,9 @@
 
 @inject ApplicationDbContext Context
 @inject NavigationManager NavigationManager
-@inject VacationRequestSignalRService SignalRService
 @inject AutoMapper.IMapper Mapper
-
+@inject ICurrentUserService CurrentUserService
+@inject IVRNotifierService VrNotifier
 
 @attribute [Authorize]
 
@@ -121,20 +122,11 @@
 	private bool IsEmployee { get; set; }
 	private string? FormErrorMessage { get; set; }
 
-	[CascadingParameter]
-	private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
-
 	protected override async Task OnInitializedAsync()
 	{
-		// Get the current user
-		var user = (await AuthenticationStateTask).User;
-
-		// Sets userid to the current user's ID if the user is authenticated
-		var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
-						?? throw new InvalidOperationException("User not authenticated");
-
-		// Check if the user is an employee
-		IsEmployee = await Context.Employees.AnyAsync(e => e.Id == userId);
+		string? userId = await CurrentUserService.GetUserIdAsync() 
+					 ?? throw new InvalidOperationException("User not authenticated");
+		IsEmployee = await CurrentUserService.IsEmployeeAsync();
 	}
 
 	private async Task HandleValidSubmit()
@@ -150,8 +142,8 @@
 		var vacationRequest = Mapper.Map<VacationRequest>(InputModel);
 
 		// Determine UserId
-		var authUser = (await AuthenticationStateTask).User;
-		var currentUserId = authUser.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+		var currentUserId = await CurrentUserService.GetUserIdAsync()
+							?? throw new InvalidOperationException("User not authenticated");
 
 		// If the user is an employee, find the customer by email
 		if (IsEmployee)
@@ -165,22 +157,25 @@
 				return;
 			}
 			// Set the UserId to the customer's ID
-			vacationRequest.UserId = customer.Id;
+			vacationRequest.CustomerId = customer.Id;
 		}
 		else
 		{
 			// If the user is not an employee, use their own ID
-			vacationRequest.UserId = currentUserId;
+			vacationRequest.CustomerId = currentUserId;
 		}
 
 		// Save
 		Context.VacationRequests.Add(vacationRequest);
 		await Context.SaveChangesAsync();
 
-		// SignalR notification
-		await SignalRService.InitializeAsync();
-		await Task.Delay(500);
-		await SignalRService.SendVacationRequestAsync();
+		// Index notification
+		await VrNotifier.NotifyChangedAsync();
+
+		// // SignalR notification
+		// await SignalRService.InitializeAsync();
+		// await Task.Delay(500);
+		// await SignalRService.SendVacationRequestAsync();
 
 		NavigationManager.NavigateTo("/vacationrequests");
 	}

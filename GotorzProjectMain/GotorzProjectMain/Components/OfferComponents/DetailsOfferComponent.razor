@@ -1,0 +1,93 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using GotorzProjectMain.Models
+@using GotorzProjectMain.Data
+
+@inject ApplicationDbContext Context
+@inject NavigationManager NavigationManager
+
+
+<h1>Offer for vacation request</h1>
+
+<div>
+    <hr />
+    @if (VacationOffer is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <dl class="row">
+            <dt class="col-sm-2">EmployeeEmail</dt>
+            <dd class="col-sm-10">@VacationOffer.EmployeeEmail</dd>
+            <dt class="col-sm-2">TotalPrice</dt>
+            <dd class="col-sm-10">@VacationOffer.TotalPrice</dd>
+            <dt class="col-sm-2">StartDate</dt>
+            <dd class="col-sm-10">@VacationOffer.StartDate</dd>
+            <dt class="col-sm-2">EndDate</dt>
+            <dd class="col-sm-10">@VacationOffer.EndDate</dd>
+            <dt class="col-sm-2">Misc</dt>
+            <dd class="col-sm-10">@VacationOffer.Misc</dd>
+            <dt class="col-sm-2">OfferStatus</dt>
+            <dd class="col-sm-10">@VacationOffer.OfferStatus</dd>
+            <dt class="col-sm-2">ExpirationDate</dt>
+            <dd class="col-sm-10">@VacationOffer.ExpirationDate</dd>
+
+        </dl>
+        @if (VacationOffer.OfferStatus == OfferStatus.Waiting)
+        {
+            <div>
+                <button @onclick="OfferAccepted" class="btn btn-primary">Accept Offer</button>
+                <button @onclick="OfferDeclined" class="btn btn-danger">Decline Offer</button>
+            </div>
+        }
+        else
+        {
+
+        }
+
+    }
+</div>
+
+@code {
+
+    [Parameter]
+    public VacationOffer? VacationOffer { get; set; }
+
+    [Parameter]
+    public VacationRequest? VacationRequest { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        if (VacationOffer is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    public async Task OfferAccepted()
+    {
+        VacationOffer.OfferStatus = OfferStatus.Approved;
+        VacationRequest.Status = RequestStatus.BookingUnderway;
+
+        await Context.SaveChangesAsync();
+
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+    }
+    public async Task OfferDeclined()
+    {
+        VacationOffer.OfferStatus = OfferStatus.Denied;
+        if (VacationRequest.Offers.Where(waitingVacationOffer => waitingVacationOffer.OfferStatus == OfferStatus.Waiting).Count() == 0)
+        {
+            VacationRequest.Status = RequestStatus.PendingRequest;
+        }
+        else
+        {
+            VacationRequest.Status = RequestStatus.WaitingApproval;
+        }
+        
+        await Context.SaveChangesAsync();
+
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+    }
+}

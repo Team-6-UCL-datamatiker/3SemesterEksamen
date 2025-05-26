@@ -10,7 +10,8 @@
 @inject NavigationManager NavigationManager
 @inject Services.IExtendedUserService UserService
 @inject ILogger<DeleteRequest> Logger
-@inject VacationRequestSignalRService SignalRService
+@inject ICurrentUserService CurrentUserService
+@inject IVRNotifierService VrNotifier
 
 <PageTitle>Delete Vacation Request</PageTitle>
 
@@ -101,7 +102,7 @@ else
         </dl>
         <dl class="row" style="display:none;">
             <dt class="col-sm-2">UserId</dt>
-            <dd class="col-sm-10">@vacationrequest.UserId</dd>
+            <dd class="col-sm-10">@vacationrequest.CustomerId</dd>
         </dl>
     </div>
 }
@@ -148,7 +149,7 @@ else
                     VacationRequestId = vacationrequest.VacationRequestId
                 };
 
-            Customer = await UserService.GetCustomerByIdAsync(vacationrequest.UserId);
+            Customer = await UserService.GetCustomerByIdAsync(vacationrequest.CustomerId);
         }
         catch (Exception ex)
         {
@@ -184,9 +185,8 @@ else
             _errorMessage = $"An error occurred while trying to delete: {ex.Message}";
         }
 
-        await SignalRService.InitializeAsync();
-        await Task.Delay(500);
-        await SignalRService.SendVacationRequestAsync();
+        // Index notification
+        await VrNotifier.NotifyChangedAsync();
 
         NavigationManager.NavigateTo("/vacationrequests");
     }

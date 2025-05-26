@@ -11,7 +11,7 @@ using GotorzProjectMain.Models;
 using GotorzProjectMain.Services.Mapping;
 using GotorzProjectMain.Services.APIs.HotelAPIs;
 using GotorzProjectMain.Services.APIs;
-using GotorzProjectMain.Services.API;
+using GotorzProjectMain.Services.APIs.FlightAPI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,23 +36,35 @@ builder.Services.AddQuickGridEntityFrameworkAdapter();
 
 builder.Services.AddScoped<IRateLimiter, RateLimiter>();
 builder.Services.AddSingleton<ICityLookupService, CityLookupService>();
+builder.Services.AddSingleton<IVRNotifierService, VRNotifierService>();
+
+//Used for getting the user data everytime an employee or customer is loaded
+builder.Services.AddScoped<IExtendedUserService, ExtendedUserService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IVacationRequestTreeService, VacationRequestTreeService>();
+
+// Service to handle hotel API
 builder.Services.AddHttpClient<IAmadeusHotelAPIService, AmadeusHotelAPIService>(client =>
 {
 	client.BaseAddress = new Uri("https://api.amadeus.com/");
 });
 
-//Used for getting the user data everytime an employee or customer is loaded
-builder.Services.AddScoped<IExtendedUserService, ExtendedUserService>();
+// Service to handle flight API
+builder.Services.AddHttpClient<IFlightService, FlightService>(client =>
+{
+	client.BaseAddress = new Uri("https://serpapi.com/");
+});
+
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+// Identity
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
 
 
-builder.Services.AddScoped<VacationRequestSignalRService>();
 
 builder.Services.AddAuthentication(options =>
 	{
@@ -80,10 +92,13 @@ else
 	builder.Services.AddScoped<IEmailSender<ApplicationUser>, GmailEmailSender>();
 }
 
-// Service to handle flight API
-builder.Services.AddHttpClient<IFlightService, FlightService>(client =>
+
+// Service to lockout users
+builder.Services.Configure<IdentityOptions>(options =>
 {
-	client.BaseAddress = new Uri("https://serpapi.com/");
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    options.Lockout.MaxFailedAccessAttempts = 10;
+    options.Lockout.AllowedForNewUsers = true;
 });
 
 // Authorization policies
@@ -103,8 +118,6 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddSignalR();
-
-
 
 builder.Services.AddResponseCompression(opts =>
 {
@@ -135,6 +148,7 @@ else
 	app.UseExceptionHandler("/Error", createScopeForErrors: true);
 	// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
 	app.UseHsts();
+    app.UseMigrationsEndPoint();
 	app.UseMigrationsEndPoint();
 	app.UseMigrationsEndPoint();
 }
@@ -146,9 +160,6 @@ app.UseRouting();
 app.UseAuthorization();
 app.UseAntiforgery();
 
-
-
-app.MapHub<VacationRequestHub>("/vacationrequesthub");
 app.MapHub<ChatHub>("/chathub");
 
 app.MapRazorComponents<App>()
@@ -158,7 +169,5 @@ app.MapRazorComponents<App>()
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
-
-
 
 app.Run();

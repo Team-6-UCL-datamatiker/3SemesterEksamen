@@ -1,0 +1,237 @@
+﻿@page "/Account/RegisterEmployee"
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+@using System.Text.Encodings.Web
+@using AutoMapper
+@using GotorzProjectMain.Components.UserComponents
+@using GotorzProjectMain.Components.Account
+@using GotorzProjectMain.InputModels.Users.EmployeeInputModels
+@using GotorzProjectMain.Models
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Hosting
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using GotorzProjectMain.Data
+@using System.Net
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IUserStore<ApplicationUser> UserStore
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IEmailSender<ApplicationUser> EmailSender
+@inject ILogger<RegisterEmployee> Logger
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+@inject ApplicationDbContext Context
+@inject IWebHostEnvironment WebHostEnvironment
+@inject IMapper Mapper
+
+@attribute [Authorize(Policy = "Admin")]
+
+<PageTitle>Register</PageTitle>
+
+<h1>Register</h1>
+
+<div class="row">
+	<div class="col-md-4">
+		<EditForm EditContext="_ec" OnValidSubmit="RegisterUser" FormName="register">
+			<DataAnnotationsValidator />
+			<h2>Create a new employee account.</h2>
+			<hr />
+@* 			<ValidationSummary class="text-danger" role="alert" />
+ *@
+			<div class="form-floating mb-3">
+				<InputText id="first-name" @bind-Value="Input.FirstName" class="form-control" autocomplete="given-name" aria-required="true" placeholder="john" />
+				<label for="first-name">First Name</label>
+@* 				<ValidationMessage For="() => Input.FirstName" class="text-danger" />
+ *@			</div>
+
+			<div class="form-floating mb-3">
+				<InputText id="last-name" @bind-Value="Input.LastName" class="form-control" autocomplete="family-name" aria-required="true" placeholder="doe" />
+				<label for="last-name">Last Name</label>
+@* 				<ValidationMessage For="() => Input.LastName" class="text-danger" />
+ *@			</div>
+
+			<div class="form-floating mb-3">
+				<InputText id="username" @bind-Value="Input.CustomUsername" class="form-control" autocomplete="family-name" aria-required="true" placeholder="doe" />
+				<label for="username">Username</label>
+@* 				<ValidationMessage For="() => Input.CustomUsername" class="text-danger" />
+ *@			</div>
+
+			<div class="form-floating mb-3">
+				<InputText id="email" @bind-Value="Input.Email" class="form-control" autocomplete="email" aria-required="true" placeholder="name@example.com" />
+				<label for="email">Email</label>
+@* 				<ValidationMessage For="() => Input.Email" class="text-danger" />
+ *@			</div>
+
+			<div class="form-floating mb-3">
+				<InputText id="password" type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+				<label for="password">Password</label>
+@* 				<ValidationMessage For="() => Input.Password" class="text-danger" />
+ *@			</div>
+
+			<div class="form-floating mb-3">
+				<InputText id="confirm-password" type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+				<label for="confirm-password">Confirm Password</label>
+@* 				<ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+ *@			</div>
+
+			<div class="form-floating mb-3">
+				<InputText id="phone" @bind-Value="Input.Phone" class="form-control" aria-required="true" placeholder="phone number" onblur="@((FocusEventArgs e) => { if (string.IsNullOrWhiteSpace(Input.Phone)) { Input.Phone = null; _ec.Validate(); }})" />
+				<label for="phone" class="form-label">Phone Number (optional)</label>
+@* 				<ValidationMessage For="() => Input.Phone" class="text-danger" />
+ *@			</div>
+
+			<EmployeeProfilePicturePreview @bind-ProfilePictureFile="Input.ProfilePictureFile" />
+
+			<!--    Field to set role, might need revisiting    -->
+			<div class="form-check mb-3">
+				<InputCheckbox id="isAdmin" @bind-Value="Input.IsAdmin" class="form-check-input" />
+				<label class="form-check-label" for="isAdmin">Is Admin?</label>
+			</div>
+
+			<button type="submit" disabled="@(string.IsNullOrWhiteSpace(Input.ConfirmPassword) || Input.ConfirmPassword != Input.Password)" class="w-100 btn btn-lg btn-primary">Register</button>
+		</EditForm>
+
+		<StatusMessage Message="@_message" />
+	</div>
+</div>
+
+@code {
+	private IEnumerable<IdentityError>? identityErrors;
+
+	[SupplyParameterFromForm]
+	private RegisterEmployeeInputModel Input { get; set; } = new();
+
+	[SupplyParameterFromQuery]
+	private string? ReturnUrl { get; set; }
+	private IEnumerable<IdentityError> _identityErrors = Enumerable.Empty<IdentityError>();
+	private string? _message => !_identityErrors.Any() ? null : $"Error: {string.Join(", ", _identityErrors.Select(error => error.Description))}";
+	private bool _imageSavedToFile;
+	private EditContext? _ec;
+
+	protected override void OnInitialized()
+	{
+		_ec = new EditContext(Input);
+	}
+
+	public async Task RegisterUser()
+	{
+		try
+		{
+			var user = new ApplicationUser();
+
+			// UserStore = The object that actually knows how to create, read, update, delete users from your database.
+			await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+
+			// Casts userstore to an IUserEmailStore<ApplicationUser>. Meaning: it forces the underlying database / user - store thing to support email operations like setting, getting, verifying emails for users.
+			var emailStore = (IUserEmailStore<ApplicationUser>)UserStore;
+			await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
+			// Giver identityErrors en værdi hvis metoden ikke returnerer succes. identityErrors bliver vist i browseren i så fald.
+			var result = await UserManager.CreateAsync(user, Input.Password);
+			_identityErrors = _identityErrors.Concat(result.Succeeded ? Enumerable.Empty<IdentityError>() : result.Errors);
+
+			//If a profile picture was uploaded, handle file processing
+			string? profilePictureString = null;
+			if (Input.ProfilePictureFile != null)
+			{
+				profilePictureString = await SaveProfilePicture(Input.ProfilePictureFile);
+				Logger.LogInformation($"Profile picture saved at: {profilePictureString}");
+			}
+			else
+			{
+				profilePictureString = "/images/DefaultProfilePicture.jpg";
+			}
+
+			var employee = new Employee
+				{
+					Id = user.Id,
+					User = user,
+					ProfilePicture = profilePictureString // Default picture if none uploaded
+				};
+
+			Mapper.Map(Input, employee);
+
+			// Assign user to either Admin or Employee role based on the checkbox
+			string roleToAssign = Input.IsAdmin ? "Admin" : "Employee";
+			result = await UserManager.AddToRoleAsync(user, roleToAssign);
+			_identityErrors = _identityErrors.Concat(result.Succeeded ? Enumerable.Empty<IdentityError>() : result.Errors);
+
+			Context.Employees.Add(employee);
+			await Context.SaveChangesAsync();
+
+			// Er det her noget vi bruger?
+			Logger.LogInformation($"User ({user.Id}) created a new account with password.");
+
+			await SendConfirmationEmailAndRedirect(user);
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "An unexpected error occurred.");
+			throw;
+		}
+	}
+	private async Task SendConfirmationEmailAndRedirect(ApplicationUser user)
+	{
+		// Link til emailbekræftelse, tror jeg? Noget i den stil.
+		var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+		code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+		var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+			NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+			new Dictionary<string, object?> { ["userId"] = user.Id, ["code"] = code, ["returnUrl"] = ReturnUrl });
+
+		await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+		if (UserManager.Options.SignIn.RequireConfirmedAccount)
+		{
+			NavigationManager.NavigateTo(
+				$"/Account/RegisterConfirmation?email={WebUtility.UrlEncode(Input.Email)}&returnUrl={WebUtility.UrlEncode(ReturnUrl ?? "/")}",
+				forceLoad: false);
+		}
+		else
+		{
+			await SignInManager.SignInAsync(user, isPersistent: false);
+			NavigationManager.NavigateTo(ReturnUrl ?? "/");
+		}
+	}
+
+	// Helper method to save the profile picture and return the file URI
+	private async Task<string?> SaveProfilePicture(IBrowserFile file)
+	{
+		try
+		{
+			// Use the file name from the uploaded file + guidId to not get duplicates
+			var fileName = $"{Guid.NewGuid()}{Path.GetFileName(file.Name)}";
+			var imagesFolder = Path.Combine(WebHostEnvironment.WebRootPath, "images");
+
+			if (!Directory.Exists(imagesFolder))
+			{
+				Directory.CreateDirectory(imagesFolder);
+			}
+
+			var uniqueFileName = $"{Path.GetFileNameWithoutExtension(file.Name)}_{Guid.NewGuid()}{Path.GetExtension(file.Name)}";
+			// Combine to create the full file path
+			var filePath = Path.Combine(imagesFolder, fileName);
+
+			// If the file doesn't exist, save it.
+			if (!File.Exists(filePath))
+			{
+				using (var stream = new FileStream(filePath, FileMode.Create))
+				{
+					await file.OpenReadStream().CopyToAsync(stream);
+				}
+			}
+
+			// Return the URI that points to the image.
+			string relativePath = "/images/" + fileName;
+			return relativePath;
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "Failed to save the profile picture.");
+			return null;
+		}
+	}
+}
