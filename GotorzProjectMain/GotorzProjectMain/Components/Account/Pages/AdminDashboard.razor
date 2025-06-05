@@ -12,201 +12,229 @@
 <h1>Admin Dashboard</h1>
 
 <div style="max-width: 1100px;">
-<button class="btn btn-secondary mb-3" @onclick="LoadSuspiciousAttemptsAsync">Update page</button>
-<form @onsubmit="HandleSearchAsync">
-    <div class="mb-3 d-flex gap-3 align-items-end">
-        <div>
-            <label for="filterSelect" class="form-label"><strong>Filter login-type</strong></label>
-            <select class="form-select" @onchange="OnFilterChanged">
-                <option value="All">All</option>
-                <option value="RequiresTwoFactor">2FA Required</option>
-                <option value="Locked out">Locked out</option>
-                <option value="Failed">Failed login</option>
-            </select>
-        </div>
-        <div>
-            <label for="emailSearch" class="form-label"><strong>Search for email</strong></label>
-            <input type="text" id="emailSearch" class="form-control" @bind="searchEmail" />
-        </div>
-        <button type="submit" class="btn btn-primary">Search</button>
-    </div>
-</form>
+	<!-- Button to reload the login attempts -->
+	<button class="btn btn-secondary mb-3" @onclick="LoadSuspiciousAttemptsAsync">Update page</button>
+	
+	<!-- Search and filter form -->
+	<form @onsubmit="HandleSearchAsync">
+		<div class="mb-3 d-flex gap-3 align-items-end">
+			<div>
+				<label for="filterSelect" class="form-label"><strong>Filter login-type</strong></label>
+				<select class="form-select" @onchange="OnFilterChanged">
+					<option value="All">All</option>
+					<option value="RequiresTwoFactor">2FA Required</option>
+					<option value="Locked out">Locked out</option>
+					<option value="Failed">Failed login</option>
+				</select>
+			</div>
+			<div>
+				<label for="emailSearch" class="form-label"><strong>Search for email</strong></label>
+				<input type="text" id="emailSearch" class="form-control" @bind="searchEmail" />
+			</div>
+			<button type="submit" class="btn btn-primary">Search</button>
+		</div>
+	</form>
 
-<div>
-	<h6><strong>Failed login attempts within the last 60 minutes</strong></h6>
-</div>
-@if (usersWithSuspiciousAttempts == null)
-    {
-        <p>Loading...</p>
-    }
-    else if (!usersWithSuspiciousAttempts.Any())
-    {
-        <p>No failed login tries within the last 60 minutes.</p>
-    }
-    else
-    {
-        @foreach (var user in usersWithSuspiciousAttempts)
-        {
-            <div class="card mb-3
+	<!-- Status heading -->
+	<div>
+		<h6><strong>Failed login attempts within the last 60 minutes</strong></h6>
+	</div>
+
+	<!-- Conditional rendering based on data load state -->
+	@if (usersWithSuspiciousAttempts == null)
+	{
+		<p>Loading...</p>
+	}
+	else if (!usersWithSuspiciousAttempts.Any())
+	{
+		<p>No failed login tries within the last 60 minutes.</p>
+	}
+	else
+	{
+		<!-- Display user cards with login attempt summaries -->
+		@foreach (var user in usersWithSuspiciousAttempts)
+		{
+			<div class="card mb-3
                 @(user.Attempts.Count >= 10 ? "border-danger bg-danger-subtle" :
                   user.Attempts.Count >= 5 ? "border-warning bg-warning-subtle" : "border-secondary")"
-            style="cursor: pointer;" @onclick="() => Toggle(user.Username)">
+				 style="cursor: pointer;" @onclick="() => Toggle(user.Username)">
 
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>@user.Username</strong>
-                        @{
-                            string badgeClass;
-                            string badgeText;
+				<div class="card-header d-flex justify-content-between align-items-center">
+					<div>
+						<strong>@user.Username</strong>
+						@{
+							string badgeClass;
+							string badgeText;
 
-                            if (selectedFilter == "Locked out")
-                            {
-                                if (user.Attempts.Count >= 3) badgeClass = "bg-danger";
-                                else if (user.Attempts.Count >= 2) badgeClass = "bg-warning";
-                                else badgeClass = "bg-secondary";
+							if (selectedFilter == "Locked out")
+							{
+								if (user.Attempts.Count >= 3) badgeClass = "bg-danger";
+								else if (user.Attempts.Count >= 2) badgeClass = "bg-warning";
+								else badgeClass = "bg-secondary";
 
-                                badgeText = $"Locked out attempts: {user.Attempts.Count}";
-                            }
-                            else
-                            {
-                                if (user.Attempts.Count >= 20) badgeClass = "bg-danger";
-                                else if (user.Attempts.Count >= 10) badgeClass = "bg-danger";
-                                else if (user.Attempts.Count >= 5) badgeClass = "bg-warning";
-                                else badgeClass = "bg-secondary";
+								badgeText = $"Locked out attempts: {user.Attempts.Count}";
+							}
+							else
+							{
+								if (user.Attempts.Count >= 20) badgeClass = "bg-danger";
+								else if (user.Attempts.Count >= 10) badgeClass = "bg-danger";
+								else if (user.Attempts.Count >= 5) badgeClass = "bg-warning";
+								else badgeClass = "bg-secondary";
 
-                                badgeText = $"Number of tries: {user.Attempts.Count}";
-                            }
-                        }
-                        <span class="badge @badgeClass ms-3">@badgeText</span>
+								badgeText = $"Number of tries: {user.Attempts.Count}";
+							}
+						}
+						<span class="badge @badgeClass ms-3">@badgeText</span>
 
-                        @if (user.Attempts.Count >= 20)
-                        {
-                            <span class="badge bg-danger ms-2">High Risk</span>
-                        }
-                    </div>
-                </div>
+						@if (user.Attempts.Count >= 20)
+						{
+							<span class="badge bg-danger ms-2">High Risk</span>
+						}
+					</div>
+				</div>
 
-
-            @if (ExpandedUsers.Contains(user.Username))
-            {
-                <div class="card-body attempts-scroll" style="max-width: 1100px;">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Time</th>
-                                <th>IP Address</th>
-                                <th>Reason</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var attempt in user.Attempts)
-                            {
-                                <tr>
-                                    <td>@attempt.TimeOfAttempt.ToLocalTime()</td>
-                                    <td>@attempt.IPAddress</td>
-                                    <td>@attempt.FailureReason</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-        </div>
-    }
-}
+				<!-- Expandable section showing login attempt details -->
+				@if (ExpandedUsers.Contains(user.Username))
+				{
+					<div class="card-body attempts-scroll" style="max-width: 1100px;">
+						<table class="table table-sm">
+							<thead>
+								<tr>
+									<th>Time</th>
+									<th>IP Address</th>
+									<th>Reason</th>
+								</tr>
+							</thead>
+							<tbody>
+								@foreach (var attempt in user.Attempts)
+								{
+									<tr>
+										<td>@attempt.TimeOfAttempt.ToLocalTime()</td>
+										<td>@attempt.IPAddress</td>
+										<td>@attempt.FailureReason</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				}
+			</div>
+		}
+	}
 </div>
 @code {
-    private string selectedFilter = "All";
-    private string searchEmail = string.Empty;
-    private HashSet<string> ExpandedUsers = new();
-    private List<UserAttemptGroup>? usersWithSuspiciousAttempts;
+	private string selectedFilter = "All";
+	private string searchEmail = string.Empty;
+	private HashSet<string> ExpandedUsers = new();
+	private List<UserAttemptGroup>? usersWithSuspiciousAttempts;
 
-    private async Task OnFilterChanged(ChangeEventArgs e)
-    {
-        selectedFilter = e.Value?.ToString() ?? "All";
-        await LoadSuspiciousAttemptsAsync();
-        StateHasChanged();
-    }
+	// Updates filter and reloads the attempt data
+	private async Task OnFilterChanged(ChangeEventArgs e)
+	{
+		selectedFilter = e.Value?.ToString() ?? "All";
+		await LoadSuspiciousAttemptsAsync();
+		StateHasChanged();
+	}
 
-    private async Task HandleSearchAsync()
-    {
-        await LoadSuspiciousAttemptsAsync();
-    }
+	// Triggers a new search using the current filter/email
+	private async Task HandleSearchAsync()
+	{
+		await LoadSuspiciousAttemptsAsync();
+	}
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadSuspiciousAttemptsAsync();
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadSuspiciousAttemptsAsync();
+	}
 
-    private async Task LoadSuspiciousAttemptsAsync()
-    {
-        try
-        {
-            var since = DateTime.UtcNow.AddHours(-1);
-            var baseQuery = Context.LoginAttempts.Where(x => x.TimeOfAttempt >= since);
+	// Loads and filters login attempts from the database
+	private async Task LoadSuspiciousAttemptsAsync()
+	{
+		try
+		{
+			DateTime since = DateTime.UtcNow.AddHours(-1);
 
-            if (!string.IsNullOrWhiteSpace(searchEmail))
-            {
-                var emailLower = searchEmail.ToLower();
-                baseQuery = baseQuery.Where(x => x.Username.ToLower().Contains(emailLower));
-            }
+			// Base query to get login attempts within the last hour
+			var baseQuery = Context.LoginAttempts.Where(attempt => attempt.TimeOfAttempt >= since);
 
-            var baseList = await baseQuery.ToListAsync();
+			// Apply email search filter if provided
+			if (!string.IsNullOrWhiteSpace(searchEmail))
+			{
+				string? emailLower = searchEmail.ToLower();
+				baseQuery = baseQuery.Where(attempt => attempt.Username.ToLower().Contains(emailLower));
+			}
+			
+			List<LoginAttempt> baseList = await baseQuery.ToListAsync();
 
-            Func<LoginAttempt, bool> attemptFilter = selectedFilter switch
-            {
-                "RequiresTwoFactor" => a => a.FailureReason != null && a.FailureReason.Trim().Equals("RequiresTwoFactor", StringComparison.OrdinalIgnoreCase),
-                "Locked out" => a => a.FailureReason != null && 
-                    a.FailureReason.Trim().Equals("Locked out", StringComparison.OrdinalIgnoreCase),
-                "Failed" => a => !a.IsSuccessful && a.FailureReason != "RequiresTwoFactor" && a.FailureReason != "Locked out",
-                _ => a => !a.IsSuccessful,
-            };
+			// Define filtering logic based on selected category
+			Func<LoginAttempt, bool> attemptFilter = selectedFilter switch
+			{
+				"RequiresTwoFactor" => a => a.FailureReason != null && a.FailureReason.Trim().Equals("RequiresTwoFactor", StringComparison.OrdinalIgnoreCase),
+				"Locked out" => a => a.FailureReason != null &&
+					a.FailureReason.Trim().Equals("Locked out", StringComparison.OrdinalIgnoreCase),
+				"Failed" => a => !a.IsSuccessful && a.FailureReason != "RequiresTwoFactor" && a.FailureReason != "Locked out",
+				_ => a => !a.IsSuccessful,
+			};
 
-            var filteredAttempts = baseList.Where(attemptFilter).ToList();
+			List<LoginAttempt> filteredAttempts = baseList.Where(attemptFilter).ToList();
 
-            var grouped = filteredAttempts
-                .GroupBy(x => x.Username)
-                .Select(g => new UserAttemptGroup
-                {
-                    Username = g.Key,
-                    Attempts = g.OrderByDescending(x => x.TimeOfAttempt).ToList()
-                })
-                .Where(g => selectedFilter switch
-                {
-                    "Locked out" => g.Attempts.Any(a => a.FailureReason != null &&
-                        a.FailureReason.Trim().Equals("Locked out", StringComparison.OrdinalIgnoreCase)),
-                    "RequiresTwoFactor" => g.Attempts.Count(a => a.FailureReason != null &&
-                        a.FailureReason.Trim().Equals("RequiresTwoFactor", StringComparison.OrdinalIgnoreCase)) >= 2,
-                    "Failed" => g.Attempts.Count(a => !a.IsSuccessful &&
-                        a.FailureReason != null &&
-                        !a.FailureReason.Trim().Equals("RequiresTwoFactor", StringComparison.OrdinalIgnoreCase) &&
-                        !a.FailureReason.Trim().Equals("Locked out", StringComparison.OrdinalIgnoreCase)) > 0,
-                    _ => g.Attempts.Count >= 5,
-                })
-                .OrderByDescending(g => g.Attempts.Count)
-                .ToList();
+			// Group failed attempts by user and prepare a structured list
+			List<UserAttemptGroup> grouped = filteredAttempts
+				.GroupBy(attempt => attempt.Username)
+				.Select(userGroup => new UserAttemptGroup
+					{
+						Username = userGroup.Key,
+						Attempts = userGroup.OrderByDescending(x => x.TimeOfAttempt).ToList()
+					})
+				
+				// Apply filtering logic to determine which user groups should be shown
+				.Where(user => selectedFilter switch
+				{
+					// Show users with any locked out attempts
+					"Locked out" => user.Attempts.Any(attempt => attempt.FailureReason != null &&
+						attempt.FailureReason.Trim().Equals("Locked out", StringComparison.OrdinalIgnoreCase)),
 
-            usersWithSuspiciousAttempts = grouped;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error loading suspicious attempts");
-            usersWithSuspiciousAttempts = new List<UserAttemptGroup>();
-        }
-    }
+					// Show users with at least 2 two-factor required attempts
+					"RequiresTwoFactor" => user.Attempts.Count(attempt => attempt.FailureReason != null &&
+						attempt.FailureReason.Trim().Equals("RequiresTwoFactor", StringComparison.OrdinalIgnoreCase)) >= 2,
 
-    private void Toggle(string username)
-    {
-        if (ExpandedUsers.Contains(username))
-            ExpandedUsers.Remove(username);
+					// Show users with general failed attempts that are not 2FA or lockout related
+					"Failed" => user.Attempts.Count(attempt => !attempt.IsSuccessful &&
+						attempt.FailureReason != null &&
+						!attempt.FailureReason.Trim().Equals("RequiresTwoFactor", StringComparison.OrdinalIgnoreCase) &&
+						!attempt.FailureReason.Trim().Equals("Locked out", StringComparison.OrdinalIgnoreCase)) > 0,
 
-        else
-            ExpandedUsers.Add(username);
-    }
+					// Default: show users with 5 or more failed attempts of any type
+					_ => user.Attempts.Count >= 5
+				})
 
-    private class UserAttemptGroup
-    {
-        public string Username { get; set; } = string.Empty;
-        public List<LoginAttempt> Attempts { get; set; } = new();
-    }
+				// Order users by the number of suspicious attempts
+				.OrderByDescending(user => user.Attempts.Count)
+				.ToList();
+
+			usersWithSuspiciousAttempts = grouped;
+		}
+		catch (Exception ex)
+		{
+			Logger.LogError(ex, "Error loading suspicious attempts");
+			usersWithSuspiciousAttempts = new List<UserAttemptGroup>();
+		}
+	}
+
+	// Toggles visibility of attempt details for a user
+	private void Toggle(string username)
+	{
+		if (ExpandedUsers.Contains(username))
+			ExpandedUsers.Remove(username);
+
+		else
+			ExpandedUsers.Add(username);
+	}
+
+	// View model for grouping login attempts by user
+	private class UserAttemptGroup
+	{
+		public string Username { get; set; } = string.Empty;
+		public List<LoginAttempt> Attempts { get; set; } = new();
+	}
 }

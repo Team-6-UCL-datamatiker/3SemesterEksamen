@@ -17,188 +17,202 @@
 
 <h1>Log in</h1>
 <div class="row">
-    <div class="col-md-4">
-        <section>
-            <StatusMessage Message="@errorMessage" />
-            <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
-                <DataAnnotationsValidator />
-                <h2>Use a local account to log in.</h2>
-                <hr />
-                <ValidationSummary class="text-danger" role="alert" />
-                <div class="form-floating mb-3">
-                    <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                    <label for="email" class="form-label">Email</label>
-                    <ValidationMessage For="() => Input.Email" class="text-danger" />
-                </div>
-                <div class="form-floating mb-3">
-                    <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                    <label for="password" class="form-label">Password</label>
-                    <ValidationMessage For="() => Input.Password" class="text-danger" />
-                </div>
-                <div class="checkbox mb-3">
-                    <label class="form-label">
-                        <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
-                        Remember me
-                    </label>
-                </div>
-                <div>
-                    <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-                </div>
-                <div>
-                    <p>
-                        <a href="Account/ForgotPassword">Forgot your password?</a>
-                    </p>
-                    <p>
-                        <a href="@(NavigationManager.GetUriWithQueryParameters("Account/RegisterCustomer", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register as a new user</a>
-                    </p>
-                    <p>
-                        <a href="Account/ResendEmailConfirmation">Resend email confirmation</a>
-                    </p>
-                </div>
-            </EditForm>
-        </section>
-    </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to log in.</h3>
-            <hr />
-            <ExternalLoginPicker />
-        </section>
-    </div>
+	<div class="col-md-4">
+		<section>
+			<StatusMessage Message="@errorMessage" />
+			<EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+				<DataAnnotationsValidator />
+				<h2>Use a local account to log in.</h2>
+				<hr />
+				<ValidationSummary class="text-danger" role="alert" />
+				<div class="form-floating mb-3">
+					<InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+					<label for="email" class="form-label">Email</label>
+					<ValidationMessage For="() => Input.Email" class="text-danger" />
+				</div>
+				<div class="form-floating mb-3">
+					<InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+					<label for="password" class="form-label">Password</label>
+					<ValidationMessage For="() => Input.Password" class="text-danger" />
+				</div>
+				<div class="checkbox mb-3">
+					<label class="form-label">
+						<InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
+						Remember me
+					</label>
+				</div>
+				<div>
+					<button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+				</div>
+				<div>
+					<p>
+						<a href="Account/ForgotPassword">Forgot your password?</a>
+					</p>
+					<p>
+						<a href="@(NavigationManager.GetUriWithQueryParameters("Account/RegisterCustomer", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">Register as a new user</a>
+					</p>
+					<p>
+						<a href="Account/ResendEmailConfirmation">Resend email confirmation</a>
+					</p>
+				</div>
+			</EditForm>
+		</section>
+	</div>
+	<div class="col-md-6 col-md-offset-2">
+		<section>
+			<h3>Use another service to log in.</h3>
+			<hr />
+			<ExternalLoginPicker />
+		</section>
+	</div>
 </div>
 
 @code {
-    private string? errorMessage;
-    string? failureReason = null;
+	private string? errorMessage;
+	string? failureReason = null;
 
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
+	[CascadingParameter]
+	private HttpContext HttpContext { get; set; } = default!;
 
-    [SupplyParameterFromForm]
-    private InputModel Input { get; set; } = new();
+	[SupplyParameterFromForm]
+	private InputModel Input { get; set; } = new();
 
-    [SupplyParameterFromQuery]
-    private string? ReturnUrl { get; set; }
+	[SupplyParameterFromQuery]
+	private string? ReturnUrl { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-        if (HttpMethods.IsGet(HttpContext.Request.Method))
-        {
-            // Clear the existing external cookie to ensure a clean login process
-            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-        }
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		if (HttpMethods.IsGet(HttpContext.Request.Method))
+		{
+			// Clear the existing external cookie to ensure a clean login process
+			await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+		}
+	}
 
-    public async Task LoginUser()
-    {
-        var ipAddress = HttpContext.Connection?.RemoteIpAddress?.ToString();
-        var timestamp = DateTime.UtcNow;
+	public async Task LoginUser()
+	{
+		var ipAddress = HttpContext.Connection?.RemoteIpAddress?.ToString();
+		var timestamp = DateTime.UtcNow;
 
-        var user = await SignInManager.UserManager.FindByEmailAsync(Input.Email);
-        if (user != null && await SignInManager.UserManager.IsLockedOutAsync(user))
-        {
-            RedirectManager.RedirectTo("Account/Lockout");
-            return;
-        }
+		// Retrieve user and check if locked out
+		ApplicationUser? user = await SignInManager.UserManager.FindByEmailAsync(Input.Email);
+		if (user != null && await SignInManager.UserManager.IsLockedOutAsync(user))
+		{
+			RedirectManager.RedirectTo("Account/Lockout");
+			return;
+		}
 
+		// Attempt to sign in with credentials
+		var result = await SignInManager.PasswordSignInAsync(
+			Input.Email,
+			Input.Password,
+			Input.RememberMe,
+			lockoutOnFailure: true
+		);
 
-        var result = await SignInManager.PasswordSignInAsync(
-            Input.Email,
-            Input.Password,
-            Input.RememberMe,
-            lockoutOnFailure: true
-        );
-
-        var failureReason = result.IsLockedOut ? "Locked out" :
-                            result.RequiresTwoFactor ? "Requires 2FA" :
-                            result.Succeeded ? null : "Login failed";
-
-        DbContext.LoginAttempts.Add(new LoginAttempt
-            {
-                Username = Input.Email,
-                IsSuccessful = result.Succeeded,
-                TimeOfAttempt = timestamp,
-                IPAddress = ipAddress,
-                FailureReason = failureReason
-            });
-
-        await DbContext.SaveChangesAsync();
-
-        if (result.Succeeded)
-        {
-            Logger.LogInformation("User {Email} logged in successfully from IP {IP} - Date: {Time}.",
-                Input.Email, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
-            RedirectManager.RedirectTo(ReturnUrl);
-            return;
-        }
-
-        if (result.RequiresTwoFactor)
-        {
-            Logger.LogInformation("User {Email} requires 2FA from IP {IP} - Date: {Time}.",
-                Input.Email, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
-            RedirectManager.RedirectTo("Account/LoginWith2fa",
-                new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
-            return;
-        }
-
-        if (result.IsLockedOut)
-        {
-            var failedCount = await CountFailedLoginsAsync(Input.Email);
-            var foundUser = await SignInManager.UserManager.FindByEmailAsync(Input.Email);
-            DateTimeOffset? lockoutEnd = null;
-
-            if (foundUser != null)
-            {
-                lockoutEnd = await SignInManager.UserManager.GetLockoutEndDateAsync(foundUser);
-            }
-
-            Logger.LogWarning("LOCKOUT: User '{Email}' has been locked out due to {Count} failed login attempts from IP {IP} at {Time}. Lockout ends at {LockoutEnd}.",
-                Input.Email, failedCount, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"), lockoutEnd?.LocalDateTime.ToString("dd/MM/yyyy HH:mm:ss") ?? "unknown");
-
-            RedirectManager.RedirectTo("Account/Lockout");
-            return;
-        }
+		// Determine failure reason if any
+		string? failureReason = result switch
+		{
+			{ IsLockedOut: true } => "Locked out",
+			{ RequiresTwoFactor: true } => "Requires 2FA",
+			{ Succeeded: true } => null,
+			_ => "Login failed" // default case for other failures
+		};
 
 
-        if (!result.Succeeded)
-        {
-            var failedCount = await CountFailedLoginsAsync(Input.Email);
-            
-            errorMessage = "Error:The Username or Password is Incorrect. Try again.";
+		// Log attempt to the database
+		DbContext.LoginAttempts.Add(new LoginAttempt
+			{
+				Username = Input.Email,
+				IsSuccessful = result.Succeeded,
+				TimeOfAttempt = timestamp,
+				IPAddress = ipAddress,
+				FailureReason = failureReason
+			});
 
-            if (failedCount >= 5)
-            {
-                Logger.LogWarning("Multiple failed login attempts for user {Email} - Number of failed tries the last hour: {Count} - Latest attempt: {Time}.",
-                    Input.Email, failedCount, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
-                return;
-            }
+		await DbContext.SaveChangesAsync();
 
-            Logger.LogWarning("Invalid login attempt for user {Email} from IP {IP} - Date: {Time}.",
-            Input.Email, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
-            
-        }
-    }
+		// Handle successful login
+		if (result.Succeeded)
+		{
+			Logger.LogInformation("User {Email} logged in successfully from IP {IP} - Date: {Time}.",
+				Input.Email, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
+			RedirectManager.RedirectTo(ReturnUrl);
+			return;
+		}
 
-    private async Task<int> CountFailedLoginsAsync(string email)
-    {
-        var since = DateTime.UtcNow.AddHours(-1);
+		// Redirect to 2FA page if required
+		if (result.RequiresTwoFactor)
+		{
+			Logger.LogInformation("User {Email} requires 2FA from IP {IP} - Date: {Time}.",
+				Input.Email, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
+			RedirectManager.RedirectTo("Account/LoginWith2fa",
+				new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
+			return;
+		}
 
-        return await DbContext.LoginAttempts
-            .Where(x => x.Username == email && !x.IsSuccessful && x.TimeOfAttempt >= since)
-            .CountAsync();
-    }
+		// Handle account lockout
+		if (result.IsLockedOut)
+		{
+			int failedCount = await CountFailedLoginsAsync(Input.Email);
+			ApplicationUser? foundUser = await SignInManager.UserManager.FindByEmailAsync(Input.Email);
+			DateTimeOffset? lockoutEnd = null;
 
-    private sealed class InputModel
-    {
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = "";
+			if (foundUser != null)
+			{
+				lockoutEnd = await SignInManager.UserManager.GetLockoutEndDateAsync(foundUser);
+			}
 
-        [Required]
-        [DataType(DataType.Password)]
-        public string Password { get; set; } = "";
+			Logger.LogWarning("LOCKOUT: User '{Email}' has been locked out due to {Count} failed login attempts from IP {IP} at {Time}. Lockout ends at {LockoutEnd}.",
+				Input.Email, failedCount, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"), lockoutEnd?.LocalDateTime.ToString("dd/MM/yyyy HH:mm:ss") ?? "unknown");
 
-        [Display(Name = "Remember me?")]
-        public bool RememberMe { get; set; }
-    }
+			RedirectManager.RedirectTo("Account/Lockout");
+			return;
+		}
+
+
+		// Handle general login failure
+		if (!result.Succeeded)
+		{
+			int failedCount = await CountFailedLoginsAsync(Input.Email);
+
+			errorMessage = "Error:The Username or Password is Incorrect. Try again.";
+
+			if (failedCount >= 5)
+			{
+				Logger.LogWarning("Multiple failed login attempts for user {Email} - Number of failed tries the last hour: {Count} - Latest attempt: {Time}.",
+					Input.Email, failedCount, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
+				return;
+			}
+
+			Logger.LogWarning("Invalid login attempt for user {Email} from IP {IP} - Date: {Time}.",
+			Input.Email, ipAddress, timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss"));
+
+		}
+	}
+
+	// Count failed login attempts within the last hour
+	private async Task<int> CountFailedLoginsAsync(string email)
+	{
+		DateTime since = DateTime.UtcNow.AddHours(-1);
+
+		return await DbContext.LoginAttempts
+			.Where(attempt => attempt.Username == email && !attempt.IsSuccessful && attempt.TimeOfAttempt >= since)
+			.CountAsync();
+	}
+
+	// Login form input model
+	private sealed class InputModel
+	{
+		[Required]
+		[EmailAddress]
+		public string Email { get; set; } = "";
+
+		[Required]
+		[DataType(DataType.Password)]
+		public string Password { get; set; } = "";
+
+		[Display(Name = "Remember me?")]
+		public bool RememberMe { get; set; }
+	}
 }

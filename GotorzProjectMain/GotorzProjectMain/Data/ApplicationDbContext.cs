@@ -102,7 +102,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(fb => fb.FlightBookingId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Ved ikke om man skulle gøre collection navnet og type navnet ens?
+        // Ved ikke om man skulle gï¿½re collection navnet og type navnet ens?
         modelBuilder.Entity<FlightRoute>()
             .HasMany(e => e.Legs)
             .WithOne()
@@ -125,7 +125,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .Property(v => v.OfferStatus)
             .HasConversion<string>();
 
-        // Specifies amount of digits in TotalPrice ------------------------- Hvorfor er det her vigtigt? Virker ikke med floats og vi gør det ikke nogen andre steder med price???
+        // Specifies amount of digits in TotalPrice ------------------------- Hvorfor er det her vigtigt? Virker ikke med floats og vi gï¿½r det ikke nogen andre steder med price???
         //modelBuilder.Entity<FlightRoute>()
         //.Property(r => r.TotalPrice)
         //.HasPrecision(18, 2);
