@@ -69,4 +69,5 @@ jobs:
         with:
           app-name: GotorzProject
           slot-name: Production
+          resource-group-name: Gotorz
           package: ${{ env.PUBLISH_DIR }}
