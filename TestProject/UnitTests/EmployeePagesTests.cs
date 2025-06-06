@@ -58,13 +58,13 @@ public class EmployeePagesTests : Bunit.TestContext
             .Setup(x => x.GetEmployeeByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((Employee)null);
 
-        navMan.NavigateTo("http://localhost/employees/details?id=nonexistent-id");
+        navMan.NavigateTo("http://localhost:nnnn/employees/details?id=nonexistent-id");
 
         // Act
         var cut = RenderComponent<DetailsEmployee>();
 
         // Assert
-        Assert.AreEqual("http://localhost/notfound", navMan.Uri);
+        Assert.AreEqual("http://localhost:nnnn/notfound", navMan.Uri);
     }
 
     // --------- EditEmployee Tests ---------
@@ -76,13 +76,13 @@ public class EmployeePagesTests : Bunit.TestContext
             .Setup(x => x.GetEmployeeByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((Employee)null);
 
-        navMan.NavigateTo("http://localhost/employees/edit?id=nonexistent-id");
+        navMan.NavigateTo("http://localhost:nnnn/employees/edit?id=nonexistent-id");
 
         // Act
         var cut = RenderComponent<EditEmployee>();
 
         // Assert
-        Assert.AreEqual("http://localhost/employees", navMan.Uri);
+        Assert.AreEqual("http://localhost:nnnn/employees", navMan.Uri);
     }
 
     // --------- RemoveEmployee Tests ---------
@@ -94,13 +94,13 @@ public class EmployeePagesTests : Bunit.TestContext
             .Setup(x => x.GetEmployeeByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((Employee)null);
 
-        navMan.NavigateTo("http://localhost/employees/details?id=nonexistent-id");
+        navMan.NavigateTo("http://localhost:nnnn/employees/details?id=nonexistent-id");
 
         // Act
         var cut = RenderComponent<RemoveEmployee>(); // ⬅️ RemoveEmployee
 
         // Assert
-        Assert.AreEqual("http://localhost/notfound", navMan.Uri);
+        Assert.AreEqual("http://localhost:nnnn/notfound", navMan.Uri);
     }
 
 }

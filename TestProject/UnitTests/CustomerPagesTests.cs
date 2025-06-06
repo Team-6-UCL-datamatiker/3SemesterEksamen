@@ -55,13 +55,13 @@ public class CustomerPagesTests : Bunit.TestContext
             .Setup(x => x.GetCustomerByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((Customer)null);
 
-        navMan.NavigateTo("http://localhost/customers/details?id=nonexistent-id");
+        navMan.NavigateTo("http://localhost:nnnn/customers/details?id=nonexistent-id");
 
         // Act
         var cut = RenderComponent<DetailsCustomer>();
 
         // Assert
-        Assert.AreEqual("http://localhost/notfound", navMan.Uri);
+        Assert.AreEqual("http://localhost:nnnn/notfound", navMan.Uri);
     }
 
     // --------- EditCustomer Tests ---------
@@ -73,13 +73,13 @@ public class CustomerPagesTests : Bunit.TestContext
             .Setup(x => x.GetCustomerByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((Customer)null);
 
-        navMan.NavigateTo("http://localhost/customers/details?id=nonexistent-id");
+        navMan.NavigateTo("http://localhost:nnnn/customers/details?id=nonexistent-id");
 
         // Act
         var cut = RenderComponent<EditCustomer>();
 
         // Assert
-        Assert.AreEqual("http://localhost/customers", navMan.Uri);
+        Assert.AreEqual("http://localhost:nnnn/customers", navMan.Uri);
     }
 
     // --------- RemoveCustomer Tests ---------
@@ -91,12 +91,12 @@ public class CustomerPagesTests : Bunit.TestContext
             .Setup(x => x.GetCustomerByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((Customer)null);
 
-        navMan.NavigateTo("http://localhost/customers/details?id=nonexistent-id");
+        navMan.NavigateTo("http://localhost:nnnn/customers/details?id=nonexistent-id");
 
         // Act
         var cut = RenderComponent<RemoveCustomer>();
 
         // Assert
-        Assert.AreEqual("http://localhost/notfound", navMan.Uri);
+        Assert.AreEqual("http://localhost:nnnn/notfound", navMan.Uri);
     }
 }
