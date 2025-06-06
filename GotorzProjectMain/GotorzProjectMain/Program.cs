@@ -16,9 +16,9 @@ using GotorzProjectMain.Services.APIs.FlightAPI;
 var builder = WebApplication.CreateBuilder(args);
 
 // Get API-info from Environment
-var apiKey = Environment.GetEnvironmentVariable("AMADEUS_API_KEY");
-var apiSecret = Environment.GetEnvironmentVariable("AMADEUS_API_SECRET");
-builder.Services.AddSingleton(new AmadeusSettings(apiKey, apiSecret));
+//var apiKey = Environment.GetEnvironmentVariable("AMADEUS_API_KEY");
+//var apiSecret = Environment.GetEnvironmentVariable("AMADEUS_API_SECRET");
+//builder.Services.AddSingleton(new AmadeusSettings(apiKey, apiSecret));
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
