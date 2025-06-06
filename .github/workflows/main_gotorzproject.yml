@@ -1,59 +1,61 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
+# Build and deploy ASP.NET Core app to Azure Web App - GotorzProject
 name: Build and deploy ASP.Net Core app to Azure Web App - GotorzProject
-
+ 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
-
+ 
+env:
+  DOTNET_VERSION: '8.x'
+  PUBLISH_DIR: ${{ github.workspace }}/publish
+ 
 jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: read #This is required for actions/checkout
-
+      contents: read
+ 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up .NET Core
+ 
+      - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.x'
-
-
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
-
-      - name: dotnet publish
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
-
-      - name: Upload artifact for deployment job
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+ 
+      - name: Restore
+        run: dotnet restore
+ 
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+ 
+      - name: Publish
+        run: dotnet publish --configuration Release --output "${{ env.PUBLISH_DIR }}" --no-build
+ 
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
-
-
-
+          name: build-output
+          path: ${{ env.PUBLISH_DIR }}
+ 
   deploy:
     runs-on: windows-latest
     needs: build
     environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+      name: Production
+      url: ${{ steps.deploy.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
-
+      id-token: write
+      contents: read
+ 
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: .net-app
-      
+          name: build-output
+          path: ${{ env.PUBLISH_DIR }}
+ 
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -62,10 +64,9 @@ jobs:
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_0AC20F7E8088417D94E6799DC35DE923 }}
 
       - name: Deploy to Azure Web App
-        id: deploy-to-webapp
+        id: deploy
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'GotorzProject'
-          slot-name: 'Production'
-          package: ./.net-app
-          
+          app-name: GotorzProject
+          slot-name: Production
+          package: ${{ env.PUBLISH_DIR }}
