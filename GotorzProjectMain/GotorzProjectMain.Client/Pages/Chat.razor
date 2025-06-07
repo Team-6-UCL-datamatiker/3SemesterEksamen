@@ -16,6 +16,7 @@
 
 @if (!_isReady)
 {
+	<!-- Show loading spinner while chat is initializing -->
 	<div class="d-flex justify-content-center align-items-center" style="height: 60vh;">
 		<div class="d-flex align-items-center gap-2">
 			<span>Loading...</span>
@@ -25,6 +26,7 @@
 }
 else
 {
+	<!-- Chat interface -->
 	<div class="container py-4">
 		<div class="row justify-content-center">
 			<div class="col-12 col-md-8">
@@ -34,7 +36,8 @@ else
 						<h5 class="mb-0">Global Chat</h5>
 						<span class="badge bg-light text-primary">@messages.Count</span>
 					</div>
-					<!-- Beskedliste -->
+
+					<!-- Message list -->
 					<div class="card-body p-0">
 						<ul class="list-group list-group-flush overflow-auto" style="max-height: 400px;">
 							@foreach (var msg in messages)
@@ -43,23 +46,24 @@ else
 							}
 						</ul>
 					</div>
-					<!-- Input -->
+
+					<!-- Input form -->
 					<div class="card-footer bg-light">
 						<div class="input-group">
 							<input @bind="messageInput"
-							@bind:event="oninput"
-							class="form-control"
-							placeholder="Skriv en besked…"
-							@onkeypress='@(async (KeyboardEventArgs e) => {
+								   @bind:event="oninput"
+								   class="form-control"
+								   placeholder="Skriv en besked…"
+								   @onkeypress='@(async (KeyboardEventArgs e) => {
            if (e.Key == "Enter" && IsConnected)
            {
                await Send();
            }
        })' />
 							<button class="btn btn-primary"
-							type="button"
-							@onclick="Send"
-							disabled="@( !IsConnected )">
+									type="button"
+									@onclick="Send"
+									disabled="@( !IsConnected )">
 								Send
 							</button>
 						</div>
@@ -77,6 +81,8 @@ else
 	private string? messageInput;
 	private string? userId;
 	private bool _isReady = false;
+
+	// Used to access the current logged-in user's authentication state
 	[CascadingParameter]
 	private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
 
@@ -91,10 +97,12 @@ else
 		userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
 							?? throw new InvalidOperationException("User not authenticated");
 
+		// Set up SignalR connection
 		hubConnection = new HubConnectionBuilder()
 			.WithUrl(Navigation.ToAbsoluteUri("/chathub"))
 			.Build();
 
+		// Listen for incoming chat messages
 		hubConnection.On<string, string, DateTime>("ReceiveMessage", (username, message, timestamp) =>
 		{
 			var encodedMsg = $"{username} [{timestamp:HH:mm}]: {message}";
@@ -104,7 +112,7 @@ else
 
 		await hubConnection.StartAsync();
 
-		// Load history
+		// Load chat history
 		var history = await hubConnection.InvokeAsync<List<ChatMessage>>("GetRecentMessages", 50);
 		foreach (var msg in history)
 		{
@@ -114,6 +122,7 @@ else
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
+		// Once page is first rendered, mark as ready
 		if (firstRender)
 		{
 			_isReady = true;
@@ -123,6 +132,7 @@ else
 
 	private async Task Send()
 	{
+		// Send message via SignalR hub
 		if (hubConnection is not null)
 		{
 			await hubConnection.SendAsync("SendMessage", messageInput, userId, username);
@@ -130,9 +140,11 @@ else
 		}
 	}
 
+	// Connection status helper
 	public bool IsConnected =>
 		hubConnection?.State == HubConnectionState.Connected;
 
+	// Clean up SignalR connection on page dispose
 	public async ValueTask DisposeAsync()
 	{
 		if (hubConnection is not null)

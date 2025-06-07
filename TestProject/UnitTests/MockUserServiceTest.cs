@@ -13,9 +13,11 @@ namespace TestProject.UnitTests
         [TestInitialize]
         public void TestInitialize()
         {
-            mockUserService = new Mock<IExtendedUserService>();
+			// Create a mock instance of the extended user service
+			mockUserService = new Mock<IExtendedUserService>();
 
-            List<Customer> mockCustomers = new List<Customer>
+			// Setup a list of mock customers
+			List<Customer> mockCustomers = new List<Customer>
             {
                 new Customer
                 {
@@ -30,7 +32,9 @@ namespace TestProject.UnitTests
                     User = new ApplicationUser { UserName = "TestUser2" }
                 }
             };
-            List<Employee> mockEmployees = new List<Employee>
+
+			// Setup a list of mock employees
+			List<Employee> mockEmployees = new List<Employee>
             {
                 new Employee
                 {
@@ -48,9 +52,9 @@ namespace TestProject.UnitTests
                 }
             };
 
-
-            mockUserService
-                .Setup(x => x.GetCustomersWithUsersAsync())
+			// Setup mock service to return customers and employees based on above lists
+			mockUserService
+				.Setup(x => x.GetCustomersWithUsersAsync())
                 .ReturnsAsync(mockCustomers);
             mockUserService
                 .Setup(x => x.GetEmployeesWithUsersAsync())
@@ -63,8 +67,8 @@ namespace TestProject.UnitTests
                 .ReturnsAsync((string id) => mockEmployees.FirstOrDefault(e => e.Id == id));
         }
 
-
-        [TestMethod]
+		// Test that the correct number of customers is returned
+		[TestMethod]
         public void GetCustomersWithUsersAsync_WhenCustomersExist_ReturnsCorrectCount()
         {
             // Arrange
@@ -74,7 +78,9 @@ namespace TestProject.UnitTests
             // Assert
             Assert.AreEqual(expectedCustomers, result.Count);
         }
-        [TestMethod]
+
+		// Test that an incorrect expected count fails properly
+		[TestMethod]
         public void GetCustomersWithUsersAsync_WhenExpectedCountIsIncorrect_ReturnsMismatchedCount()
         {
             // Arrange
@@ -84,7 +90,9 @@ namespace TestProject.UnitTests
             // Assert
             Assert.AreNotEqual(expectedCustomers, result.Count);
         }
-        [TestMethod]
+
+		// Test that the correct number of employees is returned
+		[TestMethod]
         public void GetEmployeesWithUsersAsync_WhenEmployeesExist_ReturnsCorrectCount()
         {
             // Arrange
@@ -94,7 +102,9 @@ namespace TestProject.UnitTests
             // Assert
             Assert.AreEqual(expectedEmployees, result.Count);
         }
-        [TestMethod]
+
+		// Test that an incorrect expected count for employees fails properly
+		[TestMethod]
         public void GetEmployeesWithUsersAsync_WhenExpectedCountIsIncorrect_ReturnsMismatchedCount()
         {
             // Arrange
@@ -104,7 +114,9 @@ namespace TestProject.UnitTests
             // Assert
             Assert.AreNotEqual(expectedEmployees, result.Count);
         }
-        [TestMethod]
+
+		// Test customer lookup by valid ID
+		[TestMethod]
         public void GetCustomerByIdAsync_WhenCustomerIdExists_ReturnsCustomer()
         {
             // Arrange
@@ -119,7 +131,9 @@ namespace TestProject.UnitTests
             // Assert
             Assert.AreEqual(expectedCustomer.Id, result?.Id);
         }
-        [TestMethod]
+
+		// Test customer lookup by invalid ID
+		[TestMethod]
         public void GetCustomerByIdAsync_WhenCustomerIdDoesNotExist_ReturnsNull()
         {
             // Arrange
@@ -134,7 +148,9 @@ namespace TestProject.UnitTests
             // Assert
             Assert.AreNotEqual(expectedCustomer.Id, result?.Id);
         }
-        [TestMethod]
+
+		// Test employee lookup by valid ID
+		[TestMethod]
         public void GetEmployeeByIdAsync_WhenEmployeeIdExists_ReturnsEmployee()
         {
             // Arrange
@@ -152,7 +168,9 @@ namespace TestProject.UnitTests
             // Assert
             Assert.AreEqual(expectedEmployee.Id, result?.Id);
         }
-        [TestMethod]
+
+		// Test employee lookup by invalid ID
+		[TestMethod]
         public void GetEmployeeByIdAsync_WhenEmployeeIdDoesNotExist_ReturnsNull()
         {
             // Arrange

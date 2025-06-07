@@ -29,7 +29,7 @@
 											Label="Destination"
 											Value="@Destination"
 											ValueChanged="@(val => Destination = val)"
-											Placeholder="Type a city" 
+											Placeholder="Type a city"
 											SelectionMethod="SelectDestination" />
 
 				@if (!string.IsNullOrWhiteSpace(_selectedDestination))
@@ -299,7 +299,7 @@
 			}
 		}
 
-		@*Get more offers if the first API-call returned more than 50 hotels*@
+		@* Load additional hotels if more results exist *@
 		<button @onclick="GetHotels" disabled="@(!Service.HotelIds.Any() || isLoadingMore)" class="w-100 btn btn-lg btn-primary">
 			@if (isLoadingMore)
 			{
@@ -312,7 +312,7 @@
 			}
 		</button>
 
-		@*List of all returned hotels from first API-call and a count stat to show how many were returned*@
+		@* Summary list of all retrieved hotels, even without offers *@
 		<details style="margin-bottom: 1em;">
 			<summary class="fw-bold fs-5">Complete hotel list (@Service.Hotels.Count())</summary>
 			@foreach (Hotel hotel in Service.Hotels)
@@ -362,12 +362,12 @@
 	public EventCallback<Hotel> OnHotelSelected { get; set; }
 	private HotelOffer? SelectedHotelOffer { get; set; }
 
-	// Offer API
+	// Edit context for Offer API form
 	private EditContext? _ecOffer;
 	private AmadeusHotelOfferInputModel _inputOffer = new();
 	private AmadeusHotelOfferInputModel? _validatedInputOffer;
 
-	// List API
+	// Edit context for List API form
 	private EditContext? _ecList;
 	private AmadeusHotelListInputModel _inputList = new();
 	private AmadeusHotelListInputModel? _validatedInputList;
@@ -390,12 +390,14 @@
 
 	protected override void OnInitialized()
 	{
+		// Set up validation context
 		_ecList = new EditContext(_inputList);
 		_ecOffer = new EditContext(_inputOffer);
 	}
 
 	private async Task SubmitAll()
 	{
+		// Validate both forms
 		if (!_ecList!.Validate() || !_ecOffer!.Validate())
 		{
 			return;
@@ -405,7 +407,7 @@
 		_validatedInputList = _inputList;
 		_validatedInputOffer = _inputOffer;
 
-		// Remove values from earlier searches
+		// Reset previous results
 		Service.Hotels = Enumerable.Empty<Hotel>();
 		Service.HotelIds.Clear();
 
@@ -437,7 +439,7 @@
 		}
 	}
 
-	// Based on autocomplete and airport/city checkbox, get the correct IATA code for API call, and set _selectedDestination for confirmation
+	// Updates input model based on city/airport mode and confirms selection
 	private void SelectDestination()
 	{
 		(string CityCode, string AirportCode)? codes = CityLookupService.GetCodes(Destination!);
@@ -454,14 +456,14 @@
 		_selectedDestination = $"{Destination!}, Code: {_inputList.CityOrAirportCode}";
 	}
 
-	// Autocomplete amenities method to specify where and how to look for results
+	// Returns autocomplete matches from amenity list
 	private Task<List<string>> SearchAmenitiesSuggestions(string Value)
 	{
 		return Task.FromResult(AllAmenities.Where(a => a.Contains(Value.ToString()!.Trim(), StringComparison.OrdinalIgnoreCase))
 							.Take(10).ToList());
 	}
 
-	// Add/remove elements to amenities list for API-call
+	// Toggles amenities into input list
 	private void SelectAmenity()
 	{
 		if (_inputList.Amenities.Contains(AmenityInput!))
@@ -475,7 +477,7 @@
 		AmenityInput = "";
 	}
 
-	// Helper method for selected hotel stars for API-call
+	// Toggles hotel star values (1–5) into list for filtering
 	private void ToggleRating(string starValue, object? isChecked)
 	{
 
@@ -489,10 +491,10 @@
 		}
 	}
 
-	// Set selected info and return correct value to parent component
+	// Updates selected hotel+offer and notifies parent (CreateOfferCompenent)
 	private async Task SelectHotel(Hotel hotel, HotelOffer offer)
 	{
-		hotel.Offers = new[] { offer };
+		hotel.Offers = new[] { offer }; // Keep only selected offer
 		SelectedHotel = hotel;
 		SelectedHotelOffer = offer;
 

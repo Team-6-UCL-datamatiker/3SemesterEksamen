@@ -124,24 +124,25 @@
 
 	protected override async Task OnInitializedAsync()
 	{
-		string? userId = await CurrentUserService.GetUserIdAsync() 
-					 ?? throw new InvalidOperationException("User not authenticated");
+		// Determine user role on page load
+		string? userId = await CurrentUserService.GetUserIdAsync()
+						?? throw new InvalidOperationException("User not authenticated");
 		IsEmployee = await CurrentUserService.IsEmployeeAsync();
 	}
 
 	private async Task HandleValidSubmit()
 	{
-		// Employee validation
+		// Require customer email if employee is submitting
 		if (IsEmployee && string.IsNullOrWhiteSpace(InputModel.CustomerEmail))
 		{
 			FormErrorMessage = "Customer email is required.";
 			return;
 		}
 
-		// Map InputModel to entity
+		// Map input model to VacationRequest entity
 		var vacationRequest = Mapper.Map<VacationRequest>(InputModel);
 
-		// Determine UserId
+		// Get current user ID (employee or customer)
 		var currentUserId = await CurrentUserService.GetUserIdAsync()
 							?? throw new InvalidOperationException("User not authenticated");
 
@@ -156,7 +157,8 @@
 				FormErrorMessage = $"Customer '{InputModel.CustomerEmail}' not found.";
 				return;
 			}
-			// Set the UserId to the customer's ID
+
+			// Set vacation request to be for the customer
 			vacationRequest.CustomerId = customer.Id;
 		}
 		else
@@ -165,17 +167,12 @@
 			vacationRequest.CustomerId = currentUserId;
 		}
 
-		// Save
+		// Persist the request to the database
 		Context.VacationRequests.Add(vacationRequest);
 		await Context.SaveChangesAsync();
 
-		// Index notification
+		// Index notification 
 		await VrNotifier.NotifyChangedAsync();
-
-		// // SignalR notification
-		// await SignalRService.InitializeAsync();
-		// await Task.Delay(500);
-		// await SignalRService.SendVacationRequestAsync();
 
 		NavigationManager.NavigateTo("/vacationrequests");
 	}

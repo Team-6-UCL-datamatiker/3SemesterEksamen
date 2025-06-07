@@ -16,16 +16,20 @@ namespace GotorzProjectMain.Services
             _config = config;
         }
 
-        public Task SendConfirmationLinkAsync(ApplicationUser user, string email, string confirmationLink) =>
+		// Sends a confirmation email with a clickable link
+		public Task SendConfirmationLinkAsync(ApplicationUser user, string email, string confirmationLink) =>
             SendEmailAsync(email, "Confirm your email", $"Please confirm your account by <a href='{confirmationLink}'>clicking here</a>.");
 
-        public Task SendPasswordResetLinkAsync(ApplicationUser user, string email, string resetLink) =>
+		// Sends a password reset email with a clickable link
+		public Task SendPasswordResetLinkAsync(ApplicationUser user, string email, string resetLink) =>
             SendEmailAsync(email, "Reset your password", $"You can reset your password by <a href='{resetLink}'>clicking here</a>.");
 
-        public Task SendPasswordResetCodeAsync(ApplicationUser user, string email, string resetCode) =>
+		// Sends a password reset code
+		public Task SendPasswordResetCodeAsync(ApplicationUser user, string email, string resetCode) =>
             SendEmailAsync(email, "Reset your password", $"Reset code: {resetCode}");
 
-        private Task SendEmailAsync(string toEmail, string subject, string htmlMessage)
+		// Composes and sends an email using SMTP settings from config
+		private Task SendEmailAsync(string toEmail, string subject, string htmlMessage)
         {
             var emailSettings = _config.GetSection("Email");
 

@@ -11,49 +11,47 @@
 
 @* Inputs *@
 <div style="display:flex; gap:1rem; align-items:flex-start; margin-bottom:1rem; height:4rem">
-   <div>
-    <AutoCompleteInputComponent
-      Id="fromCity"
-      Label="Departure City"
-      Value="@fromCity"
-      ValueChanged="@(val => fromCity = val)"
-      Placeholder="Type a city" />
-  </div>
+	<div>
+		<AutoCompleteInputComponent Id="fromCity"
+									Label="Departure City"
+									Value="@fromCity"
+									ValueChanged="@(val => fromCity = val)"
+									Placeholder="Type a city" />
+	</div>
 
-  <div>
-    <AutoCompleteInputComponent
-      Id="toCity"
-      Label="Arrival City"
-      Value="@toCity"
-      ValueChanged="@(val => toCity = val)"
-      Placeholder="Type a city" />
-  </div>
+	<div>
+		<AutoCompleteInputComponent Id="toCity"
+									Label="Arrival City"
+									Value="@toCity"
+									ValueChanged="@(val => toCity = val)"
+									Placeholder="Type a city" />
+	</div>
 
-    <div>
-        <label for="outbound">Outbound Date</label><br />
-        <input id="outbound"
-               type="date"
-               @bind="outbound"
-               min="@DateTime.Today.ToString("yyyy-MM-dd")"
-               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
-    </div>
+	<div>
+		<label for="outbound">Outbound Date</label><br />
+		<input id="outbound"
+			   type="date"
+			   @bind="outbound"
+			   min="@DateTime.Today.ToString("yyyy-MM-dd")"
+			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px;" />
+	</div>
 
-    <div>
-        <label for="adults">Adults</label><br />
-        <input id="adults"
-               type="number" min="1"
-               @bind="adultCount"
-               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
-    </div>
+	<div>
+		<label for="adults">Adults</label><br />
+		<input id="adults"
+			   type="number" min="1"
+			   @bind="adultCount"
+			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
+	</div>
 
-    <div>
-        <label for="children">Children</label><br />
-        <input id="children"
-               type="number" min="0"
-               @bind="childCount"
-               style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
-    </div>
-   
+	<div>
+		<label for="children">Children</label><br />
+		<input id="children"
+			   type="number" min="0"
+			   @bind="childCount"
+			   style="padding:0.5rem; border:1px solid #ccc; border-radius:4px; width:4rem;" />
+	</div>
+
 	<div>
 		<label /><br />
 		<button @onclick="Search" class="btn btn-primary" disabled="@isLoading" style="padding: 0.4rem 1rem; padding-top: 0.6rem">
@@ -79,6 +77,7 @@
 	</div>
 }
 
+@* Render available flight routes as expandable sections *@
 @if (FlightRoutes != null)
 {
 	<div style="display: flex; flex-direction: column;">
@@ -98,8 +97,7 @@
 				<br />
 				<div style="padding: 1rem; background: #fff; border-radius: 6px; border: 1px solid #ccc">
 
-
-
+					<!-- Route details with all legs and layovers -->
 					@for (int j = 0; j < route.Legs.Count; j++)
 					{
 						var leg = route.Legs[j];
@@ -121,7 +119,7 @@
 
 					}
 
-
+					<!-- Summary info and selection button -->
 					<div style="margin-top: 0.5rem; border-top: 1px solid #ddd; padding-top: 1rem;">
 						<div><strong>Total duration:</strong> @route.TotalTravelTimeDisplay</div>
 						<div><strong>Total price:</strong> @route.TotalPrice DKK</div>
@@ -143,16 +141,18 @@
 
 	private bool isLoading;
 
+	// Unique ID for tracking selected flights
 	[Parameter]
 	public string ComponentId { get; set; } = Guid.NewGuid().ToString();
 
+	// Event triggered when a flight is selected
 	[Parameter]
 	public EventCallback<(string ComponentId, FlightRoute Route)> OnFlightSelected { get; set; }
 
 
+	// Input values
 	private string fromCity = "Copenhagen (CPH)";
 	private string toCity = "London, Heathrow (LHR)";
-
 
 	private DateTime outbound = DateTime.Today.AddDays(7);
 	private int adultCount = 1;
@@ -182,6 +182,7 @@
 		FlightRoutes = null;
 		selectedFlightRouteIndex = null; // Reset selection on each new search
 
+		// Ensure a valid date is selected
 		if (outbound == DateTime.MinValue)
 		{
 			ErrorMessage = "Please select a valid outbound date.";
@@ -219,7 +220,7 @@
 				adultCount,
 				childCount);
 
-			// Post-search, empty result
+			// Show message if no results found
 			if (!FlightRoutes.Any())
 			{
 				ErrorMessage = "No flights found. Either you picked an unsupported code " +
@@ -239,6 +240,7 @@
 
 	}
 
+	// Marks a flight as selected and notifies parent (CreateOfferComponent)
 	private async Task SelectFlight(FlightRoute route)
 	{
 		selectedFlightRoute = route;

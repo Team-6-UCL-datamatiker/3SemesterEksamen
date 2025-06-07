@@ -19,185 +19,194 @@
 
 @if (!string.IsNullOrWhiteSpace(errorMessage))
 {
-    <div class="alert alert-danger mt-3" role="alert">
-        @errorMessage
-    </div>
+	<div class="alert alert-danger mt-3" role="alert">
+		@errorMessage
+	</div>
 }
 
 <div>
-    <h2>Vacation Request</h2>
-    <hr />
-    @if (vacationrequest is null)
-    {
-        <p><em>Loading...</em></p>
-    }
-    else
-    {
-        <dl class="row">
-            @if (Customer?.User is not null)
-            {
-                <dt class="col-sm-2">Full Name</dt>
-                <dd class="col-sm-10">@Customer?.User.FirstName @Customer?.User.LastName</dd>
-                <dt class="col-sm-2">Email</dt>
-                <dd class="col-sm-10">@Customer?.User.Email</dd>
-            }
-            else
-            {
-                <dt class="col-sm-2">Full Name</dt>
-                <dd class="col-sm-10">Customer not found</dd>
-            }
-            <dd class="col-sm-10" style="display:none">@vacationrequest.CustomerId</dd>
+	<h2>Vacation Request</h2>
+	<hr />
+	@if (vacationrequest is null)
+	{
+		<p><em>Loading...</em></p>
+	}
+	else
+	{
+		<dl class="row">
+			@if (Customer?.User is not null)
+			{
+				<dt class="col-sm-2">Full Name</dt>
+				<dd class="col-sm-10">@Customer?.User.FirstName @Customer?.User.LastName</dd>
+				<dt class="col-sm-2">Email</dt>
+				<dd class="col-sm-10">@Customer?.User.Email</dd>
+			}
+			else
+			{
+				<dt class="col-sm-2">Full Name</dt>
+				<dd class="col-sm-10">Customer not found</dd>
+			}
+			<dd class="col-sm-10" style="display:none">@vacationrequest.CustomerId</dd>
 
-            <dt class="col-sm-2">Departure City</dt>
-            <dd class="col-sm-10">@vacationrequest.DepartureCity</dd>
+			<dt class="col-sm-2">Departure City</dt>
+			<dd class="col-sm-10">@vacationrequest.DepartureCity</dd>
 
-            <dt class="col-sm-2">Departure Country</dt>
-            <dd class="col-sm-10">@vacationrequest.DepartureCountry</dd>
+			<dt class="col-sm-2">Departure Country</dt>
+			<dd class="col-sm-10">@vacationrequest.DepartureCountry</dd>
 
-            <dt class="col-sm-2">Arrival City</dt>
-            <dd class="col-sm-10">@vacationrequest.ArrivalCity</dd>
+			<dt class="col-sm-2">Arrival City</dt>
+			<dd class="col-sm-10">@vacationrequest.ArrivalCity</dd>
 
-            <dt class="col-sm-2">Arrival Country</dt>
-            <dd class="col-sm-10">@vacationrequest.ArrivalCountry</dd>
+			<dt class="col-sm-2">Arrival Country</dt>
+			<dd class="col-sm-10">@vacationrequest.ArrivalCountry</dd>
 
-            <dt class="col-sm-2">StartDate</dt>
-            <dd class="col-sm-10">@vacationrequest.StartDate.ToShortDateString()</dd>
-            <dt class="col-sm-2">End Date</dt>
-            <dd class="col-sm-10">@vacationrequest.EndDate.ToShortDateString()</dd>
-            <dt class="col-sm-2">Children Amount</dt>
-            <dd class="col-sm-10">@vacationrequest.ChildrenAmount</dd>
-            <dt class="col-sm-2">Adults Amount</dt>
-            <dd class="col-sm-10">@vacationrequest.AdultsAmount</dd>
-            <dt class="col-sm-2">Rooms Amount</dt>
-            <dd class="col-sm-10">@vacationrequest.RoomsAmount</dd>
-            <dt class="col-sm-2">Hotel Request</dt>
-            <dd class="col-sm-10">@vacationrequest.HotelRequest</dd>
-            <dt class="col-sm-2">Flight Request</dt>
-            <dd class="col-sm-10">@vacationrequest.FlightRequest</dd>
-            <dt class="col-sm-2">Misc</dt>
-            <dd class="col-sm-10">@vacationrequest.Misc</dd>
-            <dt class="col-sm-2">Status</dt>
-            <dd class="col-sm-10">@vacationrequest.Status</dd>
-        </dl>
-        <div>
-            <a href="@($"/vacationrequests/edit?vacationrequestid={vacationrequest.VacationRequestId}")">Edit</a> |
-            <a href="@($"/vacationrequests")">Back to List</a>
-        </div>
-    }
+			<dt class="col-sm-2">StartDate</dt>
+			<dd class="col-sm-10">@vacationrequest.StartDate.ToShortDateString()</dd>
+			<dt class="col-sm-2">End Date</dt>
+			<dd class="col-sm-10">@vacationrequest.EndDate.ToShortDateString()</dd>
+			<dt class="col-sm-2">Children Amount</dt>
+			<dd class="col-sm-10">@vacationrequest.ChildrenAmount</dd>
+			<dt class="col-sm-2">Adults Amount</dt>
+			<dd class="col-sm-10">@vacationrequest.AdultsAmount</dd>
+			<dt class="col-sm-2">Rooms Amount</dt>
+			<dd class="col-sm-10">@vacationrequest.RoomsAmount</dd>
+			<dt class="col-sm-2">Hotel Request</dt>
+			<dd class="col-sm-10">@vacationrequest.HotelRequest</dd>
+			<dt class="col-sm-2">Flight Request</dt>
+			<dd class="col-sm-10">@vacationrequest.FlightRequest</dd>
+			<dt class="col-sm-2">Misc</dt>
+			<dd class="col-sm-10">@vacationrequest.Misc</dd>
+			<dt class="col-sm-2">Status</dt>
+			<dd class="col-sm-10">@vacationrequest.Status</dd>
+		</dl>
+		<div>
+			<a href="@($"/vacationrequests/edit?vacationrequestid={vacationrequest.VacationRequestId}")">Edit</a> |
+			<a href="@($"/vacationrequests")">Back to List</a>
+		</div>
+	}
 </div>
 <br />
 
+<!-- Show approved offer -->
 @if (ApprovedVacationOffer != null)
 {
-    <details>
-        <summary class="summary-heading">Accepted offer</summary><br />
-        <DetailsOfferComponent VacationOffer="ApprovedVacationOffer" VacationRequest="vacationrequest" />
-    </details>
+	<details>
+		<summary class="summary-heading">Accepted offer</summary><br />
+		<DetailsOfferComponent VacationOffer="ApprovedVacationOffer" VacationRequest="vacationrequest" />
+	</details>
 }
 
+<!-- Show pending offers -->
 @if (WaitingVacationOffers != null && WaitingVacationOffers.Count > 0 && ApprovedVacationOffer == null)
 {
-    <details>
-        <summary>Offers waiting for response</summary><br/>
-        @foreach (var waitingVacationOffer in WaitingVacationOffers)
-        {
-            <details>
-                <summary class="summary-heading">Offer @(WaitingVacationOffers.IndexOf(waitingVacationOffer) + 1)</summary><br />
-                <DetailsOfferComponent VacationOffer="waitingVacationOffer" VacationRequest="vacationrequest" />
-            </details>
-        }
-    </details>
+	<details>
+		<summary>Offers waiting for response</summary><br />
+		@foreach (var waitingVacationOffer in WaitingVacationOffers)
+		{
+			<details>
+				<summary class="summary-heading">Offer @(WaitingVacationOffers.IndexOf(waitingVacationOffer) + 1)</summary><br />
+				<DetailsOfferComponent VacationOffer="waitingVacationOffer" VacationRequest="vacationrequest" />
+			</details>
+		}
+	</details>
 }
 
+<!-- Show denied offers -->
 @if (DeniedVacationOffers != null && DeniedVacationOffers.Count > 0 && ApprovedVacationOffer == null)
 {
-    <details>
-        <summary>Denied Offers</summary><br/>
-        @foreach (var deniedVacationOffer in DeniedVacationOffers)
-        {
-            <details>
-                <summary class="summary-heading">Denied Offer @(DeniedVacationOffers.IndexOf(deniedVacationOffer) + 1)</summary><br />
-                <DetailsOfferComponent VacationOffer="deniedVacationOffer" VacationRequest="vacationrequest" />
-            </details>
-        }
-    </details>
+	<details>
+		<summary>Denied Offers</summary><br />
+		@foreach (var deniedVacationOffer in DeniedVacationOffers)
+		{
+			<details>
+				<summary class="summary-heading">Denied Offer @(DeniedVacationOffers.IndexOf(deniedVacationOffer) + 1)</summary><br />
+				<DetailsOfferComponent VacationOffer="deniedVacationOffer" VacationRequest="vacationrequest" />
+			</details>
+		}
+	</details>
 }
 
-
+<!-- Show offer creation if no approved offer exists -->
 @if (vacationrequest != null && Employee?.User != null && ApprovedVacationOffer == null)
 {
-    <br />
-    <CreateOfferComponent Employee="Employee" VacationRequest="vacationrequest" />
+	<br />
+	<CreateOfferComponent Employee="Employee" VacationRequest="vacationrequest" />
 }
 
 
 @code {
 	private string? errorMessage;
-    private VacationRequest? vacationrequest;
-    private Customer? Customer { get; set; }
-    private Employee? Employee { get; set; }
-    private VacationOffer? VacationOffer { get; set; }
-    private List<VacationOffer> WaitingVacationOffers { get; set; }
-    private List<VacationOffer> DeniedVacationOffers { get; set; }
-    private VacationOffer? ApprovedVacationOffer { get; set; }
+	private VacationRequest? vacationrequest;
+	private Customer? Customer { get; set; }
+	private Employee? Employee { get; set; }
+	private VacationOffer? VacationOffer { get; set; }
+	private List<VacationOffer> WaitingVacationOffers { get; set; }
+	private List<VacationOffer> DeniedVacationOffers { get; set; }
+	private VacationOffer? ApprovedVacationOffer { get; set; }
 
 
-    [SupplyParameterFromQuery]
-    private int VacationRequestId { get; set; }
+	[SupplyParameterFromQuery]
+	private int VacationRequestId { get; set; }
 
-    [SupplyParameterFromQuery]
-    private string EmployeeId { get; set; }
+	[SupplyParameterFromQuery]
+	private string EmployeeId { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            vacationrequest = await VacationRequestTreeService.LoadVacationRequestTreeByIdAsync(VacationRequestId);
+	protected override async Task OnInitializedAsync()
+	{
+		try
+		{
+			// Load vacation request with offers
+			vacationrequest = await VacationRequestTreeService.LoadVacationRequestTreeByIdAsync(VacationRequestId);
 
-            Employee = await UserService.GetEmployeeByIdAsync(EmployeeId);
+			// Load employee info
+			Employee = await UserService.GetEmployeeByIdAsync(EmployeeId);
 
-            ApprovedVacationOffer = vacationrequest.Offers.FirstOrDefault(approvedVacationOffer => approvedVacationOffer.OfferStatus == OfferStatus.Approved);
-            WaitingVacationOffers = vacationrequest.Offers.Where(waitingVacationOffer => waitingVacationOffer.OfferStatus == OfferStatus.Waiting).ToList();
-            DeniedVacationOffers = vacationrequest.Offers.Where(deniedVacationOffer => deniedVacationOffer.OfferStatus == OfferStatus.Denied).ToList();
+			// Categorize offers by status
+			ApprovedVacationOffer = vacationrequest.Offers.FirstOrDefault(approvedVacationOffer => approvedVacationOffer.OfferStatus == OfferStatus.Approved);
+			WaitingVacationOffers = vacationrequest.Offers.Where(waitingVacationOffer => waitingVacationOffer.OfferStatus == OfferStatus.Waiting).ToList();
+			DeniedVacationOffers = vacationrequest.Offers.Where(deniedVacationOffer => deniedVacationOffer.OfferStatus == OfferStatus.Denied).ToList();
 
-            if (ApprovedVacationOffer != null)
-            {
-                vacationrequest.Status = RequestStatus.BookingUnderway;
-                await Context.SaveChangesAsync();
-            }
-            else if (WaitingVacationOffers.Count() > 0)
-            {
-                vacationrequest.Status = RequestStatus.WaitingApproval;
-                await Context.SaveChangesAsync();
-            }
-            else if (WaitingVacationOffers.Count() == 0)
-            {
-                vacationrequest.Status = RequestStatus.PendingRequest;
-                await Context.SaveChangesAsync();
-            }
+			// Update request status based on offer states
+			if (ApprovedVacationOffer != null)
+			{
+				vacationrequest.Status = RequestStatus.BookingUnderway;
+				await Context.SaveChangesAsync();
+			}
+			else if (WaitingVacationOffers.Count() > 0)
+			{
+				vacationrequest.Status = RequestStatus.WaitingApproval;
+				await Context.SaveChangesAsync();
+			}
+			else if (WaitingVacationOffers.Count() == 0)
+			{
+				vacationrequest.Status = RequestStatus.PendingRequest;
+				await Context.SaveChangesAsync();
+			}
 
-        }
-        catch (Exception ex)
-        {
+		}
+		catch (Exception ex)
+		{
 			errorMessage = "An error occurred while loading the vacation request details.";
 			Logger.LogError(ex, errorMessage);
-        }
+		}
 
 
-        if (vacationrequest is null)
-        {
-            NavigationManager.NavigateTo("notfound");
-        }
+		// Redirect if request was not found
+		if (vacationrequest is null)
+		{
+			NavigationManager.NavigateTo("notfound");
+		}
 
-        try
-        {
-            Customer = await UserService.GetCustomerByIdAsync(vacationrequest.CustomerId);
-        }
-        catch (Exception ex)
-        {
+		try
+		{
+			// Load customer info
+			Customer = await UserService.GetCustomerByIdAsync(vacationrequest.CustomerId);
+		}
+		catch (Exception ex)
+		{
 			errorMessage = "An error occurred while loading the customer details.";
 			Logger.LogError(ex, errorMessage);
-        }
+		}
 
-    }
+	}
 }

@@ -2532,6 +2532,8 @@ public class CityLookupService : ICityLookupService
         { "Zurich (ZRH)", ("ZRH", "ZRH") }
     };
 
+
+	// Returns up to `max` cities that contain the input string (case-insensitive)
 	public IEnumerable<string> SearchContains(string input, int max = 10)
 	{
 		if (string.IsNullOrWhiteSpace(input))

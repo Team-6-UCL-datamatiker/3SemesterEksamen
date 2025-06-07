@@ -11,16 +11,19 @@
 
 @if (_profilePicture is not null)
 {
+	<!-- Show preview if image is loaded -->
 	<img src="@_profilePicture"
-	alt="Profile picture"
-	style="max-width:200px; max-height:200px;"
-	class="img-thumbnail" />
+		 alt="Profile picture"
+		 style="max-width:200px; max-height:200px;"
+		 class="img-thumbnail" />
 }
 
 @code {
-	public string? _profilePicture;
+	public string? _profilePicture; // Base64 image data for preview
+
 	[Parameter]
 	public IBrowserFile? ProfilePictureFile { get; set; }
+
 	[Parameter]
 	public EventCallback<IBrowserFile?> ProfilePictureFileChanged { get; set; }
 
@@ -32,25 +35,26 @@
 			{
 				ProfilePictureFile = e.File;
 
-				// Ask the browser to shrink the image to 200x200
+				// Resize image to 200x200
 				var thumb = await ProfilePictureFile
 							.RequestImageFileAsync(ProfilePictureFile.ContentType, 200, 200);
 
-				// Creates a memory buffer to store the binary image data.
+				// Copy resized image to memory
 				using var ms = new MemoryStream();
-				// Opens a stream from the thumb and copies its contents into the memory buffer.
 				await thumb.OpenReadStream().CopyToAsync(ms);
-				// Turns the bytes in memory into a base64-encoded string—basically a text version of the image.
+
+				// Convert to base64 string
 				var base64 = Convert.ToBase64String(ms.ToArray());
-				// Constructs the actual data URL that your <img src="..."> will use to show the preview.
+
+				// Format as data URL for browser preview (html img tag)
 				_profilePicture = $"data:{ProfilePictureFile.ContentType};base64,{base64}";
-				// "Sends" image file back to parent for saving on the server.
+				
+				// Notify parent of updated image file
 				await ProfilePictureFileChanged.InvokeAsync(thumb);
 			}
 		}
 		catch (Exception ex)
 		{
-			// This only logs to the browser because it's client side!!
 			Logger.LogError(ex, $"Failed to show new profile picture");
 			throw;
 		}

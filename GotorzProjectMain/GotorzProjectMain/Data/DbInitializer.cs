@@ -6,27 +6,34 @@ namespace GotorzProjectMain.Data;
 
 public static class DbInitializer
 {
-    public static async Task Execute(IServiceProvider serviceProvider, ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+	// Entry point for database setup
+	public static async Task Execute(IServiceProvider serviceProvider, ApplicationDbContext context, UserManager<ApplicationUser> userManager)
     {
         // Ensure the database is created and apply any pending migrations
         await context.Database.MigrateAsync();
 
-        await CreateUserRolesIfNotExists(serviceProvider);
+		// Ensure roles exist
+		await CreateUserRolesIfNotExists(serviceProvider);
 
-        await CreateAdminIfNotExists(context, userManager);
+		// Ensure admin user exists
+		await CreateAdminIfNotExists(context, userManager);
     }
 
-    private static async Task CreateUserRolesIfNotExists(IServiceProvider serviceProvider)
+	// Creates roles if they haven't been set up yet
+	private static async Task CreateUserRolesIfNotExists(IServiceProvider serviceProvider)
     {
-        var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+		// Resolve the RoleManager service from the DI container
+		var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
         string[] roleNames = { "Admin", "Employee", "Customer" };
 
         foreach (var roleName in roleNames)
         {
-            var roleExists = await roleManager.RoleExistsAsync(roleName);
+			// Check if the role already exists
+			var roleExists = await roleManager.RoleExistsAsync(roleName);
 
-            if (!roleExists)
+			// If not, create it
+			if (!roleExists)
             {
                 var result = await roleManager.CreateAsync(new IdentityRole(roleName));
 
@@ -38,22 +45,28 @@ public static class DbInitializer
         }
     }
 
-    private static async Task CreateAdminIfNotExists(ApplicationDbContext context, UserManager<ApplicationUser> manager)
+	// Creates a default admin user if none exists
+	private static async Task CreateAdminIfNotExists(ApplicationDbContext context, UserManager<ApplicationUser> manager)
     {
-        bool adminExists = context.Employees.Any(e => e.IsAdmin == true);
+		// Check if any admin already exists
+
+		bool adminExists = context.Employees.Any(e => e.IsAdmin == true);
 
         if (!adminExists)
         {
-            var user = new ApplicationUser
+			// Create a new ApplicationUser representing the admin
+			var user = new ApplicationUser
             {
                 UserName = "admin@admin",
                 Email = "admin@admin",
                 EmailConfirmed = true
             };
 
-            var result = await manager.CreateAsync(user, "@Dmin1");
+			// Attempt to create the user with a default password
+			var result = await manager.CreateAsync(user, "@Dmin1");
 
-            if (!result.Succeeded)
+			// If user creation fails, throw with detailed error messages
+			if (!result.Succeeded)
             {
                 throw new Exception("Failed to create admin: " + string.Join(", ", result.Errors.Select(e => e.Description)));
             }
@@ -66,7 +79,8 @@ public static class DbInitializer
 				throw new Exception("Failed to assign Admin role: " + string.Join(", ", roleResult.Errors.Select(e => e.Description)));
 			}
 
-            var employee = new Employee
+			// Register the admin as an Employee (linking to Identity user)
+			var employee = new Employee
             {
                 IsAdmin = true,
                 User = user,

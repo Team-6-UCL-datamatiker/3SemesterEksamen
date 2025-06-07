@@ -24,79 +24,90 @@ public class CustomerPagesTests : Bunit.TestContext
     [TestInitialize]
     public void Setup()
     {
-        mockUserService = new Mock<IExtendedUserService>();
-        mockUserManager = new Mock<UserManager<ApplicationUser>>(
+		// Setup mocked services and dependencies needed by the components
+		mockUserService = new Mock<IExtendedUserService>();
+
+		// Creating a mock of UserManager with dummy dependencies
+		mockUserManager = new Mock<UserManager<ApplicationUser>>(
             Mock.Of<IUserStore<ApplicationUser>>(),
             null, null, null, null, null, null, null, null
         );
-        
-        var mockContext = new Mock<ApplicationDbContext>(new DbContextOptions<ApplicationDbContext>());
+
+		// Setup fake DbContext
+		var mockContext = new Mock<ApplicationDbContext>(new DbContextOptions<ApplicationDbContext>());
         Services.AddSingleton(mockContext.Object);
-        
-        var mockMapper = new Mock<IMapper>();
+
+		// Add a mocked AutoMapper service
+		var mockMapper = new Mock<IMapper>();
         Services.AddSingleton(mockMapper.Object);
-        
-        var mockWebHostEnvironment = new Mock<IWebHostEnvironment>();
+
+		// Mock the WebHostEnvironment for any file-related services
+		var mockWebHostEnvironment = new Mock<IWebHostEnvironment>();
         mockWebHostEnvironment.Setup(e => e.WebRootPath).Returns(Path.GetTempPath()); // You can set a temp folder
         Services.AddSingleton(mockWebHostEnvironment.Object);
 
-        Services.AddSingleton(mockUserService.Object);
+		// Register the mocked services in the test's service provider
+		Services.AddSingleton(mockUserService.Object);
         Services.AddSingleton(mockUserManager.Object);
 
-        navMan = Services.GetRequiredService<NavigationManager>() as FakeNavigationManager;
+		// Capture and store the fake NavigationManager to check redirection
+		navMan = Services.GetRequiredService<NavigationManager>() as FakeNavigationManager;
     }
 
     // --------- DetailsCustomer Tests ---------
     [TestMethod]
     public void DetailsCustomer_OnInitializedAsync_ShouldRedirectToNotFound_WhenCustomerIsNull()
     {
-        // Arrange
-        mockUserService
-            .Setup(x => x.GetCustomerByIdAsync(It.IsAny<string>()))
+		// Arrange: Simulate that the customer was not found in the database
+		mockUserService
+			.Setup(x => x.GetCustomerByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((Customer)null);
 
-        navMan.NavigateTo("http://localhost/customers/details?id=nonexistent-id");
+		// Set the starting URL (as if the user is navigating to details page)
+		navMan.NavigateTo("/customers/details?id=nonexistent-id");
 
-        // Act
-        var cut = RenderComponent<DetailsCustomer>();
+		// Act: Render the DetailsCustomer component
+		var cut = RenderComponent<DetailsCustomer>();
 
-        // Assert
-        Assert.AreEqual("http://localhost/notfound", navMan.Uri);
+		// Assert: If no customer found, we expect a redirect to the "not found" page
+		Assert.AreEqual("/notfound", navMan.Uri);
     }
 
     // --------- EditCustomer Tests ---------
     [TestMethod]
     public void EditCustomer_OnInitializedAsync_ShouldRedirectToNotFound_WhenCustomerIsNull()
     {
-        // Arrange
-        mockUserService
-            .Setup(x => x.GetCustomerByIdAsync(It.IsAny<string>()))
+		// Arrange: Simulate no matching customer found
+		mockUserService
+			.Setup(x => x.GetCustomerByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((Customer)null);
 
-        navMan.NavigateTo("http://localhost/customers/details?id=nonexistent-id");
+		// Navigate to edit page
+		navMan.NavigateTo("/customers/details?id=nonexistent-id");
 
-        // Act
-        var cut = RenderComponent<EditCustomer>();
+		// Act: Render the EditCustomer component
+		var cut = RenderComponent<EditCustomer>();
 
-        // Assert
-        Assert.AreEqual("http://localhost/customers", navMan.Uri);
+		// Assert: Should redirect back to main customers list
+        Assert.AreEqual("/localhost/customers", navMan.Uri);
     }
 
     // --------- RemoveCustomer Tests ---------
     [TestMethod]
     public void RemoveCustomer_OnInitializedAsync_ShouldRedirectToNotFound_WhenCustomerIsNull()
     {
-        // Arrange
-        mockUserService
-            .Setup(x => x.GetCustomerByIdAsync(It.IsAny<string>()))
+		// Arrange: Simulate no matching customer found
+		mockUserService
+			.Setup(x => x.GetCustomerByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((Customer)null);
 
-        navMan.NavigateTo("http://localhost/customers/details?id=nonexistent-id");
+		// Navigate to remove page
+		navMan.NavigateTo("/customers/details?id=nonexistent-id");
 
-        // Act
-        var cut = RenderComponent<RemoveCustomer>();
+		// Act: Render the RemoveCustomer component
+		var cut = RenderComponent<RemoveCustomer>();
 
-        // Assert
-        Assert.AreEqual("http://localhost/notfound", navMan.Uri);
+		// Assert: Should redirect to "not found" page
+		Assert.AreEqual("http://localhost/notfound", navMan.Uri);
     }
 }

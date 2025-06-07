@@ -1,16 +1,19 @@
-﻿version: '3.9'
+﻿version: '3.9'                                          # Docker Compose file format version
 
 services:
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: sqlserver_container
+    image: mcr.microsoft.com/mssql/server:2022-latest # SQL Server 2022 image from Microsoft Container Registry
+    container_name: sqlserver_container               # Optional name for the container
     environment:
-      SA_PASSWORD: "Password123!"
-      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Password123!"                     # Password for the 'sa' (System Administrator) SQL login
+      ACCEPT_EULA: "Y"                                # Must be set to accept Microsoft's license terms
     ports:
-      - "1433:1433"
+      - "1433:1433"                                   # Maps container's port 1433 to host port 1433 (default SQL Server port)
+
+    
+    # Verifies SQL Server is up and responding using sqlcmd
     healthcheck:
-      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "YourStrong!Passw0rd", "-Q", "SELECT 1"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
+      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "Password123!", "-Q", "SELECT 1"]
+      interval: 10s                                   # Run health check every 10 seconds
+      timeout: 10s                                    # Allow 10 seconds for each health check to run
+      retries: 10                                     # Retry up to 10 times before marking the container as unhealthy

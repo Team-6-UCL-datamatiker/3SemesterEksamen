@@ -35,48 +35,45 @@ else
 		<div class="col-md-4">
 			<EditForm EditContext="_ec" OnValidSubmit="UpdateEmployee" FormName="edit">
 				<DataAnnotationsValidator />
-				@* <ValidationSummary role="alert" /> *@
 
 				<div class="mb-3">
 					<label for="first-name" class="form-label">First Name:</label>
 					<InputText id="first-name" @bind-Value="Input.FirstName" class="form-control" />
-@* 					<ValidationMessage For="() => Input.FirstName" class="text-danger" />
- *@				</div>
+				</div>
 
 				<div class="mb-3">
 					<label for="last-name" class="form-label">Last Name:</label>
 					<InputText id="last-name" @bind-Value="Input.LastName" class="form-control" />
-@* 					<ValidationMessage For="() => Input.LastName" class="text-danger" />
- *@				</div>
+				</div>
 
 				<div class="mb-3">
 					<label for="username" class="form-label">Username:</label>
 					<InputText id="username" @bind-Value="Input.CustomUsername" class="form-control" />
-@* 					<ValidationMessage For="() => Input.CustomUsername" class="text-danger" />
- *@				</div>
+				</div>
 
 				<div class="mb-3">
 					<label for="email" class="form-label">Email:</label>
 					<InputText id="email" @bind-Value="Input.Email" class="form-control" />
-@* 					<ValidationMessage For="() => Input.Email" class="text-danger" />
- *@				</div>
+				</div>
 
+				<!-- Optional phone number with fallback to null on blur -->
 				<div class="mb-3">
 					<label for="phone" class="form-label">Phone:</label>
 					<InputText id="phone" @bind-Value="Input.Phone" class="form-control" aria-required="true" onblur="@((FocusEventArgs e) => { if (string.IsNullOrWhiteSpace(Input.Phone)) { Input.Phone = null; _ec.Validate(); }})" />
-@* 					<ValidationMessage For="() => Input.Phone" class="text-danger" />
- *@				</div>
+				</div>
 
+				<!-- Admin checkbox toggle -->
 				<div class="mb-3">
 					<div class="form-check">
 						<InputCheckbox id="is-admin" @bind-Value="Input.IsAdmin" class="form-check-input" />
 						<label for="is-admin" class="form-check-label">Is Admin</label>
 					</div>
-@* 					<ValidationMessage For="() => Input.IsAdmin" class="text-danger" />
- *@				</div>
+				</div>
 
+				<!-- Component to upload a new profile picture -->
 				<EmployeeProfilePicturePreview @bind-ProfilePictureFile="Input.ProfilePictureFile" />
 
+				<!-- If no new picture uploaded, show existing one -->
 				@if (Input.ProfilePictureFile is null)
 				{
 					<img src="@Employee.ProfilePicture"
@@ -116,6 +113,7 @@ else
 	protected override async Task OnInitializedAsync()
 	{
 		_ec = new EditContext(Input);
+
 		// Fetch the employee by ID in the query string
 		Employee = await UserService.GetEmployeeByIdAsync(Id);
 
@@ -129,6 +127,7 @@ else
 			Mapper.Map(Employee, Input); // Map to input model
 		}
 
+		// Load the old profile picture if it exists
 		if (Employee.ProfilePicture is not null)
 		{
 			_oldProfilePicturePath = Employee.ProfilePicture;
@@ -138,10 +137,12 @@ else
 		}
 	}
 
+	// Save changes to employee data
 	private async Task UpdateEmployee()
 	{
 		try
 		{
+			// If email changed, update related vacation offers to keep consistency
 			if (Input.Email != Employee!.User.Email)
 			{
 				var oldEmail = Employee.User.Email;
@@ -156,6 +157,8 @@ else
 			// Copy input back into Employee
 			Mapper.Map(Input, Employee);
 
+
+			// If new profile picture was uploaded, save it
 			if (Input.ProfilePictureFile != null)
 			{
 
@@ -166,6 +169,7 @@ else
 
 			await Context.SaveChangesAsync();
 
+			// Remove the old profile picture from project
 			if (_oldProfilePicturePath != "/images/DefaultProfilePicture.jpg")
 			{
 				DeleteOldProfilePicture();
@@ -175,7 +179,7 @@ else
 		}
 		catch (DbUpdateConcurrencyException ex)
 		{
-
+			// Restore old image if concurrency conflict occurs
 			if (_imageSavedToFile == true)
 			{
 				Employee!.ProfilePicture = _oldProfilePicturePath;
@@ -191,7 +195,7 @@ else
 		}
 		catch (Exception ex)
 		{
-
+			// Restore old image in case of unexpected failure
 			if (_imageSavedToFile == true)
 			{
 				Employee!.ProfilePicture = _oldProfilePicturePath;
@@ -207,7 +211,7 @@ else
 		}
 	}
 
-	// Helper method to save the uploaded profile picture.
+	// Saves uploaded profile picture to /wwwroot/images
 	private async Task<string?> SaveProfilePicture(IBrowserFile file)
 	{
 		try
@@ -238,6 +242,7 @@ else
 		}
 	}
 
+	// Deletes previous profile picture file from project
 	private void DeleteOldProfilePicture()
 	{
 		if (_oldProfilePicturePath == null) return;

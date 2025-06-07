@@ -81,16 +81,18 @@
 
         await LoadDataAsync();
 
-        // Add a delegate to the event/multicast delegate (list of delegates)
+        // Subscribe to vacation request update notifications
         VrNotifier.OnChanged += HandleChanged;
     }
 
+    // Called when the vacation request list changes
     private async Task HandleChanged()
     {
         await LoadDataAsync();
         await InvokeAsync(StateHasChanged);
     }
 
+    // Loads vacation requests and associated customer data
     private async Task LoadDataAsync()
     {
         // Load requests -  all for employees, only own for customers
@@ -108,6 +110,7 @@
         customers = await ExtendedUserService.GetCustomersWithUsersAsync();
     }
 
+    // Unsubscribe from notifications when component is disposed
     public void Dispose()
     {
         VrNotifier.OnChanged -= HandleChanged;

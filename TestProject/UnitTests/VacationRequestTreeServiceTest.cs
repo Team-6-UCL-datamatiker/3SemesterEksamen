@@ -12,7 +12,8 @@ namespace TestProject.UnitTests
         [TestInitialize]
         public void TestInitialize()
         {
-            mockTreeService = new Mock<IVacationRequestTreeService>();
+			// Define a sample VacationRequest with nested related data
+			mockTreeService = new Mock<IVacationRequestTreeService>();
 
             var testRequest = new VacationRequest
             {
@@ -62,16 +63,14 @@ namespace TestProject.UnitTests
                 }
             };
 
-            var testFlightBooking = testRequest.Offers.First().FlightBooking;
-
-            // Setup: known ID returns data
-            mockTreeService
-                .Setup(x => x.LoadVacationRequestTreeByIdAsync(1))
+			// Mock behavior: return full tree for known ID
+			mockTreeService
+				.Setup(x => x.LoadVacationRequestTreeByIdAsync(1))
                 .ReturnsAsync(testRequest);
 
-            // Setup: unknown ID throws
-            mockTreeService
-                .Setup(x => x.LoadVacationRequestTreeByIdAsync(It.Is<int>(id => id != 1)))
+			// Mock behavior: throw for unknown ID
+			mockTreeService
+				.Setup(x => x.LoadVacationRequestTreeByIdAsync(It.Is<int>(id => id != 1)))
                 .ThrowsAsync(new InvalidOperationException("VacationRequest not found"));
 
 
@@ -81,14 +80,14 @@ namespace TestProject.UnitTests
         [TestMethod]
         public void LoadVacationRequestTreeByIdAsync_WhenIdIsValid_ReturnsVacationRequest()
         {
-            // Arrange
-            int requestId = 1;
+			// Arrange: use a valid ID set up in the mock
+			int requestId = 1;
 
-            // Act
-            var result = mockTreeService.Object.LoadVacationRequestTreeByIdAsync(requestId).Result;
+			// Act: call the method
+			var result = mockTreeService.Object.LoadVacationRequestTreeByIdAsync(requestId).Result;
 
-            // Assert
-            Assert.IsNotNull(result);
+			// Assert: verify returned structure and data
+			Assert.IsNotNull(result);
             Assert.AreEqual("Copenhagen", result.DepartureCity);
             Assert.AreEqual("Paris", result.ArrivalCity);
             Assert.AreEqual(1, result.Offers.Count);
@@ -99,11 +98,11 @@ namespace TestProject.UnitTests
         [TestMethod]
         public void LoadVacationRequestTreeByIdAsync_WhenIdIsInvalid_ThrowsInvalidOperationException()
         {
-            // Arrange
-            int invalidRequestId = 999;
+			// Arrange: use an ID not handled in the mock
+			int invalidRequestId = 999;
 
-            // Act & Assert
-            Assert.ThrowsExceptionAsync<InvalidOperationException>(async () =>
+			// Act & Assert: verify the correct exception is thrown
+			Assert.ThrowsExceptionAsync<InvalidOperationException>(async () =>
             {
                 await mockTreeService.Object.LoadVacationRequestTreeByIdAsync(invalidRequestId);
             });

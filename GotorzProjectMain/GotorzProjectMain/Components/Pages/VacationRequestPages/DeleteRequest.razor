@@ -19,175 +19,184 @@
 
 @if (vacationrequest is null && string.IsNullOrEmpty(_errorMessage))
 {
-    <p><em>Loading...</em></p>
+	<p><em>Loading...</em></p>
 }
+
+<!-- If not found, show error info -->
 else if (vacationrequest is null)
 {
-    <div class="alert alert-warning">
-        <h4 class="alert-heading"><strong>Vacation Request Not Found</strong></h4>
-        <p>The vacation request could not be found.</p>
-        <p>It may have been deleted by another user.</p>
-        <hr />
-        <p>Please return to the list of vacation requests</p>
-    </div>
+<div class="alert alert-warning">
+	<h4 class="alert-heading"><strong>Vacation Request Not Found</strong></h4>
+	<p>The vacation request could not be found.</p>
+	<p>It may have been deleted by another user.</p>
+	<hr />
+	<p>Please return to the list of vacation requests</p>
+</div>
 }
 else
 {
-    @if (!string.IsNullOrEmpty(_errorMessage))
-    {
-        <div class="alert alert-danger">
-            @_errorMessage
-        </div>
-    }
-
-    <div>
-        <h2>Vacation Request</h2>
-        <hr />
-        <dl class="row">
-            <dt class="col-sm-2">Departure City</dt>
-            <dd class="col-sm-10">@vacationrequest.DepartureCity</dd>
-
-            <dt class="col-sm-2">Departure Country</dt>
-            <dd class="col-sm-10">@vacationrequest.DepartureCountry</dd>
-
-            <dt class="col-sm-2">Arrival City</dt>
-            <dd class="col-sm-10">@vacationrequest.ArrivalCity</dd>
-
-            <dt class="col-sm-2">Arrival Country</dt>
-            <dd class="col-sm-10">@vacationrequest.ArrivalCountry</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Start Date</dt>
-            <dd class="col-sm-10">@vacationrequest.StartDate.ToShortDateString()</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">End Date</dt>
-            <dd class="col-sm-10">@vacationrequest.EndDate.ToShortDateString()</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Children Amount</dt>
-            <dd class="col-sm-10">@vacationrequest.ChildrenAmount</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Adults Amount</dt>
-            <dd class="col-sm-10">@vacationrequest.AdultsAmount</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Rooms Amount</dt>
-            <dd class="col-sm-10">@vacationrequest.RoomsAmount</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Hotel Request</dt>
-            <dd class="col-sm-10">@vacationrequest.HotelRequest</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Flight Request</dt>
-            <dd class="col-sm-10">@vacationrequest.FlightRequest</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Misc</dt>
-            <dd class="col-sm-10">@vacationrequest.Misc</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Status</dt>
-            <dd class="col-sm-10">@vacationrequest.Status</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Full Name</dt>
-            <dd class="col-sm-10">@Customer?.User.FirstName @Customer?.User.LastName</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Mail</dt>
-            <dd class="col-sm-10">@Customer?.User.Email</dd>
-        </dl>
-        <dl class="row" style="display:none;">
-            <dt class="col-sm-2">UserId</dt>
-            <dd class="col-sm-10">@vacationrequest.CustomerId</dd>
-        </dl>
-    </div>
+<!-- Display error if something else failed -->
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+	<div class="alert alert-danger">
+		@_errorMessage
+	</div>
 }
 
-<!-- Always include the form, regardless of vacation request state -->
+<div>
+	<h2>Vacation Request</h2>
+	<hr />
+	<dl class="row">
+		<dt class="col-sm-2">Departure City</dt>
+		<dd class="col-sm-10">@vacationrequest.DepartureCity</dd>
+
+		<dt class="col-sm-2">Departure Country</dt>
+		<dd class="col-sm-10">@vacationrequest.DepartureCountry</dd>
+
+		<dt class="col-sm-2">Arrival City</dt>
+		<dd class="col-sm-10">@vacationrequest.ArrivalCity</dd>
+
+		<dt class="col-sm-2">Arrival Country</dt>
+		<dd class="col-sm-10">@vacationrequest.ArrivalCountry</dd>
+	</dl>
+	<dl class="row">
+		<dt class="col-sm-2">Start Date</dt>
+		<dd class="col-sm-10">@vacationrequest.StartDate.ToShortDateString()</dd>
+	</dl>
+	<dl class="row">
+		<dt class="col-sm-2">End Date</dt>
+		<dd class="col-sm-10">@vacationrequest.EndDate.ToShortDateString()</dd>
+	</dl>
+	<dl class="row">
+		<dt class="col-sm-2">Children Amount</dt>
+		<dd class="col-sm-10">@vacationrequest.ChildrenAmount</dd>
+	</dl>
+	<dl class="row">
+		<dt class="col-sm-2">Adults Amount</dt>
+		<dd class="col-sm-10">@vacationrequest.AdultsAmount</dd>
+	</dl>
+	<dl class="row">
+		<dt class="col-sm-2">Rooms Amount</dt>
+		<dd class="col-sm-10">@vacationrequest.RoomsAmount</dd>
+	</dl>
+	<dl class="row">
+		<dt class="col-sm-2">Hotel Request</dt>
+		<dd class="col-sm-10">@vacationrequest.HotelRequest</dd>
+	</dl>
+	<dl class="row">
+		<dt class="col-sm-2">Flight Request</dt>
+		<dd class="col-sm-10">@vacationrequest.FlightRequest</dd>
+	</dl>
+	<dl class="row">
+		<dt class="col-sm-2">Misc</dt>
+		<dd class="col-sm-10">@vacationrequest.Misc</dd>
+	</dl>
+	<dl class="row">
+		<dt class="col-sm-2">Status</dt>
+		<dd class="col-sm-10">@vacationrequest.Status</dd>
+	</dl>
+	<dl class="row">
+		<dt class="col-sm-2">Full Name</dt>
+		<dd class="col-sm-10">@Customer?.User.FirstName @Customer?.User.LastName</dd>
+	</dl>
+	<dl class="row">
+		<dt class="col-sm-2">Mail</dt>
+		<dd class="col-sm-10">@Customer?.User.Email</dd>
+	</dl>
+	<dl class="row" style="display:none;">
+		<dt class="col-sm-2">UserId</dt>
+		<dd class="col-sm-10">@vacationrequest.CustomerId</dd>
+	</dl>
+</div>
+}
+
+<!-- Always include the form, even if data is still loading -->
+<!-- Use formModel to avoid null errors in EditForm -->
 <EditForm method="post" Model="@formModel" OnValidSubmit="DeleteVacationRequest" FormName="delete" Enhance>
-    <button type="submit" class="btn btn-danger" disabled="@(vacationrequest is null || !string.IsNullOrEmpty(_errorMessage))">
-        Delete
-    </button> |
-    <a href="/vacationrequests" class="btn btn-secondary">Back to List</a>
+	<button type="submit" class="btn btn-danger" disabled="@(vacationrequest is null || !string.IsNullOrEmpty(_errorMessage))">
+		Delete
+	</button> |
+	<a href="/vacationrequests" class="btn btn-secondary">Back to List</a>
 </EditForm>
 
 @code {
-    private string? _errorMessage;
-    // Using a separate model for the form to ensure it's never null
-    private VacationRequest formModel = new VacationRequest();
+	private string? _errorMessage;
 
-    [SupplyParameterFromQuery]
-    private int VacationRequestId { get; set; }
-    private VacationRequest? vacationrequest;
-    private Customer? Customer { get; set; }
+	// Using a separate model for the form to ensure it's never null
+	private VacationRequest formModel = new VacationRequest();
 
-    protected override async Task OnInitializedAsync()
-    {
-        if (VacationRequestId == 0)
-        {
-            NavigationManager.NavigateTo("/vacationrequests");
-            return;
-        }
+	[SupplyParameterFromQuery]
+	private int VacationRequestId { get; set; }
+	private VacationRequest? vacationrequest;
+	private Customer? Customer { get; set; }
 
-        try
-        {
-            vacationrequest = await Context.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
+	protected override async Task OnInitializedAsync()
+	{
+		// Redirect if the ID is not valid
+		if (VacationRequestId == 0)
+		{
+			NavigationManager.NavigateTo("/vacationrequests");
+			return;
+		}
 
-            if (vacationrequest is null)
-            {
-                _errorMessage = "Vacation request not found.";
-                return;
-            }
+		try
+		{
+			// Load the vacation request
+			vacationrequest = await Context.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
 
-            // Copy the vacation request data to our form model
-            formModel = new VacationRequest
-                {
-                    VacationRequestId = vacationrequest.VacationRequestId
-                };
+			if (vacationrequest is null)
+			{
+				_errorMessage = "Vacation request not found.";
+				return;
+			}
 
-            Customer = await UserService.GetCustomerByIdAsync(vacationrequest.CustomerId);
-        }
-        catch (Exception ex)
-        {
-            _errorMessage = $"An error occurred: {ex.Message}";
-        }
-    }
+			// Set form model for binding (just needs ID for delete)
+			formModel = new VacationRequest
+				{
+					VacationRequestId = vacationrequest.VacationRequestId
+				};
 
-    private async Task DeleteVacationRequest()
-    {
-        try
-        {
-            // Verifies the request still exists before attempting to delete
-            if (vacationrequest == null)
-            {
-                _errorMessage = "Vacation request was not found or already deleted.";
-                return;
-            }
+			// Load customer info for display
+			Customer = await UserService.GetCustomerByIdAsync(vacationrequest.CustomerId);
+		}
+		catch (Exception ex)
+		{
+			_errorMessage = $"An error occurred: {ex.Message}";
+		}
+	}
 
-            Context.VacationRequests.Remove(vacationrequest!);
-            await Context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException ex)
-        {
-            _errorMessage = "Another user has deleted this data since you entered the page.";
+	private async Task DeleteVacationRequest()
+	{
+		try
+		{
+			// Verifies the request still exists before attempting to delete
+			if (vacationrequest == null)
+			{
+				_errorMessage = "Vacation request was not found or already deleted.";
+				return;
+			}
+
+			// Remove and save
+			Context.VacationRequests.Remove(vacationrequest!);
+			await Context.SaveChangesAsync();
+		}
+		catch (DbUpdateConcurrencyException ex)
+		{
+			_errorMessage = "Another user has deleted this data since you entered the page.";
 			Logger.LogWarning(ex, _errorMessage);
-        }
-        catch (NavigationException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _errorMessage = $"An error occurred while trying to delete: {ex.Message}";
-        }
+		}
+		catch (NavigationException)
+		{
+			throw;
+		}
+		catch (Exception ex)
+		{
+			_errorMessage = $"An error occurred while trying to delete: {ex.Message}";
+		}
 
-        // Index notification
-        await VrNotifier.NotifyChangedAsync();
+		// Index notification
+		await VrNotifier.NotifyChangedAsync();
 
-        NavigationManager.NavigateTo("/vacationrequests");
-    }
+		NavigationManager.NavigateTo("/vacationrequests");
+	}
 }

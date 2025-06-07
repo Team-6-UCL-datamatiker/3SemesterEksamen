@@ -66,31 +66,37 @@
 		}
 	}
 
+	// Delete customer and related data
 	private async Task DeleteCustomer()
 	{
+		// Start database transaction to ensure all deletions succeed or none are applied
 		await using var transaction = await Context.Database.BeginTransactionAsync();
 
 		try
 		{
 			if (customer is not null)
 			{
+				// Delete any pending vacation requests for this customer
 				await Context.VacationRequests
 					.Where(vr => vr.CustomerId == Id && vr.Status == RequestStatus.PendingRequest)
 					.ExecuteDeleteAsync();
 
+				// Delete customer entry
 				await Context.Customers
 					.Where(c => c.Id == customer.Id)
 					.ExecuteDeleteAsync();
 
+				// Delete corresponding user account
 				await Context.Users
 					.Where(u => u.Id == customer.Id)
 					.ExecuteDeleteAsync();
 
-				await transaction.CommitAsync();
+				await transaction.CommitAsync(); // Commit changes if all deletes succeed
 			}
 		}
 		catch (DbUpdateConcurrencyException ex)
 		{
+			// Handle case where data was changed by another process
 			await transaction.RollbackAsync();
 			_errorMessage = "Another user has modified this data since you started editing. Your changes were not saved. Please reload and try again.";
 			Logger.LogWarning(ex, _errorMessage);

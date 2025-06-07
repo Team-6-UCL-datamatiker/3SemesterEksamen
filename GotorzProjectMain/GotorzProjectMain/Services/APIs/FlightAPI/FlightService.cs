@@ -30,16 +30,16 @@ namespace GotorzProjectMain.Services.APIs.FlightAPI
             _mapper = mapper;
         }
 
-        // Fetches available flights from API using Airport codes
-        public async Task<List<FlightRoute>> SearchAsync(
+		// Calls the external flight API and maps the response into domain models
+		public async Task<List<FlightRoute>> SearchAsync(
             string departureIata,
             string arrivalIata,
             DateTime outboundDate,
             int adults = 1,
             int children = 0)
         {
-            // Build request parameters for API
-            Dictionary<string, string> query = new()
+			// Set up query parameters for the API call
+			Dictionary<string, string> query = new()
             {
                 ["engine"] = "google_flights",
                 ["api_key"] = _apiKey,
@@ -63,7 +63,8 @@ namespace GotorzProjectMain.Services.APIs.FlightAPI
             IEnumerable<FlightRouteDTO> routesDTO = (response.BestFlights ?? new())
                        .Concat(response.OtherFlights ?? new());
 
-            List<FlightRoute> routes = routesDTO
+			// Map each route DTO into a FlightRoute model
+			List<FlightRoute> routes = routesDTO
             .Select(routeDTO =>
             {
                 var route = _mapper.Map<FlightRoute>(routeDTO);

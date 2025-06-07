@@ -15,23 +15,25 @@ using GotorzProjectMain.Services.APIs.FlightAPI;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Get API-info from Environment
+// Load secrets from environment variables (for Amadeus API)
 var apiKey = Environment.GetEnvironmentVariable("AMADEUS_API_KEY");
 var apiSecret = Environment.GetEnvironmentVariable("AMADEUS_API_SECRET");
 builder.Services.AddSingleton(new AmadeusSettings(apiKey, apiSecret));
 
-// Add services to the container.
+// Add Blazor server & WASM support
 builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents()
 	.AddInteractiveWebAssemblyComponents();
 
+// Register AutoMapper profiles
 builder.Services.AddAutoMapper(typeof(UserMappingProfiles), typeof(VacationRequestMappingProfiles), typeof(AmadeusMappingProfiles));
 
-// Ensure the configuration file is being read correctly
+// Load configuration files
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
 					 .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
 					 .AddJsonFile("Connection.json", optional: false, reloadOnChange: true);
 
+// Project-specific services
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 
 builder.Services.AddScoped<IRateLimiter, RateLimiter>();
@@ -40,6 +42,7 @@ builder.Services.AddSingleton<IVRNotifierService, VRNotifierService>();
 
 //Used for getting the user data everytime an employee or customer is loaded
 builder.Services.AddScoped<IExtendedUserService, ExtendedUserService>();
+
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IVacationRequestTreeService, VacationRequestTreeService>();
 
@@ -73,6 +76,7 @@ builder.Services.AddAuthentication(options =>
 	})
 	.AddIdentityCookies();
 
+// EF Core & Identity setup
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 	options.UseSqlServer(connectionString));
@@ -83,6 +87,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
 	.AddSignInManager()
 	.AddDefaultTokenProviders();
 
+// Use Gmail email sender in production
 if (builder.Environment.IsDevelopment())
 {
 	builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
@@ -117,8 +122,10 @@ builder.Services.AddAuthorization(options =>
 		policy.RequireRole("Customer"));
 });
 
+// Enable SignalR (for chat)
 builder.Services.AddSignalR();
 
+// Enable WebAssembly streaming compression
 builder.Services.AddResponseCompression(opts =>
 {
 	opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
@@ -129,6 +136,7 @@ var app = builder.Build();
 
 app.UseResponseCompression();
 
+// Apply migrations and seed admin account
 using (var scope = app.Services.CreateScope())
 {
 	var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -153,6 +161,7 @@ else
 	app.UseMigrationsEndPoint();
 }
 
+// Static files and routing
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
@@ -160,14 +169,16 @@ app.UseRouting();
 app.UseAuthorization();
 app.UseAntiforgery();
 
+// SignalR chat endpoint
 app.MapHub<ChatHub>("/chathub");
 
+// Razor components
 app.MapRazorComponents<App>()
 	.AddInteractiveServerRenderMode()
 	.AddInteractiveWebAssemblyRenderMode()
 	.AddAdditionalAssemblies(typeof(GotorzProjectMain.Client._Imports).Assembly);
 
-// Add additional endpoints required by the Identity /Account Razor components.
+// Identity UI endpoints
 app.MapAdditionalIdentityEndpoints();
 
 app.Run();

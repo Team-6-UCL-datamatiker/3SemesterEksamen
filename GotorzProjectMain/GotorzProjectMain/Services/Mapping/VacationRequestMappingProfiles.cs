@@ -9,6 +9,7 @@ public class VacationRequestMappingProfiles : Profile
 {
 	public VacationRequestMappingProfiles()
 	{
+		// Maps VacationRequest modelclass to input model used in forms/UI
 		CreateMap<VacationRequest, VacationRequestBaseInputModel>()
 		.ForMember(inputmodel => inputmodel.DepartureCity, opt => opt.MapFrom(request => request.DepartureCity))
 		.ForMember(inputmodel => inputmodel.ArrivalCity, opt => opt.MapFrom(request => request.ArrivalCity))
@@ -23,6 +24,7 @@ public class VacationRequestMappingProfiles : Profile
 		.ForMember(inputModel => inputModel.FlightRequest, opt => opt.MapFrom(request => request.FlightRequest))
 		.ForMember(inputModel => inputModel.Misc, opt => opt.MapFrom(request => request.Misc));
 
+		// Maps input model back to VacationRequest modelclass for saving to database
 		CreateMap<VacationRequestBaseInputModel, VacationRequest>()
 		.ForMember(request => request.DepartureCity, opt => opt.MapFrom(inputmodel => inputmodel.DepartureCity))
 		.ForMember(request => request.ArrivalCity, opt => opt.MapFrom(inputmodel => inputmodel.ArrivalCity))

@@ -4,12 +4,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GotorzProjectMain.Data;
 
+// Inherits Identity support and integrates with ASP.NET Core Identity
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     { }
 
-    public DbSet<Employee> Employees { get; set; }
+	// Tables
+	public DbSet<Employee> Employees { get; set; }
     public DbSet<Customer> Customers { get; set; }
     public DbSet<VacationRequest> VacationRequests { get; set; }
     public DbSet<VacationOffer> VacationOffers { get; set; }
@@ -57,26 +59,31 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<Layover>().Property(l => l.LayoverId).ValueGeneratedOnAdd();
 
 
-        // FOREIGN KEY RELATIONSHIPS
-        modelBuilder.Entity<Customer>()
+		// FOREIGN KEY RELATIONSHIPS
+
+		// Link ApplicationUser to Customer
+		modelBuilder.Entity<Customer>()
             .HasOne(c => c.User)
             .WithOne()
             .HasForeignKey<Customer>(c => c.Id) // FK is also the PK
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Employee>()
+		// Link ApplicationUser to Employee
+		modelBuilder.Entity<Employee>()
             .HasOne(c => c.User)
             .WithOne()
             .HasForeignKey<Employee>(c => c.Id) // FK is also the PK
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<VacationRequest>()
+		// One VacationRequest → many Offers
+		modelBuilder.Entity<VacationRequest>()
             .HasMany(r => r.Offers)
             .WithOne()
             .HasForeignKey(o => o.VacationRequestId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<VacationOffer>()
+		// VacationOffer → 1 HotelBooking
+		modelBuilder.Entity<VacationOffer>()
             .HasOne(o => o.HotelBooking)
             .WithOne()
             .HasForeignKey<HotelBooking>(b => b.VacationOfferId)
@@ -86,7 +93,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasIndex(b => b.VacationOfferId)
             .IsUnique();
 
-        modelBuilder.Entity<VacationOffer>()
+		// VacationOffer → 1 FlightBooking
+		modelBuilder.Entity<VacationOffer>()
             .HasOne(o => o.FlightBooking)
             .WithOne()
             .HasForeignKey<FlightBooking>(b => b.VacationOfferId)
@@ -96,26 +104,29 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasIndex(b => b.VacationOfferId)
             .IsUnique();
 
-        modelBuilder.Entity<FlightBooking>()
+		// FlightBooking → many FlightRoutes
+		modelBuilder.Entity<FlightBooking>()
             .HasMany(b => b.FlightRoutes)
             .WithOne()
             .HasForeignKey(fb => fb.FlightBookingId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Ved ikke om man skulle g�re collection navnet og type navnet ens?
-        modelBuilder.Entity<FlightRoute>()
+		// FlightRoute → many Legs (Flights)
+		modelBuilder.Entity<FlightRoute>()
             .HasMany(e => e.Legs)
             .WithOne()
             .HasForeignKey(l => l.FlightRouteId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<FlightRoute>()
+		// FlightRoute → many Layovers
+		modelBuilder.Entity<FlightRoute>()
             .HasMany(e => e.Layovers)
             .WithOne()
             .HasForeignKey(l => l.FlightRouteId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // OTHER
+
         // By default, EF Core stores enums as integers. To store them as strings:
         modelBuilder.Entity<VacationRequest>()
             .Property(v => v.Status)
@@ -124,11 +135,5 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<VacationOffer>()
             .Property(v => v.OfferStatus)
             .HasConversion<string>();
-
-        // Specifies amount of digits in TotalPrice ------------------------- Hvorfor er det her vigtigt? Virker ikke med floats og vi g�r det ikke nogen andre steder med price???
-        //modelBuilder.Entity<FlightRoute>()
-        //.Property(r => r.TotalPrice)
-        //.HasPrecision(18, 2);
-
     }
 }

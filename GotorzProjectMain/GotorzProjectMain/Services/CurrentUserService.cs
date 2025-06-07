@@ -9,9 +9,12 @@ namespace GotorzProjectMain.Services
 
 	public class CurrentUserService : ICurrentUserService
 	{
+		// Used to get info about the currently logged-in user
 		private readonly AuthenticationStateProvider _authStateProvider;
+
 		private readonly ApplicationDbContext _db;
 
+		// The current authenticated user
 		public ClaimsPrincipal? User { get; set; }
 
 
@@ -23,6 +26,7 @@ namespace GotorzProjectMain.Services
 			_db = db;
 		}
 
+		// Gets the current user's ID (or null if not authenticated)
 		public async Task<string?> GetUserIdAsync()
 		{
 			var authState = await _authStateProvider.GetAuthenticationStateAsync();
@@ -30,6 +34,7 @@ namespace GotorzProjectMain.Services
 			return User.FindFirstValue(ClaimTypes.NameIdentifier);
 		}
 
+		// Checks if the current user is registered as an employee
 		public async Task<bool> IsEmployeeAsync()
 		{
 			string? userId = await GetUserIdAsync();

@@ -14,28 +14,33 @@ namespace GotorzProjectMain.Hubs
 			_context = context;
 		}
 
+		// Called when a user sends a new message
 		public async Task SendMessage(string message, string userId, string username)
 		{
-			ChatMessage chatMessage = new ChatMessage();
+			// Create new chat message entity
+			ChatMessage chatMessage = new ChatMessage
+			{
+				SenderId = userId,
+				Username = username,
+				Message = message,
+				Timestamp = DateTime.Now
+			};
 
-			chatMessage.SenderId = userId;
-			chatMessage.Username = username;
-			chatMessage.Message = message;
-			chatMessage.Timestamp = DateTime.Now;
-
+			// Store the message in the database
 			_context.ChatMessages.Add(chatMessage);
 			await _context.SaveChangesAsync();
 
-			// Notify all clients about the new message
+			// Broadcast the message to all connected clients
 			await Clients.All.SendAsync("ReceiveMessage", username, message, chatMessage.Timestamp);
 		}
 
+		// Retrieves the latest N chat messages (default = 50)
 		public async Task<IEnumerable<ChatMessage>> GetRecentMessages(int count = 50)
 		{
 			return await _context.ChatMessages
-							.OrderByDescending(m => m.Timestamp)
+							.OrderByDescending(m => m.Timestamp) // Get latest first
 							.Take(count)
-							.OrderBy(m => m.Timestamp)   // back to chronological
+							.OrderBy(m => m.Timestamp)   // Then re-sort chronologically (oldest first)
 							.ToListAsync();
 		}
 

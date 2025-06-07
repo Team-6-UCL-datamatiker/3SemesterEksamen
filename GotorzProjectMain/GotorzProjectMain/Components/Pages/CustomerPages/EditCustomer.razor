@@ -38,32 +38,28 @@ else
 				<div class="mb-3">
 					<label for="username" class="form-label">CustomUserName:</label>
 					<InputText id="username" @bind-Value="Input.CustomUsername" class="form-control" autocomplete="username" aria-required="true" oninput="@(async (ChangeEventArgs e) => await DebounceUsernameCheck(e))" />
-@* 					<ValidationMessage For="() => Input.CustomUsername" class="alert alert-danger mt-3" />
- *@				</div>
+				</div>
 
 				<div class="mb-3">
 					<label for="first-name" class="form-label">First Name:</label>
 					<InputText id="first-name" @bind-Value="Input.FirstName" class="form-control" aria-required="true" />
-@* 					<ValidationMessage For="() => Input.FirstName" class="alert alert-danger mt-3" />
- *@				</div>
+				</div>
 
 				<div class="mb-3">
 					<label for="last-name" class="form-label">Last Name:</label>
 					<InputText id="last-name" @bind-Value="Input.LastName" class="form-control" aria-required="true" />
-@* 					<ValidationMessage For="() => Input.LastName" class="alert alert-danger mt-3" />
- *@				</div>
+				</div>
 
 				<div class="mb-3">
 					<label for="email" class="form-label">Email:</label>
 					<InputText id="email" @bind-Value="Input.Email" class="form-control" aria-required="true" />
-@* 					<ValidationMessage For="() => Input.Email" class="alert alert-danger mt-3" />
- *@				</div>
+				</div>
 
+				<!-- Ensures empty phone input is treated as null and re-validates when leaving the field -->
 				<div class="mb-3">
 					<label for="phone" class="form-label">Phone:</label>
 					<InputText id="phone" @bind-Value="Input.Phone" class="form-control" aria-required="true" onblur="@(() => { if (string.IsNullOrWhiteSpace(Input.Phone)) { Input.Phone = null; _ec.Validate(); }})" />
-@* 					<ValidationMessage For="() => Input.Phone" class="alert alert-danger mt-3" />
- *@				</div>
+				</div>
 
 				<button type="submit" class="btn btn-primary">Save</button>
 
@@ -98,6 +94,7 @@ else
 
 	protected override async Task OnInitializedAsync()
 	{
+		// Initialize form context and validation message storage
 		_ec = new EditContext(Input);
 		_messageStore = new ValidationMessageStore(_ec);
 		_inputUserNameField = new FieldIdentifier(Input, nameof(Input.CustomUsername));
@@ -110,28 +107,42 @@ else
 		}
 		else
 		{
+			// Map customer data to input model
 			Mapper.Map(Customer, Input);
 		}
 
+		// Store current username for debounce check comparison
 		_currentUserName = Input.CustomUsername.ToLower();
 	}
 
+	// Performs a debounced check to see if the entered username already exists
 	private async Task DebounceUsernameCheck(ChangeEventArgs e)
 	{
-		_messageStore.Clear(_inputUserNameField); // wipe old errors
+		// Clear any previous validation messages for the username field
+		_messageStore.Clear(_inputUserNameField);
+
+		// Cancel any previous debounce that was waiting to run
 		_debounceCts?.Cancel();
 		_debounceCts = new CancellationTokenSource();
 
 		try
 		{
+			// Skip check if input is null or hasn't changed
 			if (e.Value is null || e.Value.ToString().ToLower() == _currentUserName)
 			{
 				return;
 			}
 
-			await Task.Delay(500, _debounceCts.Token); // 500ms debounce
-			_userNameErrorMessage = await Context.Customers.AnyAsync(c => c.CustomUserName.ToLower() == e.Value.ToString().ToLower()) ? "Sorry, that username is already in use. Please try a different one." : null;
+			// Wait for 500ms before running the uniqueness check
+			// If user types again within this period, this task is cancelled
+			await Task.Delay(500, _debounceCts.Token);
 
+			// Check if the entered username already exists in the database (case insensitive)
+			_userNameErrorMessage = await Context.Customers.AnyAsync(c => c.CustomUserName.ToLower() == e.Value.ToString().ToLower())
+				? "Sorry, that username is already in use. Please try a different one."
+				: null;
+
+			// If the username is not unique, add an error message to the form validation
 			if (_userNameErrorMessage is not null)
 			{
 				_messageStore.Add(_inputUserNameField, _userNameErrorMessage); // add new error
@@ -140,10 +151,12 @@ else
 		}
 		catch (TaskCanceledException)
 		{
-			// Ignore, because it means user typed again before 500ms
+			// If the user typed again before the 500ms delay, this exception is expected
+			// and simply means the current debounce attempt was interrupted
 		}
 	}
 
+	// Save customer data to the database
 	private async Task UpdateCustomer()
 	{
 		try
@@ -154,6 +167,7 @@ else
 		}
 		catch (DbUpdateConcurrencyException ex)
 		{
+			// Handle conflict due to simultaneous edits
 			_errorMessage = "Another user has modified this data since you started editing. Your changes were not saved. Please reload and try again.";
 			Logger.LogWarning(ex, _errorMessage);
 		}

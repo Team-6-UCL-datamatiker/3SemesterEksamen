@@ -54,9 +54,9 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
             return _accessToken;
         }
 
-        // Ellers:
-        // Byg HTTP request
-        var request = new HttpRequestMessage(HttpMethod.Post, "https://api.amadeus.com/v1/security/oauth2/token");
+		// Ellers:
+		// Request new token
+		var request = new HttpRequestMessage(HttpMethod.Post, "https://api.amadeus.com/v1/security/oauth2/token");
         request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
     {
         { "grant_type", "client_credentials" },
@@ -92,8 +92,8 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
 
             var token = await GetAccessTokenAsync();
 
-            // Tjekker om det er et nyt kald eller kald efter flere offers på sidste kald
-            if (!HotelIds.Any())
+			// If first request, get hotel IDs from list API
+			if (!HotelIds.Any())
             {
                 _batch = 0;
                 var listQuery = BuildListQueryAsync(listParameters);
@@ -251,7 +251,8 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
         }
     }
 
-    public string BuildListQueryAsync(AmadeusHotelListInputModel p)
+	// Builds query string from list input model using reflection
+	public string BuildListQueryAsync(AmadeusHotelListInputModel p)
     {
         try
         {
@@ -294,7 +295,8 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
         }
     }
 
-    public string BuildOffersQueryAsync(AmadeusHotelOfferInputModel p, List<string> hotelIds)
+	// Builds query string from offer input model and hotel IDs using reflection
+	public string BuildOffersQueryAsync(AmadeusHotelOfferInputModel p, List<string> hotelIds)
     {
         try
         {

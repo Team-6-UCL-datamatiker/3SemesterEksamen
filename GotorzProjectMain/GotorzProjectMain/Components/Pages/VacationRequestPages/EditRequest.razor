@@ -93,6 +93,8 @@ else
 					<ValidationMessage For="() => InputModel.Misc" class="text-danger" />
 
 				</div>
+
+				<!-- Read-only customer email -->
 				<div class="mb-3">
 					<label class="form-label">Customer Email:</label>
 					<input type="text" class="form-control" value="@Customer?.User?.Email" readonly />
@@ -122,6 +124,7 @@ else
 	{
 		try
 		{
+			// Load request from DB if not already loaded
 			VacationRequest ??= await Context.VacationRequests.FirstOrDefaultAsync(m => m.VacationRequestId == VacationRequestId);
 
 			if (VacationRequest is null)
@@ -129,6 +132,8 @@ else
 				NavigationManager.NavigateTo("notfound");
 				return;
 			}
+
+			// Map to input model and load customer info
 			Mapper.Map(VacationRequest, InputModel);
 			Customer = await ExtendedUserService.GetCustomerByIdAsync(VacationRequest.CustomerId);
 		}
@@ -144,6 +149,7 @@ else
 	{
 		try
 		{
+			// Update entity from input and save
 			Mapper.Map(InputModel, VacationRequest);
 			await Context.SaveChangesAsync();
 
@@ -173,6 +179,7 @@ else
 
 	}
 
+	// Checks if a vacation request exists in the database
 	private bool VacationRequestExists(int vacationrequestid)
 	{
 		try

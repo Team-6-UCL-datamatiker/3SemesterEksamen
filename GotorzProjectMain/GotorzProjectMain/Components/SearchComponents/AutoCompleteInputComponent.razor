@@ -6,20 +6,22 @@
 <div class="position-relative">
 	<label for="@Id">@Label</label><br />
 	<input id="@Id"
-	class="form-control"
-	placeholder="@Placeholder"
-	autocomplete="off"
-	@bind="Value"
-	@oninput="OnInput"
-	@onkeydown="HandleKeyPress" />
+		   class="form-control"
+		   placeholder="@Placeholder"
+		   autocomplete="off"
+		   @bind="Value"
+		   @oninput="OnInput"
+		   @onkeydown="HandleKeyPress" />
 
 	@if (Suggestions.Any() && !string.IsNullOrWhiteSpace(Value))
 	{
+		<!-- Show dropdown only if there are suggestions and input is not empty -->
 		<ul class="list-group position-absolute mt-1 w-100" style="z-index:1000;">
 			@foreach (var suggestion in Suggestions)
 			{
+				<!-- Render each suggestion as a selectable item -->
 				<li class="list-group-item list-group-item-action"
-				@onclick="() => Select(suggestion)">
+					@onclick="() => Select(suggestion)">
 					@suggestion
 				</li>
 			}
@@ -46,11 +48,13 @@
 	// Handles user input events, debounces, and fetches suggestions via provided delegate.
 	private async Task OnInput(ChangeEventArgs e)
 	{
-		// Update the bound value
+		// Update the input value from the event
 		Value = e?.Value?.ToString() ?? "";
+
+		// Notify parent component of the updated value
 		await ValueChanged.InvokeAsync(Value);
 
-		// Cancel any in-progress debounce
+		// Cancel any previous debounce delay
 		_debounceCts?.Cancel();
 		_debounceCts?.Dispose();
 		_debounceCts = new();
@@ -62,20 +66,20 @@
 			{
 				if (SearchSuggestions is null)
 				{
-					// Defaulter til at søge i byerne
+					// Use default city lookup if no external function provided
 					Suggestions = await Task.FromResult(CityLookupService.SearchContains(Value, 10).ToList());
 
 				}
 				else
 				{
-					// Bruges til at søge i andre lister (amenities)
+					// Use custom search (amenities)
 					Suggestions = await SearchSuggestions(Value);
 				}
 			}
 		}
 		catch (TaskCanceledException)
 		{
-			// Silently ignore if debounce was reset :D
+			// Ignore if debounce was canceled
 		}
 	}
 
@@ -92,7 +96,7 @@
 	private async Task Select(string suggestion)
 	{
 		await ValueChanged.InvokeAsync(suggestion);
-		if(SelectionMethod is not null)
+		if (SelectionMethod is not null)
 		{
 			SelectionMethod();
 		}

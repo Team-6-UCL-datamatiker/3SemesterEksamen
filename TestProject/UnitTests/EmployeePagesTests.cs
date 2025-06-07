@@ -25,82 +25,93 @@ public class EmployeePagesTests : Bunit.TestContext
     [TestInitialize]
     public void Setup()
     {
-        mockUserService = new Mock<IExtendedUserService>();
+		// Create mocks for required services
+		mockUserService = new Mock<IExtendedUserService>();
         mockCurrentUserService = new Mock<ICurrentUserService>();
-        mockUserManager = new Mock<UserManager<ApplicationUser>>(
+
+		// Create a mock UserManager with dummy parameters
+		mockUserManager = new Mock<UserManager<ApplicationUser>>(
             Mock.Of<IUserStore<ApplicationUser>>(),
             null, null, null, null, null, null, null, null
         );
-        
-        var mockContext = new Mock<ApplicationDbContext>(new DbContextOptions<ApplicationDbContext>());
+
+		// Provide a mocked DB context
+		var mockContext = new Mock<ApplicationDbContext>(new DbContextOptions<ApplicationDbContext>());
         Services.AddSingleton(mockContext.Object);
-        
-        var mockMapper = new Mock<IMapper>();
+
+		// Provide a mocked AutoMapper
+		var mockMapper = new Mock<IMapper>();
         Services.AddSingleton(mockMapper.Object);
-        
-        var mockWebHostEnvironment = new Mock<IWebHostEnvironment>();
-        mockWebHostEnvironment.Setup(e => e.WebRootPath).Returns(Path.GetTempPath()); // You can set a temp folder
+
+		// Provide a mocked WebHostEnvironment for components that use file paths
+		var mockWebHostEnvironment = new Mock<IWebHostEnvironment>();
+        mockWebHostEnvironment.Setup(e => e.WebRootPath).Returns(Path.GetTempPath()); 
         Services.AddSingleton(mockWebHostEnvironment.Object);
 
-        Services.AddSingleton(mockUserService.Object);
+		// Register mocks in the DI container
+		Services.AddSingleton(mockUserService.Object);
         Services.AddSingleton(mockUserManager.Object);
         Services.AddSingleton(mockCurrentUserService.Object);
 
-        navMan = Services.GetRequiredService<NavigationManager>() as FakeNavigationManager;
+		// Get the fake navigation manager for tracking redirects
+		navMan = Services.GetRequiredService<NavigationManager>() as FakeNavigationManager;
     }
 
     // --------- DetailsEmployee Tests ---------
     [TestMethod]
     public void DetailsEmployee_OnInitializedAsync_ShouldRedirectToNotFound_WhenEmployeeIsNull()
     {
-        // Arrange
-        mockUserService
-            .Setup(x => x.GetEmployeeByIdAsync(It.IsAny<string>()))
+		// Arrange: Return null to simulate employee not found
+		mockUserService
+			.Setup(x => x.GetEmployeeByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((Employee)null);
 
-        navMan.NavigateTo("http://localhost/employees/details?id=nonexistent-id");
+		// Navigate to employee details page
+		navMan.NavigateTo("/employees/details?id=nonexistent-id");
 
-        // Act
-        var cut = RenderComponent<DetailsEmployee>();
+		// Act: Render the component
+		var cut = RenderComponent<DetailsEmployee>();
 
-        // Assert
-        Assert.AreEqual("http://localhost/notfound", navMan.Uri);
+		// Assert: Should redirect to notfound page
+		Assert.AreEqual("/notfound", navMan.Uri);
     }
 
     // --------- EditEmployee Tests ---------
     [TestMethod]
     public void EditEmployee_OnInitializedAsync_ShouldRedirectToNotFound_WhenEmployeeIsNull()
     {
-        // Arrange
-        mockUserService
-            .Setup(x => x.GetEmployeeByIdAsync(It.IsAny<string>()))
+		// Arrange: Return null to simulate employee not found
+		mockUserService
+			.Setup(x => x.GetEmployeeByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((Employee)null);
 
-        navMan.NavigateTo("http://localhost/employees/edit?id=nonexistent-id");
+		// Navigate to edit employee page
+		navMan.NavigateTo("/employees/edit?id=nonexistent-id");
 
-        // Act
-        var cut = RenderComponent<EditEmployee>();
+		// Act: Render the component
+		var cut = RenderComponent<EditEmployee>();
 
-        // Assert
-        Assert.AreEqual("http://localhost/employees", navMan.Uri);
+		// Assert: Should redirect to employee list
+		Assert.AreEqual("/employees", navMan.Uri);
     }
 
     // --------- RemoveEmployee Tests ---------
     [TestMethod]
     public void RemoveEmployee_OnInitializedAsync_ShouldRedirectToNotFound_WhenEmployeeIsNull()
     {
-        // Arrange
-        mockUserService
-            .Setup(x => x.GetEmployeeByIdAsync(It.IsAny<string>()))
+		// Arrange: Return null to simulate employee not found
+		mockUserService
+			.Setup(x => x.GetEmployeeByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((Employee)null);
+		
+        // Navigate to remove employee page
+		navMan.NavigateTo("/employees/details?id=nonexistent-id");
 
-        navMan.NavigateTo("http://localhost/employees/details?id=nonexistent-id");
+		// Act: Render the component
+		var cut = RenderComponent<RemoveEmployee>(); // ⬅️ RemoveEmployee
 
-        // Act
-        var cut = RenderComponent<RemoveEmployee>(); // ⬅️ RemoveEmployee
-
-        // Assert
-        Assert.AreEqual("http://localhost/notfound", navMan.Uri);
+		// Assert: Should redirect to notfound page
+		Assert.AreEqual("/notfound", navMan.Uri);
     }
 
 }

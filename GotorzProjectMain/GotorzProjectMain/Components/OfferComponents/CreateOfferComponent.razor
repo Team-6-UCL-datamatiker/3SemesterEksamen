@@ -12,6 +12,7 @@
 
 @rendermode InteractiveServer
 
+<!-- Flight search inputs for outward and return flights -->
 <details>
 	<summary class="summary-heading">Flight Search 1</summary><br />
 	<SearchFlightComponent ComponentId="1" OnFlightSelected="HandleFlightSelected" />
@@ -20,11 +21,14 @@
 	<summary class="summary-heading">Flight Search 2</summary><br />
 	<SearchFlightComponent ComponentId="2" OnFlightSelected="HandleFlightSelected" />
 </details>
+
+<!-- Hotel search input -->
 <details>
 	<summary class="summary-heading">Hotel Search</summary><br />
 	<SearchHotelComponent OnHotelSelected="HandleHotelSelected" />
 </details>
 
+<!-- Error display if something goes wrong -->
 @if (!string.IsNullOrWhiteSpace(ErrorMessage))
 {
 	<div class="alert alert-danger mt-3" role="alert">
@@ -41,6 +45,8 @@
 	public VacationRequest? VacationRequest { get; set; }
 	[Parameter]
 	public Employee? Employee { get; set; }
+
+
 	VacationOffer? VacationOffer { get; set; }
 	FlightBooking? FlightBooking { get; set; }
 	FlightBooking? ReturnFlightBooking { get; set; }
@@ -48,10 +54,12 @@
 	FlightRoute? OutwardRoute { get; set; }
 	FlightRoute? ReturnRoute { get; set; }
 
+	// Handles creation of a complete vacation offer from selected inputs
 	public async Task CreateVacationOffer()
 	{
 		try
 		{
+			// Create and populate offer object
 			VacationOffer = new VacationOffer
 				{
 					EmployeeEmail = Employee!.User.Email!,
@@ -62,25 +70,29 @@
 					ExpirationDate = DateTime.Now.AddDays(10),
 				};
 
+			// Attach offer and bookings to the vacation request
 			VacationRequest!.Offers.Add(VacationOffer);
 			VacationOffer.HotelBooking = HotelBooking;
 
+			// Combine flight data into a single booking
 			FlightBooking = new FlightBooking
 				{
-				// Airline = string.Join(", ", OutwardRoute.Legs.Select(leg => leg.Airline)),
 					TotalPrice = OutwardRoute.TotalPrice + ReturnRoute.TotalPrice,
 					DepartureTime = OutwardRoute.Legs.First().DepartureTime,
 					DepartureAirport = OutwardRoute.Legs.First().DepartureAirportName,
-				// ArrivalAirport = OutwardRoute.Legs.Last().ArrivalAirportName
 					ArrivalAirport = ReturnRoute.Legs.Last().ArrivalAirportName
 				};
 
+			// Associate flight booking with the offer
 			VacationOffer.FlightBooking = FlightBooking;
 			FlightBooking.FlightRoutes.Add(OutwardRoute);
 			FlightBooking.FlightRoutes.Add(ReturnRoute);
+
+			// Calculate and assign the total price
 			VacationOffer.TotalPrice = FlightBooking!.TotalPrice + HotelBooking!.TotalPrice;
 			VacationRequest.Status = RequestStatus.WaitingApproval;
 
+			// Persist changes and navigate away
 			await Context.SaveChangesAsync();
 			NavigationManager.NavigateTo("/vacationrequests");
 		}
@@ -91,6 +103,7 @@
 		}
 	}
 
+	// Handles selection of flights from the search component
 	private void HandleFlightSelected((string ComponentId, FlightRoute Route) selection)
 	{
 		if (selection.ComponentId == "1")
@@ -103,6 +116,7 @@
 		}
 	}
 
+	// Handles selection of a hotel from the search component
 	private void HandleHotelSelected(Hotel selectedHotel)
 	{
 		try
