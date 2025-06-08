@@ -102,7 +102,8 @@ else
 			.WithUrl(Navigation.ToAbsoluteUri("/chathub"))
 			.Build();
 
-		// Listen for incoming chat messages
+		// Register a client-side handler for the "ReceiveMessage" method invoked by the server.
+		// This acts like an event listener triggered by the server via RPC.
 		hubConnection.On<string, string, DateTime>("ReceiveMessage", (username, message, timestamp) =>
 		{
 			var encodedMsg = $"{username} [{timestamp:HH:mm}]: {message}";
