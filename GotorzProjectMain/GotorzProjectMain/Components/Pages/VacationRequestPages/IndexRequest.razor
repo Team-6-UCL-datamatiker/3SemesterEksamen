@@ -110,7 +110,7 @@
         customers = await ExtendedUserService.GetCustomersWithUsersAsync();
     }
 
-    // Unsubscribe from notifications when component is disposed
+    // Unsubscribe from notifications when component is disposed to avoid memory leaks
     public void Dispose()
     {
         VrNotifier.OnChanged -= HandleChanged;
