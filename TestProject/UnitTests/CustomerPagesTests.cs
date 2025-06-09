@@ -17,51 +17,51 @@ namespace TestProject.UnitTests;
 [TestClass]
 public class CustomerPagesTests : Bunit.TestContext
 {
-    private Mock<IExtendedUserService> mockUserService;
-    private Mock<UserManager<ApplicationUser>> mockUserManager;
-    private FakeNavigationManager navMan;
+	private Mock<IExtendedUserService> mockUserService;
+	private Mock<UserManager<ApplicationUser>> mockUserManager;
+	private FakeNavigationManager navMan;
 
-    [TestInitialize]
-    public void Setup()
-    {
+	[TestInitialize]
+	public void Setup()
+	{
 		// Setup mocked services and dependencies needed by the components
 		mockUserService = new Mock<IExtendedUserService>();
 
 		// Creating a mock of UserManager with dummy dependencies
 		mockUserManager = new Mock<UserManager<ApplicationUser>>(
-            Mock.Of<IUserStore<ApplicationUser>>(),
-            null, null, null, null, null, null, null, null
-        );
+			Mock.Of<IUserStore<ApplicationUser>>(),
+			null, null, null, null, null, null, null, null
+		);
 
 		// Setup fake DbContext
 		var mockContext = new Mock<ApplicationDbContext>(new DbContextOptions<ApplicationDbContext>());
-        Services.AddSingleton(mockContext.Object);
+		Services.AddSingleton(mockContext.Object);
 
 		// Add a mocked AutoMapper service
 		var mockMapper = new Mock<IMapper>();
-        Services.AddSingleton(mockMapper.Object);
+		Services.AddSingleton(mockMapper.Object);
 
 		// Mock the WebHostEnvironment for any file-related services
 		var mockWebHostEnvironment = new Mock<IWebHostEnvironment>();
-        mockWebHostEnvironment.Setup(e => e.WebRootPath).Returns(Path.GetTempPath()); // You can set a temp folder
-        Services.AddSingleton(mockWebHostEnvironment.Object);
+		mockWebHostEnvironment.Setup(e => e.WebRootPath).Returns(Path.GetTempPath()); // You can set a temp folder
+		Services.AddSingleton(mockWebHostEnvironment.Object);
 
 		// Register the mocked services in the test's service provider
 		Services.AddSingleton(mockUserService.Object);
-        Services.AddSingleton(mockUserManager.Object);
+		Services.AddSingleton(mockUserManager.Object);
 
 		// Capture and store the fake NavigationManager to check redirection
 		navMan = Services.GetRequiredService<NavigationManager>() as FakeNavigationManager;
-    }
+	}
 
-    // --------- DetailsCustomer Tests ---------
-    [TestMethod]
-    public void DetailsCustomer_OnInitializedAsync_ShouldRedirectToNotFound_WhenCustomerIsNull()
-    {
+	// --------- DetailsCustomer Tests ---------
+	[TestMethod]
+	public void DetailsCustomer_OnInitializedAsync_ShouldRedirectToNotFound_WhenCustomerIsNull()
+	{
 		// Arrange: Simulate that the customer was not found in the database
 		mockUserService
 			.Setup(x => x.GetCustomerByIdAsync(It.IsAny<string>()))
-            .ReturnsAsync((Customer)null);
+			.ReturnsAsync((Customer)null);
 
 		// Set the starting URL (as if the user is navigating to details page)
 		navMan.NavigateTo("http://localhost/customers/details?id=nonexistent-id");
@@ -71,16 +71,16 @@ public class CustomerPagesTests : Bunit.TestContext
 
 		// Assert: If no customer found, we expect a redirect to the "not found" page
 		Assert.AreEqual("http://localhost/notfound", navMan.Uri);
-    }
+	}
 
-    // --------- EditCustomer Tests ---------
-    [TestMethod]
-    public void EditCustomer_OnInitializedAsync_ShouldRedirectToNotFound_WhenCustomerIsNull()
-    {
+	// --------- EditCustomer Tests ---------
+	[TestMethod]
+	public void EditCustomer_OnInitializedAsync_ShouldRedirectToNotFound_WhenCustomerIsNull()
+	{
 		// Arrange: Simulate no matching customer found
 		mockUserService
 			.Setup(x => x.GetCustomerByIdAsync(It.IsAny<string>()))
-            .ReturnsAsync((Customer)null);
+			.ReturnsAsync((Customer)null);
 
 		// Navigate to edit page
 		navMan.NavigateTo("http://localhost/customers/details?id=nonexistent-id");
@@ -89,17 +89,17 @@ public class CustomerPagesTests : Bunit.TestContext
 		var cut = RenderComponent<EditCustomer>();
 
 		// Assert: Should redirect back to main customers list
-        Assert.AreEqual("http://localhost/localhost/customers", navMan.Uri);
-    }
+		Assert.AreEqual("http://localhost/localhost/customers", navMan.Uri);
+	}
 
-    // --------- RemoveCustomer Tests ---------
-    [TestMethod]
-    public void RemoveCustomer_OnInitializedAsync_ShouldRedirectToNotFound_WhenCustomerIsNull()
-    {
+	// --------- RemoveCustomer Tests ---------
+	[TestMethod]
+	public void RemoveCustomer_OnInitializedAsync_ShouldRedirectToNotFound_WhenCustomerIsNull()
+	{
 		// Arrange: Simulate no matching customer found
 		mockUserService
 			.Setup(x => x.GetCustomerByIdAsync(It.IsAny<string>()))
-            .ReturnsAsync((Customer)null);
+			.ReturnsAsync((Customer)null);
 
 		// Navigate to remove page
 		navMan.NavigateTo("http://localhost/customers/details?id=nonexistent-id");
@@ -109,5 +109,5 @@ public class CustomerPagesTests : Bunit.TestContext
 
 		// Assert: Should redirect to "not found" page
 		Assert.AreEqual("http://localhost/notfound", navMan.Uri);
-    }
+	}
 }
