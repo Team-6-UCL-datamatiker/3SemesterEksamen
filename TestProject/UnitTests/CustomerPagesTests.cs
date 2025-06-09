@@ -64,13 +64,13 @@ public class CustomerPagesTests : Bunit.TestContext
             .ReturnsAsync((Customer)null);
 
 		// Set the starting URL (as if the user is navigating to details page)
-		navMan.NavigateTo("/customers/details?id=nonexistent-id");
+		navMan.NavigateTo("http://localhost/customers/details?id=nonexistent-id");
 
 		// Act: Render the DetailsCustomer component
 		var cut = RenderComponent<DetailsCustomer>();
 
 		// Assert: If no customer found, we expect a redirect to the "not found" page
-		Assert.AreEqual("/notfound", navMan.Uri);
+		Assert.AreEqual("http://localhost/notfound", navMan.Uri);
     }
 
     // --------- EditCustomer Tests ---------
@@ -83,13 +83,13 @@ public class CustomerPagesTests : Bunit.TestContext
             .ReturnsAsync((Customer)null);
 
 		// Navigate to edit page
-		navMan.NavigateTo("/customers/details?id=nonexistent-id");
+		navMan.NavigateTo("http://localhost/customers/details?id=nonexistent-id");
 
 		// Act: Render the EditCustomer component
 		var cut = RenderComponent<EditCustomer>();
 
 		// Assert: Should redirect back to main customers list
-        Assert.AreEqual("/localhost/customers", navMan.Uri);
+        Assert.AreEqual("http://localhost/localhost/customers", navMan.Uri);
     }
 
     // --------- RemoveCustomer Tests ---------
@@ -102,7 +102,7 @@ public class CustomerPagesTests : Bunit.TestContext
             .ReturnsAsync((Customer)null);
 
 		// Navigate to remove page
-		navMan.NavigateTo("/customers/details?id=nonexistent-id");
+		navMan.NavigateTo("http://localhost/customers/details?id=nonexistent-id");
 
 		// Act: Render the RemoveCustomer component
 		var cut = RenderComponent<RemoveCustomer>();
