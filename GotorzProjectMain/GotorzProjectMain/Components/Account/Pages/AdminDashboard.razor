@@ -147,7 +147,7 @@
 		await LoadSuspiciousAttemptsAsync();
 	}
 
-	// Loads and filters login attempts from the database
+	// Loads and filters login attempts from the database - used for both filtered search and on pageload (with default filter))
 	private async Task LoadSuspiciousAttemptsAsync()
 	{
 		try

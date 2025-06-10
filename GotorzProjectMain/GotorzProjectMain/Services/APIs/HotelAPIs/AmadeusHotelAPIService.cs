@@ -161,8 +161,11 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
             List<string> hotelIdsBatch;
             if (HotelIds.Count() > 50)
             {
-                hotelIdsBatch = HotelIds.Take(50).ToList();
-                HotelIds.RemoveRange(0, hotelIdsBatch.Count);
+				// Tag de første 50 hotelId'er og fjern dem fra listen
+				hotelIdsBatch = HotelIds.Take(50).ToList();
+
+				// Fjern de første 50 hotelId'er fra listen, så de ikke bruges igen
+				HotelIds.RemoveRange(0, hotelIdsBatch.Count);
             }
             else
             {
@@ -230,10 +233,10 @@ public class AmadeusHotelAPIService : IAmadeusHotelAPIService
                 hotel.Offers = hotelOffers?.Offers != null ? _mapper.Map<IReadOnlyList<HotelOffer>>(hotelOffers.Offers) : Array.Empty<HotelOffer>();
             }
 
-            // Hvis der stadig er flere hoteller at søge tilbud i lægges 1 til batch for at alt stemmer ved kald efter flere tilbud.
-            if (HotelIds.Any())
-            {
-                _batch++;
+			// Hvis der stadig er flere hoteller tilbage, øg batch-tælleren.
+			// Dette gør det muligt at holde styr på, hvor mange batches vi har hentet, og bruges til korrekt at matche de næste 50 hoteller med deres tilbud.            if (HotelIds.Any())
+			{
+				_batch++;
             }
         }
         catch (InvalidOperationException)

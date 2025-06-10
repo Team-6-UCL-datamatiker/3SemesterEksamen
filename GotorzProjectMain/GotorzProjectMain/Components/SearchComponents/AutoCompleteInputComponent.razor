@@ -36,8 +36,8 @@
 	// Event callback to notify parent of value changes
 	[Parameter] public EventCallback<string> ValueChanged { get; set; }
 	[Parameter] public Func<string, Task<List<string>>>? SearchSuggestions { get; set; }
-	[Parameter] public Action? SelectionMethod { get; set; }
 	// Function provided by the parent to fetch suggestion list
+	[Parameter] public Action? SelectionMethod { get; set; }
 	[Parameter] public string Placeholder { get; set; } = "Type a city";
 
 	private List<string> Suggestions = new();
