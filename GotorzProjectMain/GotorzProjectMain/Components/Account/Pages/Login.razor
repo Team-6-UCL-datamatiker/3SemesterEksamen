@@ -116,7 +116,7 @@
 		{
 			{ IsLockedOut: true } => "Locked out",
 			{ RequiresTwoFactor: true } => "Requires 2FA",
-			{ Succeeded: true } => null,
+			{ Succeeded: true } => null, // successful login, no failure reason
 			_ => "Login failed" // default case for other failures
 		};
 
